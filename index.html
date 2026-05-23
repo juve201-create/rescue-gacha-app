@@ -1393,8 +1393,7 @@ body::after{
 }
 
 /* Center line indicator */
-.csgo-rail-wrap::before,
-.csgo-rail-wrap::after {
+.csgo-rail-wrap::before {
   content: '';
   position: absolute;
   top: 0; bottom: 0;
@@ -1404,13 +1403,6 @@ body::after{
   left: 50%;
   transform: translateX(-50%);
   box-shadow: 0 0 16px var(--pink-main), 0 0 32px rgba(232,24,122,0.4);
-}
-.csgo-rail-wrap::after {
-  width: 1px;
-  background: rgba(232,24,122,0.3);
-  left: calc(50% - 70px);
-  transform: none;
-  box-shadow: none;
 }
 
 /* Top/bottom fade */
@@ -1888,9 +1880,10 @@ body::after{
     <div class="csgo-result-label" id="csgo-result-label"></div>
     <div class="csgo-result-sub" id="csgo-result-sub"></div>
   </div>
-  <div style="display:flex;gap:10px;align-items:center;opacity:0;transition:opacity 0.3s;" id="csgo-btn-row">
-  <button class="csgo-next-btn" id="csgo-next-btn" onclick="csgoNext()">Siguiente ▶</button>
-  <button class="csgo-skip-btn" id="csgo-skip-btn" onclick="csgoSkipAll()">⏭ Saltar todo</button>
+  <div style="display:flex;gap:10px;align-items:center;" id="csgo-btn-row">
+  <button class="csgo-skip-btn" id="csgo-skip-current" onclick="csgoSkipCurrent()">⏭ Saltar</button>
+  <button class="csgo-next-btn" id="csgo-next-btn" onclick="csgoNext()" style="display:none;">Siguiente ▶</button>
+  <button class="csgo-skip-btn" id="csgo-skip-all-btn" onclick="csgoSkipAll()" style="opacity:0.5;">⏭⏭ Saltar todo</button>
 </div>
 </div>
 
@@ -2828,6 +2821,10 @@ function csgoRevealNext(){
   csgoRevealCard(card);
 }
 
+function csgoSkipCurrent(){
+  if(window._csgoSkipFn) window._csgoSkipFn();
+}
+
 function csgoSkip(){
   if(window._csgoSkipFn) window._csgoSkipFn();
 }
@@ -2880,7 +2877,9 @@ function csgoRevealCard(card){
 
   result.classList.remove('shown');
   nextBtn.classList.remove('shown');
-  document.getElementById('csgo-btn-row').style.opacity='0';
+  nextBtn.style.display = 'none';
+  document.getElementById('csgo-skip-current').style.display = 'inline-block';
+  document.getElementById('csgo-skip-all-btn').style.opacity = '0.5';
   title.textContent = 'Invocando...';
 
   const POOL = ['common','common','common','rare','common','rare','common','epic','common','rare'];
@@ -2941,7 +2940,11 @@ function csgoRevealCard(card){
 
     const isLast = _csgoIdx >= _csgoQueue.length;
     nextBtn.textContent = isLast ? '✦ Ver resumen' : 'Siguiente ▶';
-    setTimeout(() => { document.getElementById('csgo-btn-row').style.opacity='1'; }, 200);
+    setTimeout(() => {
+      document.getElementById('csgo-skip-current').style.display = 'none';
+      document.getElementById('csgo-next-btn').style.display = 'inline-block';
+      document.getElementById('csgo-skip-all-btn').style.opacity = '1';
+    }, 200);
   }
 
   // Expose skip for the button

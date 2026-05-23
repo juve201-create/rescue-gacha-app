@@ -3,495 +3,308 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Rescue Admin">
 <meta name="theme-color" content="#0D0518">
 <title>Rescue TCG — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{
-  font-family:'Crimson Pro',Georgia,serif;
-  background:#0D0518;color:#F0E6C8;
-  min-height:100vh;
-  padding-bottom:env(safe-area-inset-bottom);
-}
-
-/* ── LOGIN ── */
-.login-screen{
-  display:flex;align-items:center;justify-content:center;
-  min-height:100vh;padding:24px 16px;
-  background:radial-gradient(ellipse at 50% 100%,#2D0A50 0%,#1A0A2E 40%,#0D0518 100%);
-}
-.login-box{
-  width:100%;max-width:320px;
-  background:linear-gradient(175deg,#1E0A38,#120720);
-  border:1px solid rgba(232,24,122,0.3);
-  border-radius:18px;padding:32px 22px;
-  box-shadow:0 0 60px rgba(232,24,122,0.15),0 24px 64px rgba(0,0,0,0.8);
-  position:relative;overflow:hidden;
-}
-.login-box::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,#E8187A,#9333EA,transparent);
-}
-.login-logo{text-align:center;margin-bottom:14px;}
-.login-logo-text{
-  font-family:'Cinzel',serif;font-size:22px;font-weight:900;
-  letter-spacing:4px;
-  background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
+body{font-family:Georgia,serif;background:#0D0518;color:#F0E6C8;min-height:100vh;}
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;background:radial-gradient(ellipse at 50% 100%,#2D0A50 0%,#1A0A2E 40%,#0D0518 100%);}
+.login-box{width:100%;max-width:320px;background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid rgba(232,24,122,0.3);border-radius:18px;padding:32px 22px;box-shadow:0 0 60px rgba(232,24,122,0.15);}
+.login-logo-text{font-family:'Cinzel',serif;font-size:22px;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:6px;}
 .login-sub{font-size:11px;color:#9D7DB8;letter-spacing:3px;text-align:center;margin-bottom:22px;text-transform:uppercase;}
 .login-error{color:#F87171;font-size:11px;text-align:center;margin-bottom:10px;min-height:16px;font-family:'Cinzel',serif;}
-.login-input{
-  width:100%;background:rgba(61,20,102,0.4);
-  border:1px solid #4A1575;border-radius:8px;
-  padding:12px 14px;color:#F0E6C8;
-  font-family:'Cinzel',serif;font-size:14px;
-  outline:none;margin-bottom:12px;
-  -webkit-appearance:none;
-  transition:border-color 0.15s;
-}
+.login-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid #4A1575;border-radius:8px;padding:12px 14px;color:#F0E6C8;font-family:'Cinzel',serif;font-size:14px;outline:none;margin-bottom:12px;-webkit-appearance:none;transition:border-color 0.15s;}
 .login-input:focus{border-color:#E8187A;}
-.login-btn{
-  width:100%;
-  background:linear-gradient(135deg,#E8187A,#9D0050);
-  border:none;border-radius:8px;padding:13px;
-  color:white;font-family:'Cinzel',serif;
-  font-size:14px;font-weight:700;letter-spacing:2px;
-  cursor:pointer;
-  box-shadow:0 4px 0 #500025,0 6px 16px rgba(232,24,122,0.35);
-  position:relative;top:0;transition:top 0.1s,box-shadow 0.1s;
-}
-.login-btn:active{top:3px;box-shadow:0 1px 0 #500025;}
-
-/* ── DASHBOARD ── */
+.login-btn{width:100%;background:linear-gradient(135deg,#E8187A,#9D0050);border:none;border-radius:8px;padding:13px;color:white;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #500025;}
 .dashboard{display:none;}
-
-.topbar{
-  background:linear-gradient(135deg,#1E0A38,#120720);
-  border-bottom:1px solid rgba(232,24,122,0.2);
-  padding:max(14px,env(safe-area-inset-top)) 18px 14px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:50;
-}
+.topbar{background:linear-gradient(135deg,#1E0A38,#120720);border-bottom:1px solid rgba(232,24,122,0.2);padding:max(14px,env(safe-area-inset-top)) 18px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
 .topbar-title{font-family:'Cinzel',serif;font-size:15px;font-weight:900;color:#E8187A;letter-spacing:3px;}
-.topbar-right{display:flex;gap:8px;align-items:center;}
-.refresh-btn,.logout-btn{
-  font-family:'Cinzel',serif;font-size:10px;font-weight:700;
-  padding:6px 12px;border-radius:6px;cursor:pointer;letter-spacing:1px;
-  border:1px solid;transition:all 0.15s;
-}
+.topbar-right{display:flex;gap:8px;}
+.refresh-btn,.logout-btn{font-family:'Cinzel',serif;font-size:10px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;letter-spacing:1px;border:1px solid;transition:all 0.15s;}
 .refresh-btn{border-color:rgba(212,160,23,0.5);background:rgba(212,160,23,0.08);color:#D4A017;}
 .logout-btn{border-color:rgba(232,24,122,0.4);background:rgba(232,24,122,0.08);color:#F472B6;}
-
-/* ── TABS ── */
-.tabs{
-  display:flex;border-bottom:1px solid #4A1575;
-  background:#0D0518;
-  position:sticky;top:48px;z-index:49;
-  overflow-x:auto;scrollbar-width:none;
-}
+.tabs{display:flex;border-bottom:1px solid #4A1575;background:#0D0518;position:sticky;top:48px;z-index:49;overflow-x:auto;scrollbar-width:none;}
 .tabs::-webkit-scrollbar{display:none;}
-.tab{
-  flex:0 0 auto;padding:10px 16px;
-  font-family:'Cinzel',serif;font-size:11px;font-weight:700;
-  letter-spacing:1px;text-transform:uppercase;
-  color:#9D7DB8;cursor:pointer;border-bottom:2px solid transparent;
-  white-space:nowrap;transition:all 0.15s;
-}
+.tab{flex:0 0 auto;padding:10px 16px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9D7DB8;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
 .tab.active{color:#E8187A;border-bottom-color:#E8187A;}
-
-/* ── CONTENT ── */
 .content{padding:16px;}
-
-/* ── STATS GRID ── */
-.stats-grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:10px;margin-bottom:20px;
-}
-.stat-card{
-  background:linear-gradient(175deg,#1E0A38,#120720);
-  border:1px solid #4A1575;border-radius:12px;
-  padding:16px 12px;text-align:center;
-}
-.stat-number{
-  font-family:'Cinzel',serif;font-size:28px;font-weight:900;
-  color:#E8187A;display:block;
-}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.stat-card{background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid #4A1575;border-radius:12px;padding:16px 12px;text-align:center;}
+.stat-number{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#E8187A;display:block;}
 .stat-label{font-size:10px;color:#9D7DB8;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
-
-/* ── SECTION TITLE ── */
-.sec-title{
-  font-family:'Cinzel',serif;font-size:12px;font-weight:700;
-  letter-spacing:2px;color:#D4A017;margin-bottom:12px;text-transform:uppercase;
-}
-
-/* ── CARDS LIST ── */
+.sec-title{font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:2px;color:#D4A017;margin-bottom:12px;text-transform:uppercase;}
 .list{display:flex;flex-direction:column;gap:8px;}
-
-.list-item{
-  background:linear-gradient(135deg,#1E0A38,#120720);
-  border:1px solid #4A1575;border-radius:10px;
-  padding:12px 14px;
-  display:flex;align-items:center;gap:12px;
-}
+.list-item{background:linear-gradient(135deg,#1E0A38,#120720);border:1px solid #4A1575;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
 .list-item-icon{font-size:22px;flex-shrink:0;}
 .list-item-info{flex:1;min-width:0;}
-.list-item-title{
-  font-family:'Cinzel',serif;font-size:12px;font-weight:700;
-  color:#F0E6C8;letter-spacing:0.5px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
+.list-item-title{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:#F0E6C8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .list-item-sub{font-size:11px;color:#9D7DB8;margin-top:2px;}
-.list-item-action{flex-shrink:0;}
-
-.badge{
-  display:inline-block;padding:3px 8px;border-radius:4px;
-  font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:1px;
-}
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:1px;}
 .badge-green{background:rgba(74,222,128,0.12);color:#4ADE80;border:1px solid #4ADE80;}
-.badge-red  {background:rgba(248,113,113,0.12);color:#F87171;border:1px solid #F87171;}
-.badge-gold {background:rgba(212,160,23,0.12);color:#D4A017;border:1px solid #D4A017;}
-.badge-pink {background:rgba(232,24,122,0.12);color:#F472B6;border:1px solid rgba(232,24,122,0.4);}
-
-.action-btn{
-  font-family:'Cinzel',serif;font-size:9px;font-weight:700;
-  padding:5px 10px;border-radius:5px;cursor:pointer;letter-spacing:1px;
-  border:1px solid rgba(232,24,122,0.5);
-  background:rgba(232,24,122,0.1);color:#F472B6;
-  white-space:nowrap;
-}
-.action-btn:active{background:rgba(232,24,122,0.25);}
-
-.code-tag{
-  font-size:11px;font-family:monospace;
-  background:rgba(74,222,128,0.1);
-  padding:2px 8px;border-radius:4px;
-  color:#4ADE80;border:1px dashed rgba(74,222,128,0.4);
-  display:inline-block;margin-top:4px;
-}
-
+.badge-gold{background:rgba(212,160,23,0.12);color:#D4A017;border:1px solid #D4A017;}
+.action-btn{font-family:'Cinzel',serif;font-size:9px;font-weight:700;padding:5px 10px;border-radius:5px;cursor:pointer;letter-spacing:1px;border:1px solid rgba(232,24,122,0.5);background:rgba(232,24,122,0.1);color:#F472B6;white-space:nowrap;flex-shrink:0;}
+.code-tag{font-size:11px;font-family:monospace;background:rgba(74,222,128,0.1);padding:2px 8px;border-radius:4px;color:#4ADE80;border:1px dashed rgba(74,222,128,0.4);display:inline-block;margin-top:4px;}
 .empty{text-align:center;padding:32px 20px;color:#4A1575;font-style:italic;font-size:13px;}
-
-/* ── ADD GEMS MODAL ── */
-.modal-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(5,2,15,0.92);backdrop-filter:blur(6px);
-  z-index:200;align-items:center;justify-content:center;padding:20px;
-}
-.modal-overlay.visible{display:flex;}
-.modal-box{
-  background:linear-gradient(175deg,#1E0A38,#120720);
-  border:1px solid rgba(232,24,122,0.3);border-radius:14px;
-  padding:24px 20px;width:100%;max-width:300px;
-  box-shadow:0 0 40px rgba(232,24,122,0.2);
-}
-.modal-title{
-  font-family:'Cinzel',serif;font-size:14px;font-weight:700;
-  letter-spacing:2px;color:#F0E6C8;text-align:center;margin-bottom:6px;
-}
-.modal-sub{font-size:11px;color:#9D7DB8;text-align:center;margin-bottom:16px;}
-.modal-input{
-  width:100%;background:rgba(61,20,102,0.4);
-  border:1px solid #4A1575;border-radius:8px;
-  padding:11px 14px;color:#F0E6C8;
-  font-family:'Cinzel',serif;font-size:16px;
-  outline:none;margin-bottom:12px;-webkit-appearance:none;
-  text-align:center;letter-spacing:2px;
-}
-.modal-input:focus{border-color:#E8187A;}
-.modal-btns{display:flex;gap:8px;}
-.modal-confirm{
-  flex:1;background:linear-gradient(135deg,#E8187A,#9D0050);
-  border:none;border-radius:8px;padding:12px;
-  color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;
-  letter-spacing:1px;cursor:pointer;
-}
-.modal-cancel{
-  flex:1;background:transparent;
-  border:1px solid #4A1575;border-radius:8px;padding:12px;
-  color:#9D7DB8;font-family:'Cinzel',serif;font-size:13px;font-weight:700;
-  letter-spacing:1px;cursor:pointer;
-}
-
 .loading{text-align:center;padding:30px;color:#4A1575;font-style:italic;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,2,15,0.92);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.visible{display:flex;}
+.modal-box{background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid rgba(232,24,122,0.3);border-radius:14px;padding:24px 20px;width:100%;max-width:300px;}
+.modal-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#F0E6C8;text-align:center;margin-bottom:6px;}
+.modal-sub{font-size:11px;color:#9D7DB8;text-align:center;margin-bottom:16px;}
+.modal-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid #4A1575;border-radius:8px;padding:11px 14px;color:#F0E6C8;font-family:'Cinzel',serif;font-size:16px;outline:none;margin-bottom:12px;-webkit-appearance:none;text-align:center;}
+.modal-btns{display:flex;gap:8px;}
+.modal-confirm{flex:1;background:linear-gradient(135deg,#E8187A,#9D0050);border:none;border-radius:8px;padding:12px;color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;cursor:pointer;}
+.modal-cancel{flex:1;background:transparent;border:1px solid #4A1575;border-radius:8px;padding:12px;color:#9D7DB8;font-family:'Cinzel',serif;font-size:13px;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">
-    <div class="login-logo">
-      <div class="login-logo-text">RESCUE TCG</div>
-    </div>
+    <div class="login-logo-text">RESCUE TCG</div>
     <div class="login-sub">Panel Admin</div>
     <div class="login-error" id="login-error"></div>
-    <input class="login-input" type="password" id="admin-pass"
-      placeholder="Contraseña de admin"
-      id="admin-pass-input">
-    <button class="login-btn" id="login-btn">ENTRAR</button>
+    <input class="login-input" type="password" id="admin-pass" placeholder="Contrasena de admin">
+    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
-
   <div class="topbar">
-    <div class="topbar-title">⚔ ADMIN</div>
+    <div class="topbar-title">ADMIN</div>
     <div class="topbar-right">
-      <button class="refresh-btn" onclick="loadTab(activeTab)">↻</button>
+      <button class="refresh-btn" onclick="loadTab(activeTab)">Actualizar</button>
       <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </div>
-
   <div class="tabs">
-    <div class="tab active" onclick="loadTab('stats')" id="tab-stats">📊 Stats</div>
-    <div class="tab" onclick="loadTab('users')" id="tab-users">👥 Usuarios</div>
-    <div class="tab" onclick="loadTab('payments')" id="tab-payments">💰 Pagos</div>
-    <div class="tab" onclick="loadTab('prizes')" id="tab-prizes">🏆 Premios</div>
+    <div class="tab active" id="tab-stats" onclick="loadTab('stats')">Stats</div>
+    <div class="tab" id="tab-users" onclick="loadTab('users')">Usuarios</div>
+    <div class="tab" id="tab-payments" onclick="loadTab('payments')">Pagos</div>
+    <div class="tab" id="tab-prizes" onclick="loadTab('prizes')">Premios</div>
   </div>
-
-  <div class="content" id="tab-content">
-    <div class="loading">Cargando...</div>
-  </div>
-
+  <div class="content" id="tab-content"><div class="loading">Cargando...</div></div>
 </div>
 
-<!-- ADD GEMS MODAL -->
 <div class="modal-overlay" id="gems-modal">
   <div class="modal-box">
-    <div class="modal-title" id="modal-title">Agregar Créditos</div>
+    <div class="modal-title">Agregar Creditos</div>
     <div class="modal-sub" id="modal-sub"></div>
     <input class="modal-input" type="number" id="modal-amount" placeholder="0" min="1">
     <div class="modal-btns">
       <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="modal-confirm" onclick="confirmGems()">✦ Agregar</button>
+      <button class="modal-confirm" onclick="confirmGems()">Agregar</button>
     </div>
   </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+var SB_URL  = "https://cceuvzxtrlglnkwjggmi.supabase.co";
+var SB_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU";
+var PASS    = "RescueTCG2025Admin!";
+var activeTab = "stats";
+var modalUserId = null;
+var modalCurrentGems = 0;
 
-const SB_URL  = 'https://cceuvzxtrlglnkwjggmi.supabase.co';
-const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU';
-const PASS    = 'RescueTCG2025Admin!';
-
-let activeTab = 'stats';
-let modalUserId = null;
-let modalCurrentGems = 0;
-
-async function sb(table, query='', method='GET', body=null){
-  const opts = {
-    headers:{
-      'apikey': SB_ANON,
-      'Authorization': 'Bearer ' + SB_ANON,
-      'Content-Type': 'application/json',
-      'Prefer': method==='PATCH' ? 'return=representation' : ''
-    }
-  };
-  if(method !== 'GET'){ opts.method = method; if(body) opts.body = JSON.stringify(body); }
-  const res = await fetch(SB_URL + '/rest/v1/' + table + query, opts);
-  return res.json();
-}
-
-function doLogin(){
-  const pass = document.getElementById('admin-pass').value;
-  if(pass === PASS){
-    sessionStorage.setItem('rg_admin','1');
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    loadTab('stats');
+function doLogin() {
+  var pass = document.getElementById("admin-pass").value;
+  if (pass === PASS) {
+    sessionStorage.setItem("rg_admin", "1");
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    loadTab("stats");
   } else {
-    document.getElementById('login-error').textContent = 'Contraseña incorrecta';
+    document.getElementById("login-error").textContent = "Contrasena incorrecta";
   }
 }
 
-function doLogout(){
-  sessionStorage.removeItem('rg_admin');
+document.getElementById("admin-pass").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") doLogin();
+});
+
+function doLogout() {
+  sessionStorage.removeItem("rg_admin");
   location.reload();
 }
 
-function loadTab(tab){
+function loadTab(tab) {
   activeTab = tab;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  const el = document.getElementById('tab-' + tab);
-  if(el) el.classList.add('active');
-  const content = document.getElementById('tab-content');
-  content.innerHTML = '<div class="loading">Cargando...</div>';
-  if(tab === 'stats')    loadStats();
-  if(tab === 'users')    loadUsers();
-  if(tab === 'payments') loadPayments();
-  if(tab === 'prizes')   loadPrizes();
+  document.querySelectorAll(".tab").forEach(function(t) { t.classList.remove("active"); });
+  var el = document.getElementById("tab-" + tab);
+  if (el) el.classList.add("active");
+  document.getElementById("tab-content").innerHTML = "<div class=\"loading\">Cargando...</div>";
+  if (tab === "stats")    loadStats();
+  if (tab === "users")    loadUsers();
+  if (tab === "payments") loadPayments();
+  if (tab === "prizes")   loadPrizes();
 }
 
-async function loadStats(){
-  const [users, payments, prizes] = await Promise.all([
-    sb('users','?select=id'),
-    sb('payments','?select=amount_mxn,status'),
-    sb('prizes','?select=redeemed'),
-  ]);
-  const revenue = payments.filter(p=>p.status==='approved').reduce((a,p)=>a+(p.amount_mxn||0),0);
-  const activePrizes = prizes.filter(p=>!p.redeemed).length;
-
-  document.getElementById('tab-content').innerHTML =
-    '<div class="stats-grid">' +
-    statCard(users.length,'Usuarios','👥') +
-    statCard(payments.length,'Pagos','💰') +
-    statCard('$'+revenue,'Ingresos MXN','📈') +
-    statCard(activePrizes,'Premios activos','🏆') +
-    '</div>';
+function sbFetch(table, query) {
+  return fetch(SB_URL + "/rest/v1/" + table + (query||""), {
+    headers: {
+      "apikey": SB_ANON,
+      "Authorization": "Bearer " + SB_ANON,
+      "Content-Type": "application/json"
+    }
+  }).then(function(r) { return r.json(); });
 }
 
-function statCard(val, label, icon){
-  return '<div class="stat-card">' +
-    '<span class="stat-number">' + val + '</span>' +
-    '<span class="stat-label">' + icon + ' ' + label + '</span>' +
-    '</div>';
+function sbPatch(table, filter, body) {
+  return fetch(SB_URL + "/rest/v1/" + table + "?" + filter, {
+    method: "PATCH",
+    headers: {
+      "apikey": SB_ANON,
+      "Authorization": "Bearer " + SB_ANON,
+      "Content-Type": "application/json",
+      "Prefer": "return=representation"
+    },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); });
 }
 
-async function loadUsers(){
-  const users = await sb("users","?select=id,email,gems,created_at&order=created_at.desc");
-  const el = document.getElementById("tab-content");
-  if(!users.length){ el.innerHTML="<div class=\"empty\">Sin usuarios</div>"; return; }
-  let html = "<p class=\"sec-title\">Usuarios (" + users.length + ")</p><div class=\"list\">";
-  users.forEach(function(u){
-    html += "<div class=\"list-item\">";
-    html += "<div class=\"list-item-icon\">👤</div>";
-    html += "<div class=\"list-item-info\">";
-    html += "<div class=\"list-item-title\">" + u.email + "</div>";
-    html += "<div class=\"list-item-sub\"><span class=\"badge badge-gold\">✦ " + (u.gems||0) + "</span> · " + fmtDate(u.created_at) + "</div>";
-    html += "</div>";
-    html += "<div class=\"list-item-action\"><button class=\"action-btn\" onclick=\"openModal('" + u.id + "','" + u.email + "'," + (u.gems||0) + ")\">+ Maná</button></div>";
-    html += "</div>";
+function fmtDate(d) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("es-MX", {day:"2-digit",month:"2-digit",year:"2-digit"});
+}
+
+function loadStats() {
+  Promise.all([
+    sbFetch("users","?select=id"),
+    sbFetch("payments","?select=amount_mxn,status"),
+    sbFetch("prizes","?select=redeemed")
+  ]).then(function(results) {
+    var users    = results[0];
+    var payments = results[1];
+    var prizes   = results[2];
+    var revenue  = 0;
+    payments.forEach(function(p) { if (p.status === "approved") revenue += (p.amount_mxn||0); });
+    var active = prizes.filter(function(p) { return !p.redeemed; }).length;
+    document.getElementById("tab-content").innerHTML =
+      "<div class=\"stats-grid\">" +
+      "<div class=\"stat-card\"><span class=\"stat-number\">" + users.length + "</span><span class=\"stat-label\">Usuarios</span></div>" +
+      "<div class=\"stat-card\"><span class=\"stat-number\">" + payments.length + "</span><span class=\"stat-label\">Pagos</span></div>" +
+      "<div class=\"stat-card\"><span class=\"stat-number\">$" + revenue + "</span><span class=\"stat-label\">Ingresos MXN</span></div>" +
+      "<div class=\"stat-card\"><span class=\"stat-number\">" + active + "</span><span class=\"stat-label\">Premios activos</span></div>" +
+      "</div>";
   });
-  html += "</div>";
-  el.innerHTML = html;
 }
 
-async function loadPayments(){
-  const payments = await sb('payments','?select=*,users(email)&order=created_at.desc&limit=100');
-  if(!payments.length){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin pagos</div>'; return; }
-
-  document.getElementById('tab-content').innerHTML =
-    "<p class=\"sec-title\">Últimos pagos (" + payments.length + ")</p>" +
-    '<div class="list">' +
-    payments.map(p => '<div class="list-item">' +
-      '<div class="list-item-icon">💳</div>' +
-      '<div class="list-item-info">' +
-        '<div class="list-item-title">' + (p.users?.email || '—') + '</div>' +
-        '<div class="list-item-sub">$' + p.amount_mxn + ' MXN · <span class="badge badge-gold">✦ ' + p.gems_granted + '</span> · ' + fmtDate(p.created_at) + '</div>' +
-      '</div>' +
-      '<span class="badge badge-green">' + (p.status||'ok') + '</span>' +
-    '</div>').join('') +
-    '</div>';
-}
-
-async function loadPrizes(){
-  const prizes = await sb("prizes","?select=*,users(email)&order=obtained_at.desc");
-  const active   = prizes.filter(function(p){ return !p.redeemed; });
-  const redeemed = prizes.filter(function(p){ return  p.redeemed; });
-  let html = "";
-  if(active.length){
-    html += "<p class=\"sec-title\">Pendientes (" + active.length + ")</p><div class=\"list\">";
-    active.forEach(function(p){
+function loadUsers() {
+  sbFetch("users","?select=id,email,gems,created_at&order=created_at.desc").then(function(users) {
+    if (!users.length) { document.getElementById("tab-content").innerHTML = "<div class=\"empty\">Sin usuarios</div>"; return; }
+    var html = "<p class=\"sec-title\">Usuarios (" + users.length + ")</p><div class=\"list\">";
+    users.forEach(function(u) {
       html += "<div class=\"list-item\">";
-      html += "<div class=\"list-item-icon\">🎁</div>";
+      html += "<div class=\"list-item-icon\">&#128100;</div>";
       html += "<div class=\"list-item-info\">";
-      html += "<div class=\"list-item-title\">" + p.name + "</div>";
-      html += "<div class=\"list-item-sub\">" + (p.users && p.users.email ? p.users.email : "—") + "</div>";
-      html += "<div class=\"code-tag\">" + p.code + "</div>";
+      html += "<div class=\"list-item-title\">" + u.email + "</div>";
+      html += "<div class=\"list-item-sub\"><span class=\"badge badge-gold\">&#10022; " + (u.gems||0) + "</span> &middot; " + fmtDate(u.created_at) + "</div>";
       html += "</div>";
-      html += "<button class=\"action-btn\" onclick=\"redeemPrize('" + p.id + "',this)\">Canjear</button>";
+      html += "<button class=\"action-btn\" onclick=\"openModal('" + u.id + "','" + u.email + "'," + (u.gems||0) + ")\">+ Mana</button>";
       html += "</div>";
     });
     html += "</div>";
-  }
-  if(redeemed.length){
-    html += "<p class=\"sec-title\" style=\"margin-top:20px;\">Canjeados (" + redeemed.length + ")</p><div class=\"list\">";
-    redeemed.forEach(function(p){
-      html += "<div class=\"list-item\" style=\"opacity:0.45;\">";
-      html += "<div class=\"list-item-icon\">✅</div>";
-      html += "<div class=\"list-item-info\">";
-      html += "<div class=\"list-item-title\">" + p.name + "</div>";
-      html += "<div class=\"list-item-sub\">" + (p.users && p.users.email ? p.users.email : "—") + " · " + fmtDate(p.obtained_at) + "</div>";
-      html += "</div></div>";
-    });
-    html += "</div>";
-  }
-  if(!prizes.length) html = "<div class=\"empty\">Sin premios</div>";
-  document.getElementById("tab-content").innerHTML = html;
-}
-
-async function redeemPrize(id, btn){
-  btn.textContent = '...';
-  btn.disabled = true;
-  await fetch(SB_URL + '/rest/v1/prizes?id=eq.' + id, {
-    method: 'PATCH',
-    headers:{'apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Content-Type':'application/json','Prefer':'return=representation'},
-    body: JSON.stringify({redeemed:true})
+    document.getElementById("tab-content").innerHTML = html;
   });
-  loadPrizes();
 }
 
-function openModal(userId, email, currentGems){
+function loadPayments() {
+  sbFetch("payments","?select=*,users(email)&order=created_at.desc&limit=100").then(function(payments) {
+    if (!payments.length) { document.getElementById("tab-content").innerHTML = "<div class=\"empty\">Sin pagos</div>"; return; }
+    var html = "<p class=\"sec-title\">Pagos (" + payments.length + ")</p><div class=\"list\">";
+    payments.forEach(function(p) {
+      var email = p.users && p.users.email ? p.users.email : "—";
+      html += "<div class=\"list-item\">";
+      html += "<div class=\"list-item-icon\">&#128179;</div>";
+      html += "<div class=\"list-item-info\">";
+      html += "<div class=\"list-item-title\">" + email + "</div>";
+      html += "<div class=\"list-item-sub\">$" + p.amount_mxn + " MXN &middot; <span class=\"badge badge-gold\">&#10022; " + p.gems_granted + "</span> &middot; " + fmtDate(p.created_at) + "</div>";
+      html += "</div>";
+      html += "<span class=\"badge badge-green\">" + (p.status||"ok") + "</span>";
+      html += "</div>";
+    });
+    html += "</div>";
+    document.getElementById("tab-content").innerHTML = html;
+  });
+}
+
+function loadPrizes() {
+  sbFetch("prizes","?select=*,users(email)&order=obtained_at.desc").then(function(prizes) {
+    var active   = prizes.filter(function(p) { return !p.redeemed; });
+    var redeemed = prizes.filter(function(p) { return  p.redeemed; });
+    var html = "";
+    if (active.length) {
+      html += "<p class=\"sec-title\">Pendientes (" + active.length + ")</p><div class=\"list\">";
+      active.forEach(function(p) {
+        var email = p.users && p.users.email ? p.users.email : "—";
+        html += "<div class=\"list-item\">";
+        html += "<div class=\"list-item-icon\">&#127873;</div>";
+        html += "<div class=\"list-item-info\">";
+        html += "<div class=\"list-item-title\">" + p.name + "</div>";
+        html += "<div class=\"list-item-sub\">" + email + "</div>";
+        html += "<div class=\"code-tag\">" + p.code + "</div>";
+        html += "</div>";
+        html += "<button class=\"action-btn\" onclick=\"redeemPrize('" + p.id + "',this)\">Canjear</button>";
+        html += "</div>";
+      });
+      html += "</div>";
+    }
+    if (redeemed.length) {
+      html += "<p class=\"sec-title\" style=\"margin-top:20px;\">Canjeados (" + redeemed.length + ")</p><div class=\"list\">";
+      redeemed.forEach(function(p) {
+        var email = p.users && p.users.email ? p.users.email : "—";
+        html += "<div class=\"list-item\" style=\"opacity:0.45;\">";
+        html += "<div class=\"list-item-icon\">&#9989;</div>";
+        html += "<div class=\"list-item-info\">";
+        html += "<div class=\"list-item-title\">" + p.name + "</div>";
+        html += "<div class=\"list-item-sub\">" + email + " &middot; " + fmtDate(p.obtained_at) + "</div>";
+        html += "</div></div>";
+      });
+      html += "</div>";
+    }
+    if (!prizes.length) html = "<div class=\"empty\">Sin premios</div>";
+    document.getElementById("tab-content").innerHTML = html;
+  });
+}
+
+function redeemPrize(id, btn) {
+  btn.textContent = "...";
+  btn.disabled = true;
+  sbPatch("prizes","id=eq." + id, {redeemed:true}).then(function() { loadPrizes(); });
+}
+
+function openModal(userId, email, currentGems) {
   modalUserId = userId;
   modalCurrentGems = currentGems;
-  document.getElementById('modal-title').textContent = 'Agregar Créditos';
-  document.getElementById('modal-sub').textContent = email + ' · Actual: ✦ ' + currentGems;
-  document.getElementById('modal-amount').value = '';
-  document.getElementById('gems-modal').classList.add('visible');
-  setTimeout(()=>document.getElementById('modal-amount').focus(),300);
+  document.getElementById("modal-sub").textContent = email + " - Actual: " + currentGems;
+  document.getElementById("modal-amount").value = "";
+  document.getElementById("gems-modal").classList.add("visible");
 }
 
-function closeModal(){
-  document.getElementById('gems-modal').classList.remove('visible');
+function closeModal() {
+  document.getElementById("gems-modal").classList.remove("visible");
   modalUserId = null;
 }
 
-async function confirmGems(){
-  const amount = parseInt(document.getElementById('modal-amount').value);
-  if(!amount || amount <= 0) return;
-  const newGems = modalCurrentGems + amount;
-  await fetch(SB_URL + '/rest/v1/users?id=eq.' + modalUserId, {
-    method:'PATCH',
-    headers:{'apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Content-Type':'application/json','Prefer':'return=representation'},
-    body: JSON.stringify({gems: newGems})
+function confirmGems() {
+  var amount = parseInt(document.getElementById("modal-amount").value);
+  if (!amount || amount <= 0) return;
+  var newGems = modalCurrentGems + amount;
+  sbPatch("users","id=eq." + modalUserId, {gems:newGems}).then(function() {
+    closeModal();
+    loadTab("users");
   });
-  closeModal();
-  loadTab('users');
 }
 
-function fmtDate(d){
-  if(!d) return '—';
-  return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'});
+if (sessionStorage.getItem("rg_admin") === "1") {
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  loadTab("stats");
 }
-
-// Check session
-if(sessionStorage.getItem('rg_admin')==='1'){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('dashboard').style.display='block';
-  loadTab('stats');
-}
-
-// Wire up events
-document.getElementById('login-btn').addEventListener('click', doLogin);
-document.getElementById('admin-pass-input').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-document.getElementById('modal-amount').addEventListener('keydown', function(e){ if(e.key==='Enter') confirmGems(); });
-
-// Expose globally for inline onclick handlers in dynamic HTML
-window.loadTab       = loadTab;
-window.openModal     = openModal;
-window.closeModal    = closeModal;
-window.confirmGems   = confirmGems;
-window.redeemPrize   = redeemPrize;
-window.doLogout      = doLogout;
-
-}); // end DOMContentLoaded
 </script>
 </body>
 </html>

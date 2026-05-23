@@ -1541,6 +1541,42 @@ body::after{
   cursor: pointer; transition: all 0.15s;
 }
 .csgo-skip-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-main); }
+
+/* ── Tirar! next pull button ── */
+.csgo-pull-next-btn {
+  font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  padding: 14px 28px;
+  border: none; border-radius: 10px;
+  background: linear-gradient(135deg, #FF2D9A, var(--pink-main), #9D0050);
+  background-size: 200% auto;
+  color: white;
+  box-shadow: 0 6px 0 #500025, 0 8px 24px rgba(232,24,122,0.5);
+  cursor: pointer;
+  position: relative; top: 0;
+  transition: top 0.1s, box-shadow 0.1s;
+  animation: btn-shimmer 3s linear infinite;
+  display: flex; align-items: center; gap: 10px;
+}
+.csgo-pull-next-btn:active {
+  top: 4px;
+  box-shadow: 0 2px 0 #500025, 0 4px 10px rgba(232,24,122,0.3);
+}
+
+.csgo-queue-badge {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+@media(max-width:480px){
+  .csgo-pull-next-btn { font-size: 14px; padding: 12px 20px; letter-spacing: 2px; }
+  .csgo-queue-badge { font-size: 10px; padding: 2px 7px; }
+}
 </style>
   <!-- PWA / iPhone Home Screen -->
   <meta name="apple-mobile-web-app-title" content="Rescue Gacha">
@@ -1880,9 +1916,12 @@ body::after{
     <div class="csgo-result-label" id="csgo-result-label"></div>
     <div class="csgo-result-sub" id="csgo-result-sub"></div>
   </div>
-  <div style="display:flex;gap:10px;align-items:center;" id="csgo-btn-row">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;" id="csgo-btn-row">
   <button class="csgo-skip-btn" id="csgo-skip-current" onclick="csgoSkipCurrent()">⏭ Saltar</button>
-  <button class="csgo-next-btn" id="csgo-next-btn" onclick="csgoNext()" style="display:none;">Siguiente ▶</button>
+  <button class="csgo-pull-next-btn" id="csgo-pull-next" onclick="csgoNext()" style="display:none;">
+    ¡Tirar! <span class="csgo-queue-badge" id="csgo-queue-badge"></span>
+  </button>
+  <button class="csgo-next-btn" id="csgo-next-btn" onclick="csgoNext()" style="display:none;">Ver resumen ▶</button>
   <button class="csgo-skip-btn" id="csgo-skip-all-btn" onclick="csgoSkipAll()" style="opacity:0.5;">⏭⏭ Saltar todo</button>
 </div>
 </div>
@@ -2878,6 +2917,7 @@ function csgoRevealCard(card){
   result.classList.remove('shown');
   nextBtn.classList.remove('shown');
   nextBtn.style.display = 'none';
+  document.getElementById('csgo-pull-next').style.display = 'none';
   document.getElementById('csgo-skip-current').style.display = 'inline-block';
   document.getElementById('csgo-skip-all-btn').style.opacity = '0.5';
   title.textContent = 'Invocando...';
@@ -2941,9 +2981,21 @@ function csgoRevealCard(card){
     const isLast = _csgoIdx >= _csgoQueue.length;
     nextBtn.textContent = isLast ? '✦ Ver resumen' : 'Siguiente ▶';
     setTimeout(() => {
+      const remaining = _csgoQueue.length - _csgoIdx;
       document.getElementById('csgo-skip-current').style.display = 'none';
-      document.getElementById('csgo-next-btn').style.display = 'inline-block';
-      document.getElementById('csgo-skip-all-btn').style.opacity = '1';
+      document.getElementById('csgo-skip-all-btn').style.opacity = remaining > 0 ? '1' : '0.4';
+      if(remaining > 0){
+        // More cards — show "¡Tirar!" with count
+        const pullNext = document.getElementById('csgo-pull-next');
+        const badge    = document.getElementById('csgo-queue-badge');
+        badge.textContent = remaining + ' restante' + (remaining > 1 ? 's' : '');
+        pullNext.style.display = 'flex';
+        document.getElementById('csgo-next-btn').style.display = 'none';
+      } else {
+        // Last card — show "Ver resumen"
+        document.getElementById('csgo-pull-next').style.display = 'none';
+        document.getElementById('csgo-next-btn').style.display = 'inline-block';
+      }
     }, 200);
   }
 

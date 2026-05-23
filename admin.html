@@ -232,8 +232,8 @@ body{
     <div class="login-error" id="login-error"></div>
     <input class="login-input" type="password" id="admin-pass"
       placeholder="Contraseña de admin"
-      onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
+      id="admin-pass-input">
+    <button class="login-btn" id="login-btn">ENTRAR</button>
   </div>
 </div>
 
@@ -275,6 +275,8 @@ body{
 </div>
 
 <script>
+document.addEventListener("DOMContentLoaded", function() {
+
 const SB_URL  = 'https://cceuvzxtrlglnkwjggmi.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU';
 const PASS    = 'RescueTCG2025Admin!';
@@ -474,6 +476,21 @@ if(sessionStorage.getItem('rg_admin')==='1'){
   document.getElementById('dashboard').style.display='block';
   loadTab('stats');
 }
+
+// Wire up events
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('admin-pass-input').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('modal-amount').addEventListener('keydown', function(e){ if(e.key==='Enter') confirmGems(); });
+
+// Expose globally for inline onclick handlers in dynamic HTML
+window.loadTab       = loadTab;
+window.openModal     = openModal;
+window.closeModal    = closeModal;
+window.confirmGems   = confirmGems;
+window.redeemPrize   = redeemPrize;
+window.doLogout      = doLogout;
+
+}); // end DOMContentLoaded
 </script>
 </body>
 </html>

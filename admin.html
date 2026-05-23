@@ -2,378 +2,477 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rescue Gacha — Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rescue Admin">
+<meta name="theme-color" content="#0D0518">
+<title>Rescue TCG — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'Crimson Pro', serif;
-  background: #0D0518;
-  color: #F0E6C8;
-  min-height: 100vh;
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:'Crimson Pro',Georgia,serif;
+  background:#0D0518;color:#F0E6C8;
+  min-height:100vh;
+  padding-bottom:env(safe-area-inset-bottom);
 }
 
-/* Login */
-.admin-login {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; padding: 20px;
+/* ── LOGIN ── */
+.login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px 16px;
+  background:radial-gradient(ellipse at 50% 100%,#2D0A50 0%,#1A0A2E 40%,#0D0518 100%);
 }
-.login-box {
-  background: linear-gradient(175deg, #1E0A38, #120720);
-  border: 1px solid rgba(232,24,122,0.3);
-  border-radius: 16px; padding: 32px 24px;
-  width: 100%; max-width: 320px;
-  box-shadow: 0 0 60px rgba(232,24,122,0.15);
+.login-box{
+  width:100%;max-width:320px;
+  background:linear-gradient(175deg,#1E0A38,#120720);
+  border:1px solid rgba(232,24,122,0.3);
+  border-radius:18px;padding:32px 22px;
+  box-shadow:0 0 60px rgba(232,24,122,0.15),0 24px 64px rgba(0,0,0,0.8);
+  position:relative;overflow:hidden;
 }
-.login-box h1 {
-  font-family: 'Cinzel', serif; font-size: 20px;
-  letter-spacing: 3px; text-align: center;
-  color: #E8187A; margin-bottom: 6px;
+.login-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#E8187A,#9333EA,transparent);
 }
-.login-box p {
-  font-size: 12px; color: #9D7DB8; text-align: center;
-  letter-spacing: 2px; margin-bottom: 24px;
+.login-logo{text-align:center;margin-bottom:14px;}
+.login-logo-text{
+  font-family:'Cinzel',serif;font-size:22px;font-weight:900;
+  letter-spacing:4px;
+  background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.login-box input {
-  width: 100%; background: rgba(61,20,102,0.4);
-  border: 1px solid #4A1575; border-radius: 8px;
-  padding: 11px 14px; color: #F0E6C8;
-  font-family: 'Cinzel', serif; font-size: 13px;
-  outline: none; margin-bottom: 12px;
-  -webkit-appearance: none;
+.login-sub{font-size:11px;color:#9D7DB8;letter-spacing:3px;text-align:center;margin-bottom:22px;text-transform:uppercase;}
+.login-error{color:#F87171;font-size:11px;text-align:center;margin-bottom:10px;min-height:16px;font-family:'Cinzel',serif;}
+.login-input{
+  width:100%;background:rgba(61,20,102,0.4);
+  border:1px solid #4A1575;border-radius:8px;
+  padding:12px 14px;color:#F0E6C8;
+  font-family:'Cinzel',serif;font-size:14px;
+  outline:none;margin-bottom:12px;
+  -webkit-appearance:none;
+  transition:border-color 0.15s;
 }
-.login-box input:focus { border-color: #E8187A; }
-.login-box button {
-  width: 100%; background: linear-gradient(135deg, #E8187A, #9D0050);
-  border: none; border-radius: 8px; padding: 13px;
-  color: white; font-family: 'Cinzel', serif;
-  font-size: 14px; font-weight: 700; letter-spacing: 2px;
-  cursor: pointer; box-shadow: 0 4px 0 #500025;
+.login-input:focus{border-color:#E8187A;}
+.login-btn{
+  width:100%;
+  background:linear-gradient(135deg,#E8187A,#9D0050);
+  border:none;border-radius:8px;padding:13px;
+  color:white;font-family:'Cinzel',serif;
+  font-size:14px;font-weight:700;letter-spacing:2px;
+  cursor:pointer;
+  box-shadow:0 4px 0 #500025,0 6px 16px rgba(232,24,122,0.35);
+  position:relative;top:0;transition:top 0.1s,box-shadow 0.1s;
 }
-.error-msg { color: #F87171; font-size: 11px; text-align: center; margin-bottom: 10px; min-height: 16px; }
+.login-btn:active{top:3px;box-shadow:0 1px 0 #500025;}
 
-/* Dashboard */
-.dashboard { display: none; }
-.topbar {
-  background: linear-gradient(135deg, #1E0A38, #120720);
-  border-bottom: 1px solid rgba(232,24,122,0.2);
-  padding: 14px 24px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.topbar h1 { font-family: 'Cinzel', serif; font-size: 18px; color: #E8187A; letter-spacing: 3px; }
-.logout-btn {
-  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
-  padding: 6px 14px; border-radius: 6px;
-  border: 1px solid rgba(232,24,122,0.4);
-  background: rgba(232,24,122,0.1); color: #F472B6;
-  cursor: pointer;
-}
+/* ── DASHBOARD ── */
+.dashboard{display:none;}
 
-.content { padding: 24px; max-width: 1100px; margin: 0 auto; }
+.topbar{
+  background:linear-gradient(135deg,#1E0A38,#120720);
+  border-bottom:1px solid rgba(232,24,122,0.2);
+  padding:max(14px,env(safe-area-inset-top)) 18px 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-family:'Cinzel',serif;font-size:15px;font-weight:900;color:#E8187A;letter-spacing:3px;}
+.topbar-right{display:flex;gap:8px;align-items:center;}
+.refresh-btn,.logout-btn{
+  font-family:'Cinzel',serif;font-size:10px;font-weight:700;
+  padding:6px 12px;border-radius:6px;cursor:pointer;letter-spacing:1px;
+  border:1px solid;transition:all 0.15s;
+}
+.refresh-btn{border-color:rgba(212,160,23,0.5);background:rgba(212,160,23,0.08);color:#D4A017;}
+.logout-btn{border-color:rgba(232,24,122,0.4);background:rgba(232,24,122,0.08);color:#F472B6;}
 
-.stats-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px; margin-bottom: 32px;
+/* ── TABS ── */
+.tabs{
+  display:flex;border-bottom:1px solid #4A1575;
+  background:#0D0518;
+  position:sticky;top:48px;z-index:49;
+  overflow-x:auto;scrollbar-width:none;
 }
-.stat-card {
-  background: linear-gradient(175deg, #1E0A38, #120720);
-  border: 1px solid #4A1575; border-radius: 12px;
-  padding: 20px; text-align: center;
+.tabs::-webkit-scrollbar{display:none;}
+.tab{
+  flex:0 0 auto;padding:10px 16px;
+  font-family:'Cinzel',serif;font-size:11px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:#9D7DB8;cursor:pointer;border-bottom:2px solid transparent;
+  white-space:nowrap;transition:all 0.15s;
 }
-.stat-card .number {
-  font-family: 'Cinzel', serif; font-size: 36px; font-weight: 900;
-  color: #E8187A; display: block;
-}
-.stat-card .label {
-  font-size: 11px; color: #9D7DB8; letter-spacing: 2px;
-  text-transform: uppercase; margin-top: 4px;
-}
+.tab.active{color:#E8187A;border-bottom-color:#E8187A;}
 
-.section-title {
-  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
-  letter-spacing: 2px; color: #D4A017; margin-bottom: 14px;
-  text-transform: uppercase;
-}
+/* ── CONTENT ── */
+.content{padding:16px;}
 
-.table-wrap {
-  background: linear-gradient(175deg, #1E0A38, #120720);
-  border: 1px solid #4A1575; border-radius: 12px;
-  overflow: hidden; margin-bottom: 32px;
-  overflow-x: auto;
+/* ── STATS GRID ── */
+.stats-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:20px;
 }
-table { width: 100%; border-collapse: collapse; }
-th {
-  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  color: #9D7DB8; padding: 12px 16px; text-align: left;
-  border-bottom: 1px solid #4A1575; background: rgba(61,20,102,0.3);
+.stat-card{
+  background:linear-gradient(175deg,#1E0A38,#120720);
+  border:1px solid #4A1575;border-radius:12px;
+  padding:16px 12px;text-align:center;
 }
-td {
-  padding: 12px 16px; font-size: 13px; color: #F0E6C8;
-  border-bottom: 1px solid rgba(74,21,117,0.3);
+.stat-number{
+  font-family:'Cinzel',serif;font-size:28px;font-weight:900;
+  color:#E8187A;display:block;
 }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(232,24,122,0.05); }
+.stat-label{font-size:10px;color:#9D7DB8;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
 
-.badge {
-  display: inline-block; padding: 2px 8px; border-radius: 4px;
-  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700;
-  letter-spacing: 1px;
-}
-.badge-green { background: rgba(74,222,128,0.15); color: #4ADE80; border: 1px solid #4ADE80; }
-.badge-red   { background: rgba(248,113,113,0.15); color: #F87171; border: 1px solid #F87171; }
-.badge-gold  { background: rgba(212,160,23,0.15); color: #D4A017; border: 1px solid #D4A017; }
-
-.add-gems-btn {
-  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700;
-  padding: 4px 10px; border-radius: 4px; cursor: pointer;
-  border: 1px solid rgba(232,24,122,0.5);
-  background: rgba(232,24,122,0.1); color: #F472B6;
-  letter-spacing: 1px;
-}
-.add-gems-btn:hover { background: rgba(232,24,122,0.25); }
-
-.loading { text-align: center; padding: 40px; color: #9D7DB8; font-style: italic; }
-.refresh-btn {
-  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
-  padding: 8px 18px; border-radius: 6px; cursor: pointer;
-  border: 1px solid #D4A017; background: rgba(212,160,23,0.1);
-  color: #D4A017; letter-spacing: 1px; margin-bottom: 20px;
+/* ── SECTION TITLE ── */
+.sec-title{
+  font-family:'Cinzel',serif;font-size:12px;font-weight:700;
+  letter-spacing:2px;color:#D4A017;margin-bottom:12px;text-transform:uppercase;
 }
 
-@media(max-width:600px){
-  .content { padding: 14px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+/* ── CARDS LIST ── */
+.list{display:flex;flex-direction:column;gap:8px;}
+
+.list-item{
+  background:linear-gradient(135deg,#1E0A38,#120720);
+  border:1px solid #4A1575;border-radius:10px;
+  padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
 }
+.list-item-icon{font-size:22px;flex-shrink:0;}
+.list-item-info{flex:1;min-width:0;}
+.list-item-title{
+  font-family:'Cinzel',serif;font-size:12px;font-weight:700;
+  color:#F0E6C8;letter-spacing:0.5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.list-item-sub{font-size:11px;color:#9D7DB8;margin-top:2px;}
+.list-item-action{flex-shrink:0;}
+
+.badge{
+  display:inline-block;padding:3px 8px;border-radius:4px;
+  font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:1px;
+}
+.badge-green{background:rgba(74,222,128,0.12);color:#4ADE80;border:1px solid #4ADE80;}
+.badge-red  {background:rgba(248,113,113,0.12);color:#F87171;border:1px solid #F87171;}
+.badge-gold {background:rgba(212,160,23,0.12);color:#D4A017;border:1px solid #D4A017;}
+.badge-pink {background:rgba(232,24,122,0.12);color:#F472B6;border:1px solid rgba(232,24,122,0.4);}
+
+.action-btn{
+  font-family:'Cinzel',serif;font-size:9px;font-weight:700;
+  padding:5px 10px;border-radius:5px;cursor:pointer;letter-spacing:1px;
+  border:1px solid rgba(232,24,122,0.5);
+  background:rgba(232,24,122,0.1);color:#F472B6;
+  white-space:nowrap;
+}
+.action-btn:active{background:rgba(232,24,122,0.25);}
+
+.code-tag{
+  font-size:11px;font-family:monospace;
+  background:rgba(74,222,128,0.1);
+  padding:2px 8px;border-radius:4px;
+  color:#4ADE80;border:1px dashed rgba(74,222,128,0.4);
+  display:inline-block;margin-top:4px;
+}
+
+.empty{text-align:center;padding:32px 20px;color:#4A1575;font-style:italic;font-size:13px;}
+
+/* ── ADD GEMS MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,2,15,0.92);backdrop-filter:blur(6px);
+  z-index:200;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.visible{display:flex;}
+.modal-box{
+  background:linear-gradient(175deg,#1E0A38,#120720);
+  border:1px solid rgba(232,24,122,0.3);border-radius:14px;
+  padding:24px 20px;width:100%;max-width:300px;
+  box-shadow:0 0 40px rgba(232,24,122,0.2);
+}
+.modal-title{
+  font-family:'Cinzel',serif;font-size:14px;font-weight:700;
+  letter-spacing:2px;color:#F0E6C8;text-align:center;margin-bottom:6px;
+}
+.modal-sub{font-size:11px;color:#9D7DB8;text-align:center;margin-bottom:16px;}
+.modal-input{
+  width:100%;background:rgba(61,20,102,0.4);
+  border:1px solid #4A1575;border-radius:8px;
+  padding:11px 14px;color:#F0E6C8;
+  font-family:'Cinzel',serif;font-size:16px;
+  outline:none;margin-bottom:12px;-webkit-appearance:none;
+  text-align:center;letter-spacing:2px;
+}
+.modal-input:focus{border-color:#E8187A;}
+.modal-btns{display:flex;gap:8px;}
+.modal-confirm{
+  flex:1;background:linear-gradient(135deg,#E8187A,#9D0050);
+  border:none;border-radius:8px;padding:12px;
+  color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;
+  letter-spacing:1px;cursor:pointer;
+}
+.modal-cancel{
+  flex:1;background:transparent;
+  border:1px solid #4A1575;border-radius:8px;padding:12px;
+  color:#9D7DB8;font-family:'Cinzel',serif;font-size:13px;font-weight:700;
+  letter-spacing:1px;cursor:pointer;
+}
+
+.loading{text-align:center;padding:30px;color:#4A1575;font-style:italic;}
 </style>
 </head>
 <body>
 
-<!-- Login -->
-<div class="admin-login" id="admin-login">
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
   <div class="login-box">
-    <h1>RESCUE GACHA</h1>
-    <p>PANEL DE ADMINISTRACIÓN</p>
-    <div class="error-msg" id="admin-error"></div>
-    <input type="password" id="admin-pass" placeholder="Contraseña de admin" onkeydown="if(event.key==='Enter')adminLogin()">
-    <button onclick="adminLogin()">ENTRAR</button>
+    <div class="login-logo">
+      <div class="login-logo-text">RESCUE TCG</div>
+    </div>
+    <div class="login-sub">Panel Admin</div>
+    <div class="login-error" id="login-error"></div>
+    <input class="login-input" type="password" id="admin-pass"
+      placeholder="Contraseña de admin"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
   </div>
 </div>
 
-<!-- Dashboard -->
+<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
+
   <div class="topbar">
-    <h1>⚔ ADMIN</h1>
-    <button class="logout-btn" onclick="adminLogout()">Cerrar sesión</button>
+    <div class="topbar-title">⚔ ADMIN</div>
+    <div class="topbar-right">
+      <button class="refresh-btn" onclick="loadTab(activeTab)">↻</button>
+      <button class="logout-btn" onclick="doLogout()">Salir</button>
+    </div>
   </div>
-  <div class="content">
 
-    <button class="refresh-btn" onclick="loadAll()">↻ Actualizar datos</button>
+  <div class="tabs">
+    <div class="tab active" onclick="loadTab('stats')" id="tab-stats">📊 Stats</div>
+    <div class="tab" onclick="loadTab('users')" id="tab-users">👥 Usuarios</div>
+    <div class="tab" onclick="loadTab('payments')" id="tab-payments">💰 Pagos</div>
+    <div class="tab" onclick="loadTab('prizes')" id="tab-prizes">🏆 Premios</div>
+  </div>
 
-    <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <span class="number" id="stat-users">—</span>
-        <span class="label">Usuarios</span>
-      </div>
-      <div class="stat-card">
-        <span class="number" id="stat-payments">—</span>
-        <span class="label">Pagos</span>
-      </div>
-      <div class="stat-card">
-        <span class="number" id="stat-revenue">—</span>
-        <span class="label">Ingresos MXN</span>
-      </div>
-      <div class="stat-card">
-        <span class="number" id="stat-prizes">—</span>
-        <span class="label">Premios activos</span>
-      </div>
+  <div class="content" id="tab-content">
+    <div class="loading">Cargando...</div>
+  </div>
+
+</div>
+
+<!-- ADD GEMS MODAL -->
+<div class="modal-overlay" id="gems-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Agregar Créditos</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <input class="modal-input" type="number" id="modal-amount" placeholder="0" min="1">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmGems()">✦ Agregar</button>
     </div>
-
-    <!-- Users -->
-    <p class="section-title">Usuarios</p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>Créditos</th>
-            <th>Registro</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody id="users-tbody">
-          <tr><td colspan="4" class="loading">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Payments -->
-    <p class="section-title">Pagos recientes</p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Monto</th>
-            <th>Créditos</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody id="payments-tbody">
-          <tr><td colspan="5" class="loading">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Prizes -->
-    <p class="section-title">Premios pendientes de canjear</p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Premio</th>
-            <th>Código</th>
-            <th>Usuario</th>
-            <th>Estado</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody id="prizes-tbody">
-          <tr><td colspan="5" class="loading">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
   </div>
 </div>
 
 <script>
-const SUPABASE_URL  = 'https://cceuvzxtrlglnkwjggmi.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU';
-const ADMIN_PASS    = 'RescueTCG2025Admin!';
+const SB_URL  = 'https://cceuvzxtrlglnkwjggmi.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU';
+const PASS    = 'RescueTCG2025Admin!';
 
-async function sb(table, query='') {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
-    headers: {
-      'apikey': SUPABASE_ANON,
-      'Authorization': 'Bearer ' + SUPABASE_ANON,
-      'Content-Type': 'application/json'
-    }
-  });
-  return res.json();
-}
+let activeTab = 'stats';
+let modalUserId = null;
+let modalCurrentGems = 0;
 
-async function sbPatch(table, filter, body) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
-    method: 'PATCH',
-    headers: {
-      'apikey': SUPABASE_ANON,
-      'Authorization': 'Bearer ' + SUPABASE_ANON,
+async function sb(table, query='', method='GET', body=null){
+  const opts = {
+    headers:{
+      'apikey': SB_ANON,
+      'Authorization': 'Bearer ' + SB_ANON,
       'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify(body)
-  });
+      'Prefer': method==='PATCH' ? 'return=representation' : ''
+    }
+  };
+  if(method !== 'GET'){ opts.method = method; if(body) opts.body = JSON.stringify(body); }
+  const res = await fetch(SB_URL + '/rest/v1/' + table + query, opts);
   return res.json();
 }
 
-function adminLogin() {
+function doLogin(){
   const pass = document.getElementById('admin-pass').value;
-  if (pass === ADMIN_PASS) {
-    sessionStorage.setItem('admin_auth', '1');
-    document.getElementById('admin-login').style.display = 'none';
+  if(pass === PASS){
+    sessionStorage.setItem('rg_admin','1');
+    document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    loadAll();
+    loadTab('stats');
   } else {
-    document.getElementById('admin-error').textContent = 'Contraseña incorrecta';
+    document.getElementById('login-error').textContent = 'Contraseña incorrecta';
   }
 }
 
-function adminLogout() {
-  sessionStorage.removeItem('admin_auth');
+function doLogout(){
+  sessionStorage.removeItem('rg_admin');
   location.reload();
 }
 
-async function loadAll() {
-  loadUsers();
-  loadPayments();
+function loadTab(tab){
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const el = document.getElementById('tab-' + tab);
+  if(el) el.classList.add('active');
+  const content = document.getElementById('tab-content');
+  content.innerHTML = '<div class="loading">Cargando...</div>';
+  if(tab === 'stats')    loadStats();
+  if(tab === 'users')    loadUsers();
+  if(tab === 'payments') loadPayments();
+  if(tab === 'prizes')   loadPrizes();
+}
+
+async function loadStats(){
+  const [users, payments, prizes] = await Promise.all([
+    sb('users','?select=id'),
+    sb('payments','?select=amount_mxn,status'),
+    sb('prizes','?select=redeemed'),
+  ]);
+  const revenue = payments.filter(p=>p.status==='approved').reduce((a,p)=>a+(p.amount_mxn||0),0);
+  const activePrizes = prizes.filter(p=>!p.redeemed).length;
+
+  document.getElementById('tab-content').innerHTML =
+    '<div class="stats-grid">' +
+    statCard(users.length,'Usuarios','👥') +
+    statCard(payments.length,'Pagos','💰') +
+    statCard('$'+revenue,'Ingresos MXN','📈') +
+    statCard(activePrizes,'Premios activos','🏆') +
+    '</div>';
+}
+
+function statCard(val, label, icon){
+  return '<div class="stat-card">' +
+    '<span class="stat-number">' + val + '</span>' +
+    '<span class="stat-label">' + icon + ' ' + label + '</span>' +
+    '</div>';
+}
+
+async function loadUsers(){
+  const users = await sb('users','?select=id,email,gems,created_at&order=created_at.desc');
+  if(!users.length){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin usuarios</div>'; return; }
+
+  document.getElementById('tab-content').innerHTML =
+    '<p class="sec-title">Usuarios (' + users.length + ')</p>' +
+    '<div class="list">' +
+    users.map(u => '<div class="list-item">' +
+      '<div class="list-item-icon">👤</div>' +
+      '<div class="list-item-info">' +
+        '<div class="list-item-title">' + u.email + '</div>' +
+        '<div class="list-item-sub"><span class="badge badge-gold">✦ ' + (u.gems||0) + '</span> · ' + fmtDate(u.created_at) + '</div>' +
+      '</div>' +
+      '<div class="list-item-action"><button class="action-btn" onclick="openModal('' + u.id + '','' + u.email + '',' + (u.gems||0) + ')">+ Maná</button></div>' +
+    '</div>').join('') +
+    '</div>';
+}
+
+async function loadPayments(){
+  const payments = await sb('payments','?select=*,users(email)&order=created_at.desc&limit=100');
+  if(!payments.length){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin pagos</div>'; return; }
+
+  document.getElementById('tab-content').innerHTML =
+    '<p class="sec-title">Últimos pagos (' + payments.length + ')</p>' +
+    '<div class="list">' +
+    payments.map(p => '<div class="list-item">' +
+      '<div class="list-item-icon">💳</div>' +
+      '<div class="list-item-info">' +
+        '<div class="list-item-title">' + (p.users?.email || '—') + '</div>' +
+        '<div class="list-item-sub">$' + p.amount_mxn + ' MXN · <span class="badge badge-gold">✦ ' + p.gems_granted + '</span> · ' + fmtDate(p.created_at) + '</div>' +
+      '</div>' +
+      '<span class="badge badge-green">' + (p.status||'ok') + '</span>' +
+    '</div>').join('') +
+    '</div>';
+}
+
+async function loadPrizes(){
+  const prizes = await sb('prizes','?select=*,users(email)&order=obtained_at.desc');
+  const active  = prizes.filter(p => !p.redeemed);
+  const redeemed= prizes.filter(p =>  p.redeemed);
+
+  let html = '';
+  if(active.length){
+    html += '<p class="sec-title">Pendientes (' + active.length + ')</p>' +
+    '<div class="list">' +
+    active.map(p => '<div class="list-item">' +
+      '<div class="list-item-icon">🎁</div>' +
+      '<div class="list-item-info">' +
+        '<div class="list-item-title">' + p.name + '</div>' +
+        '<div class="list-item-sub">' + (p.users?.email||'—') + '</div>' +
+        '<div class="code-tag">' + p.code + '</div>' +
+      '</div>' +
+      '<button class="action-btn" onclick="redeemPrize('' + p.id + '',this)">Canjear</button>' +
+    '</div>').join('') +
+    '</div>';
+  }
+  if(redeemed.length){
+    html += '<p class="sec-title" style="margin-top:20px;">Canjeados (' + redeemed.length + ')</p>' +
+    '<div class="list">' +
+    redeemed.map(p => '<div class="list-item" style="opacity:0.45;">' +
+      '<div class="list-item-icon">✅</div>' +
+      '<div class="list-item-info">' +
+        '<div class="list-item-title">' + p.name + '</div>' +
+        '<div class="list-item-sub">' + (p.users?.email||'—') + ' · ' + fmtDate(p.obtained_at) + '</div>' +
+      '</div>' +
+    '</div>').join('') +
+    '</div>';
+  }
+  if(!prizes.length) html = '<div class="empty">Sin premios</div>';
+  document.getElementById('tab-content').innerHTML = html;
+}
+
+async function redeemPrize(id, btn){
+  btn.textContent = '...';
+  btn.disabled = true;
+  await fetch(SB_URL + '/rest/v1/prizes?id=eq.' + id, {
+    method: 'PATCH',
+    headers:{'apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Content-Type':'application/json','Prefer':'return=representation'},
+    body: JSON.stringify({redeemed:true})
+  });
   loadPrizes();
 }
 
-async function loadUsers() {
-  const users = await sb('users', '?select=id,email,gems,created_at&order=created_at.desc');
-  const tbody = document.getElementById('users-tbody');
-  const payments = await sb('payments', '?select=user_id,amount_mxn');
-
-  document.getElementById('stat-users').textContent = users.length;
-
-  const totalRevenue = (await sb('payments', '?select=amount_mxn')).reduce((a,p) => a + (p.amount_mxn||0), 0);
-  document.getElementById('stat-revenue').textContent = '$' + totalRevenue;
-
-  tbody.innerHTML = users.map(u => `
-    <tr>
-      <td>${u.email}</td>
-      <td><span class="badge badge-gold">✦ ${u.gems}</span></td>
-      <td>${new Date(u.created_at).toLocaleDateString('es-MX')}</td>
-      <td>
-        <button class="add-gems-btn" onclick="addGems('${u.id}','${u.email}',${u.gems})">+ Créditos</button>
-      </td>
-    </tr>
-  `).join('') || '<tr><td colspan="4" class="loading">Sin usuarios</td></tr>';
+function openModal(userId, email, currentGems){
+  modalUserId = userId;
+  modalCurrentGems = currentGems;
+  document.getElementById('modal-title').textContent = 'Agregar Créditos';
+  document.getElementById('modal-sub').textContent = email + ' · Actual: ✦ ' + currentGems;
+  document.getElementById('modal-amount').value = '';
+  document.getElementById('gems-modal').classList.add('visible');
+  setTimeout(()=>document.getElementById('modal-amount').focus(),300);
 }
 
-async function loadPayments() {
-  const payments = await sb('payments', '?select=*,users(email)&order=created_at.desc&limit=50');
-  const tbody = document.getElementById('payments-tbody');
-  document.getElementById('stat-payments').textContent = payments.length;
-
-  tbody.innerHTML = payments.map(p => `
-    <tr>
-      <td>${p.users?.email || p.user_id}</td>
-      <td>$${p.amount_mxn} MXN</td>
-      <td><span class="badge badge-gold">✦ ${p.gems_granted}</span></td>
-      <td><span class="badge badge-green">${p.status}</span></td>
-      <td>${new Date(p.created_at).toLocaleDateString('es-MX')}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="5" class="loading">Sin pagos</td></tr>';
+function closeModal(){
+  document.getElementById('gems-modal').classList.remove('visible');
+  modalUserId = null;
 }
 
-async function loadPrizes() {
-  const prizes = await sb('prizes', '?select=*,users(email)&order=obtained_at.desc');
-  const tbody = document.getElementById('prizes-tbody');
-  const active = prizes.filter(p => !p.redeemed).length;
-  document.getElementById('stat-prizes').textContent = active;
-
-  tbody.innerHTML = prizes.map(p => `
-    <tr>
-      <td>${p.name}</td>
-      <td><code style="background:rgba(74,222,128,0.1);padding:2px 8px;border-radius:4px;color:#4ADE80;font-size:12px;">${p.code}</code></td>
-      <td>${p.users?.email || '—'}</td>
-      <td>${p.redeemed
-        ? '<span class="badge badge-red">Canjeado</span>'
-        : '<span class="badge badge-green">Pendiente</span>'}</td>
-      <td>${new Date(p.obtained_at).toLocaleDateString('es-MX')}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="5" class="loading">Sin premios</td></tr>';
+async function confirmGems(){
+  const amount = parseInt(document.getElementById('modal-amount').value);
+  if(!amount || amount <= 0) return;
+  const newGems = modalCurrentGems + amount;
+  await fetch(SB_URL + '/rest/v1/users?id=eq.' + modalUserId, {
+    method:'PATCH',
+    headers:{'apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Content-Type':'application/json','Prefer':'return=representation'},
+    body: JSON.stringify({gems: newGems})
+  });
+  closeModal();
+  loadTab('users');
 }
 
-async function addGems(userId, email, currentGems) {
-  const amount = prompt(`Agregar créditos a ${email}\nCréditos actuales: ${currentGems}\n\n¿Cuántos créditos agregar?`);
-  if (!amount || isNaN(amount) || parseInt(amount) <= 0) return;
-  const newGems = currentGems + parseInt(amount);
-  await sbPatch('users', `id=eq.${userId}`, { gems: newGems });
-  alert(`✅ ${amount} créditos agregados a ${email}`);
-  loadUsers();
+function fmtDate(d){
+  if(!d) return '—';
+  return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'});
 }
 
 // Check session
-if (sessionStorage.getItem('admin_auth') === '1') {
-  document.getElementById('admin-login').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  loadAll();
+if(sessionStorage.getItem('rg_admin')==='1'){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  loadTab('stats');
 }
 </script>
 </body>

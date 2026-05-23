@@ -267,12 +267,12 @@ body::after{
 ════════════════════════════ */
 .machine-area{
   display:flex;flex-direction:column;align-items:center;
-  gap:18px;margin-bottom:28px;
+  gap:0;margin-bottom:20px;
 }
 
 .machine{
   width:200px;height:260px;
-  position:relative;cursor:pointer;
+  position:relative;cursor:pointer;cursor:pointer;
   transition:transform 0.1s;
 }
 .machine:active{transform:scale(0.95);}
@@ -364,27 +364,9 @@ body::after{
 .machine.shaking{animation:shake-machine 0.5s ease-in-out;}
 
 /* ── Pull button ── */
-.pull-btn{
-  font-family:'Cinzel',serif;
-  font-size:16px;font-weight:700;
-  letter-spacing:3px;text-transform:uppercase;
-  padding:16px 36px;
-  border:none;border-radius:10px;
-  background:linear-gradient(135deg,#FF2D9A,var(--pink-main),#9D0050);
-  background-size:200% auto;
-  color:white;
-  box-shadow:0 6px 0 #500025,0 8px 24px rgba(232,24,122,0.5);
-  position:relative;top:0;
-  transition:top 0.1s,box-shadow 0.1s,background-position 0.3s;
-  width:100%;max-width:260px;
-  animation:btn-shimmer 3s linear infinite;
-}
-@keyframes btn-shimmer{
-  0%{background-position:0% center;}
-  100%{background-position:200% center;}
-}
-.pull-btn:active{top:4px;box-shadow:0 2px 0 #500025,0 4px 10px rgba(232,24,122,0.3);}
-.pull-btn:disabled{opacity:0.4;cursor:not-allowed;animation:none;}
+
+
+
 
 /* ════════════════════════════
    RESULTS OVERLAY
@@ -689,7 +671,6 @@ body::after{
   .machine-label{font-size:11px;letter-spacing:3px;}
   .machine-stars{font-size:12px;}
 
-  .pull-btn{font-size:14px;padding:13px 28px;max-width:220px;}
 
   .results-box{padding:14px 10px;border-radius:14px;max-height:87vh;}
   .results-title{font-size:17px;}
@@ -1786,7 +1767,7 @@ body::after{
 
   <!-- GACHA MACHINE -->
   <div class="machine-area">
-    <div class="machine" id="machine">
+    <div class="machine" id="machine" onclick="doPull()">
       <div class="machine-body">
         <div class="machine-scan"></div>
         <div class="machine-window" id="machine-window">◈</div>
@@ -1794,9 +1775,6 @@ body::after{
         <div class="machine-stars">— ✦ —</div>
       </div>
     </div>
-    <button class="pull-btn" id="pull-btn" onclick="doPull()">
-      ROBAR
-    </button>
   </div>
 
   <!-- COLLECTION -->
@@ -1910,9 +1888,9 @@ body::after{
     <div class="csgo-result-label" id="csgo-result-label"></div>
     <div class="csgo-result-sub" id="csgo-result-sub"></div>
   </div>
-  <div style="display:flex;gap:10px;align-items:center;">
+  <div style="display:flex;gap:10px;align-items:center;opacity:0;transition:opacity 0.3s;" id="csgo-btn-row">
   <button class="csgo-next-btn" id="csgo-next-btn" onclick="csgoNext()">Siguiente ▶</button>
-  <button class="csgo-skip-btn" id="csgo-skip-btn" onclick="csgoSkip()">⏭ Saltar</button>
+  <button class="csgo-skip-btn" id="csgo-skip-btn" onclick="csgoSkipAll()">⏭ Saltar todo</button>
 </div>
 </div>
 
@@ -2500,8 +2478,7 @@ async function doPull(){
 
   const machine=document.getElementById('machine');
   const win=document.getElementById('machine-window');
-  const btn=document.getElementById('pull-btn');
-  btn.disabled=true;
+
 
   machine.classList.add('shaking');
   setTimeout(()=>machine.classList.remove('shaking'),500);
@@ -2536,7 +2513,7 @@ async function doPull(){
     if(prizeCard){ window._pendingPrize = prizeCard; }
     else { window._pendingPrize = null; }
   }
-  pulling=false;btn.disabled=false;
+  pulling=false;
 }
 
 
@@ -2855,6 +2832,26 @@ function csgoSkip(){
   if(window._csgoSkipFn) window._csgoSkipFn();
 }
 
+function csgoSkipAll(){
+  // Skip current animation
+  if(window._csgoSkipFn) window._csgoSkipFn();
+  // Then skip all remaining
+  setTimeout(() => {
+    // Fast-forward all remaining cards
+    const remaining = _csgoQueue.slice(_csgoIdx);
+    if(remaining.length === 0) return;
+    // Play sounds for special cards
+    remaining.forEach(c => {
+      if(c.rarity === 'secret') { sndSecret(); spawnConfetti(); }
+      else if(c.rarity === 'legendary') { sndLegendary(); spawnConfetti(); }
+      else if(c.rarity === 'epic') sndEpic();
+    });
+    _csgoIdx = _csgoQueue.length;
+    document.getElementById('csgo-overlay').classList.remove('visible');
+    showSummary(_csgoQueue);
+  }, 100);
+}
+
 function csgoNext(){
   document.getElementById('csgo-next-btn').classList.remove('shown');
   document.getElementById('csgo-result').classList.remove('shown');
@@ -2883,7 +2880,7 @@ function csgoRevealCard(card){
 
   result.classList.remove('shown');
   nextBtn.classList.remove('shown');
-  skipBtn.style.display = 'inline-block';
+  document.getElementById('csgo-btn-row').style.opacity='0';
   title.textContent = 'Invocando...';
 
   const POOL = ['common','common','common','rare','common','rare','common','epic','common','rare'];
@@ -2944,8 +2941,7 @@ function csgoRevealCard(card){
 
     const isLast = _csgoIdx >= _csgoQueue.length;
     nextBtn.textContent = isLast ? '✦ Ver resumen' : 'Siguiente ▶';
-    skipBtn.style.display = 'none';
-    setTimeout(() => nextBtn.classList.add('shown'), 200);
+    setTimeout(() => { document.getElementById('csgo-btn-row').style.opacity='1'; }, 200);
   }
 
   // Expose skip for the button
@@ -3036,7 +3032,6 @@ function closeResults(){
     window._pendingPrize = null;
     setTimeout(()=>showPrizeReveal(p), 400);
   }
-  const btn=document.getElementById('pull-btn');
   const r=btn.getBoundingClientRect();
   spawnSparks(r.left+r.width/2,r.top);
 }

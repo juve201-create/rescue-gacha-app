@@ -2584,8 +2584,8 @@ function handlePrizesOverlayClick(e){
 
 function markPrizeRedeemed(idx){
   if(window._prizes[idx]) {
-    window._prizes[idx].redeemed = true;
     if(window._prizes[idx].db_id) redeemPrizeToDB(window._prizes[idx].db_id);
+    window._prizes.splice(idx, 1); // Remove completely from array
     renderPrizesWallet();
     updatePrizeBadge();
     sndClick();

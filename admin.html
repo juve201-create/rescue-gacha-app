@@ -326,4 +326,55 @@ async function loadUsers() {
 }
 
 async function loadPayments() {
-  const paym
+  const payments = await sb('payments', '?select=*,users(email)&order=created_at.desc&limit=50');
+  const tbody = document.getElementById('payments-tbody');
+  document.getElementById('stat-payments').textContent = payments.length;
+
+  tbody.innerHTML = payments.map(p => `
+    <tr>
+      <td>${p.users?.email || p.user_id}</td>
+      <td>$${p.amount_mxn} MXN</td>
+      <td><span class="badge badge-gold">✦ ${p.gems_granted}</span></td>
+      <td><span class="badge badge-green">${p.status}</span></td>
+      <td>${new Date(p.created_at).toLocaleDateString('es-MX')}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="loading">Sin pagos</td></tr>';
+}
+
+async function loadPrizes() {
+  const prizes = await sb('prizes', '?select=*,users(email)&order=obtained_at.desc');
+  const tbody = document.getElementById('prizes-tbody');
+  const active = prizes.filter(p => !p.redeemed).length;
+  document.getElementById('stat-prizes').textContent = active;
+
+  tbody.innerHTML = prizes.map(p => `
+    <tr>
+      <td>${p.name}</td>
+      <td><code style="background:rgba(74,222,128,0.1);padding:2px 8px;border-radius:4px;color:#4ADE80;font-size:12px;">${p.code}</code></td>
+      <td>${p.users?.email || '—'}</td>
+      <td>${p.redeemed
+        ? '<span class="badge badge-red">Canjeado</span>'
+        : '<span class="badge badge-green">Pendiente</span>'}</td>
+      <td>${new Date(p.obtained_at).toLocaleDateString('es-MX')}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" class="loading">Sin premios</td></tr>';
+}
+
+async function addGems(userId, email, currentGems) {
+  const amount = prompt(`Agregar créditos a ${email}\nCréditos actuales: ${currentGems}\n\n¿Cuántos créditos agregar?`);
+  if (!amount || isNaN(amount) || parseInt(amount) <= 0) return;
+  const newGems = currentGems + parseInt(amount);
+  await sbPatch('users', `id=eq.${userId}`, { gems: newGems });
+  alert(`✅ ${amount} créditos agregados a ${email}`);
+  loadUsers();
+}
+
+// Check session
+if (sessionStorage.getItem('admin_auth') === '1') {
+  document.getElementById('admin-login').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadAll();
+}
+</script>
+</body>
+</html>

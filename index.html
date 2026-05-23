@@ -1558,6 +1558,16 @@ body::after{
   .csgo-result-label { font-size: 15px; }
   .csgo-next-btn { font-size: 11px; padding: 10px 20px; }
 }
+
+.csgo-skip-btn {
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 11px 16px; border-radius: var(--r-md);
+  border: 1px solid var(--text-dim);
+  background: rgba(255,255,255,0.04); color: var(--text-muted);
+  cursor: pointer; transition: all 0.15s;
+}
+.csgo-skip-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-main); }
 </style>
   <!-- PWA / iPhone Home Screen -->
   <meta name="apple-mobile-web-app-title" content="Rescue Gacha">
@@ -1900,7 +1910,10 @@ body::after{
     <div class="csgo-result-label" id="csgo-result-label"></div>
     <div class="csgo-result-sub" id="csgo-result-sub"></div>
   </div>
+  <div style="display:flex;gap:10px;align-items:center;">
   <button class="csgo-next-btn" id="csgo-next-btn" onclick="csgoNext()">Siguiente ▶</button>
+  <button class="csgo-skip-btn" id="csgo-skip-btn" onclick="csgoSkip()">⏭ Saltar</button>
+</div>
 </div>
 
 <!-- RESULTS OVERLAY -->
@@ -2519,7 +2532,9 @@ async function doPull(){
   if(secretCard){ showSecretReveal(secretCard); }
   else {
     showResults(drawn, hasLegendary);
-    if(prizeCard){ setTimeout(()=>showPrizeReveal(prizeCard), 1800); }
+    // Prize shows after user closes results summary
+    if(prizeCard){ window._pendingPrize = prizeCard; }
+    else { window._pendingPrize = null; }
   }
   pulling=false;btn.disabled=false;
 }
@@ -2836,6 +2851,10 @@ function csgoRevealNext(){
   csgoRevealCard(card);
 }
 
+function csgoSkip(){
+  if(window._csgoSkipFn) window._csgoSkipFn();
+}
+
 function csgoNext(){
   document.getElementById('csgo-next-btn').classList.remove('shown');
   document.getElementById('csgo-result').classList.remove('shown');
@@ -2860,9 +2879,11 @@ function csgoRevealCard(card){
   const label   = document.getElementById('csgo-result-label');
   const sub     = document.getElementById('csgo-result-sub');
   const nextBtn = document.getElementById('csgo-next-btn');
+  const skipBtn = document.getElementById('csgo-skip-btn');
 
   result.classList.remove('shown');
   nextBtn.classList.remove('shown');
+  skipBtn.style.display = 'inline-block';
   title.textContent = 'Invocando...';
 
   const POOL = ['common','common','common','rare','common','rare','common','epic','common','rare'];
@@ -2894,27 +2915,27 @@ function csgoRevealCard(card){
   rail.style.transform  = 'translateX(0)';
 
   const dur = 3500 + Math.random() * 800;
-  setTimeout(() => {
-    rail.style.transition = 'transform ' + dur + 'ms cubic-bezier(0.12, 0.8, 0.22, 1)';
+  let animTimeout = null;
+  let tickInt = null;
+  let done = false;
+
+  function finishReveal(){
+    if(done) return;
+    done = true;
+    if(tickInt) clearInterval(tickInt);
+    if(animTimeout) clearTimeout(animTimeout);
+
+    rail.style.transition = 'none';
     rail.style.transform  = 'translateX(-' + scrollTo + 'px)';
-  }, 60);
 
-  let ticks = 0;
-  const tickInt = setInterval(() => {
-    if(++ticks < 20) sndTick();
-    else clearInterval(tickInt);
-  }, dur / 20);
-
-  setTimeout(() => {
-    clearInterval(tickInt);
     const winEl = document.getElementById('csi-' + WIN);
     if(winEl) winEl.classList.add('winner');
 
-    if(card.rarity === 'secret')      { sndSecret(); spawnConfetti(); }
+    if(card.rarity === 'secret')        { sndSecret(); spawnConfetti(); }
     else if(card.rarity === 'legendary'){ sndLegendary(); spawnConfetti(); }
-    else if(card.rarity === 'epic')   { sndEpic(); spawnConfetti(); }
-    else if(card.rarity === 'rare')   sndRare();
-    else                              sndCommon();
+    else if(card.rarity === 'epic')     { sndEpic(); spawnConfetti(); }
+    else if(card.rarity === 'rare')     sndRare();
+    else                                sndCommon();
 
     title.textContent = '';
     label.textContent = rarityLabel(card.rarity).toUpperCase();
@@ -2923,8 +2944,23 @@ function csgoRevealCard(card){
 
     const isLast = _csgoIdx >= _csgoQueue.length;
     nextBtn.textContent = isLast ? '✦ Ver resumen' : 'Siguiente ▶';
-    setTimeout(() => nextBtn.classList.add('shown'), 400);
-  }, dur + 120);
+    skipBtn.style.display = 'none';
+    setTimeout(() => nextBtn.classList.add('shown'), 200);
+  }
+
+  // Expose skip for the button
+  window._csgoSkipFn = finishReveal;
+
+  setTimeout(() => {
+    rail.style.transition = 'transform ' + dur + 'ms cubic-bezier(0.12, 0.8, 0.22, 1)';
+    rail.style.transform  = 'translateX(-' + scrollTo + 'px)';
+  }, 60);
+
+  tickInt = setInterval(() => {
+    sndTick();
+  }, dur / 20);
+
+  animTimeout = setTimeout(finishReveal, dur + 120);
 }
 
 function showSummary(cards){
@@ -2995,6 +3031,11 @@ function croDismiss(){
 
 function closeResults(){
   document.getElementById('results-overlay').classList.remove('visible');
+  if(window._pendingPrize){
+    const p = window._pendingPrize;
+    window._pendingPrize = null;
+    setTimeout(()=>showPrizeReveal(p), 400);
+  }
   const btn=document.getElementById('pull-btn');
   const r=btn.getBoundingClientRect();
   spawnSparks(r.left+r.width/2,r.top);

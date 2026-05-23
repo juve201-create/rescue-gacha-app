@@ -1381,6 +1381,183 @@ body::after{
   .login-box{padding:24px 16px;}
   .login-title{font-size:26px;}
 }
+
+/* ══════════════════════════════
+   CS:GO STYLE CARD REVEAL
+══════════════════════════════ */
+.csgo-overlay {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(5, 2, 15, 0.96);
+  backdrop-filter: blur(8px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.csgo-overlay.visible { display: flex; }
+
+.csgo-title {
+  font-family: 'Cinzel', serif;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* The rail container */
+.csgo-rail-wrap {
+  width: 100%;
+  max-width: 700px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Center line indicator */
+.csgo-rail-wrap::before,
+.csgo-rail-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 3px;
+  background: var(--pink-main);
+  z-index: 10;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 16px var(--pink-main), 0 0 32px rgba(232,24,122,0.4);
+}
+.csgo-rail-wrap::after {
+  width: 1px;
+  background: rgba(232,24,122,0.3);
+  left: calc(50% - 70px);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Top/bottom fade */
+.csgo-fade-left, .csgo-fade-right {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 120px;
+  z-index: 9;
+  pointer-events: none;
+}
+.csgo-fade-left {
+  left: 0;
+  background: linear-gradient(90deg, rgba(5,2,15,1) 0%, transparent 100%);
+}
+.csgo-fade-right {
+  right: 0;
+  background: linear-gradient(270deg, rgba(5,2,15,1) 0%, transparent 100%);
+}
+
+/* The scrolling rail */
+.csgo-rail {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  will-change: transform;
+  width: max-content;
+}
+
+/* Individual card in rail */
+.csgo-item {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 160px;
+  border-radius: 10px;
+  border: 2px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px;
+  transition: transform 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+.csgo-item.common   { background: linear-gradient(160deg,#1A1A2E,#0D0D1A); border-color: #4A4A6A; }
+.csgo-item.rare     { background: linear-gradient(160deg,#0A1A38,#050D20); border-color: #3B6AE0; box-shadow: 0 0 10px rgba(59,106,224,0.2); }
+.csgo-item.epic     { background: linear-gradient(160deg,#1E0A38,#0D0520); border-color: var(--purple-bright); box-shadow: 0 0 12px rgba(147,51,234,0.3); }
+.csgo-item.legendary{ background: linear-gradient(160deg,#2A1A00,#150D00); border-color: var(--gold); box-shadow: 0 0 16px rgba(212,160,23,0.35); }
+.csgo-item.secret   { background: linear-gradient(160deg,#0F0520,#0a1a40); border-color: #E879F9; box-shadow: 0 0 20px rgba(232,121,249,0.5); }
+.csgo-item.prize    { background: linear-gradient(160deg,#041A08,#031008); border-color: #4ADE80; box-shadow: 0 0 14px rgba(74,222,128,0.4); }
+
+.csgo-item .ci-rarity {
+  font-family: 'Cinzel', serif; font-size: 7px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 3px;
+  align-self: stretch; text-align: center;
+}
+.csgo-item.common   .ci-rarity { background: #2A2A3E; color: #8A8AAA; }
+.csgo-item.rare     .ci-rarity { background: #0A1E4A; color: #7AA4F0; }
+.csgo-item.epic     .ci-rarity { background: #1E0A3E; color: #C084FC; }
+.csgo-item.legendary .ci-rarity{ background: #2A1A00; color: var(--gold-light); }
+.csgo-item.secret   .ci-rarity {
+  background: linear-gradient(90deg,#E879F9,#818CF8,#E879F9);
+  background-size: 200%; animation: badge-shimmer 2s linear infinite; color: white;
+}
+.csgo-item.prize    .ci-rarity { background: #052010; color: #4ADE80; }
+
+.csgo-item .ci-art  { font-size: 36px; }
+.csgo-item .ci-name {
+  font-family: 'Cinzel', serif; font-size: 9px; font-weight: 700;
+  text-align: center; line-height: 1.2; color: #AAAACC;
+}
+.csgo-item.rare     .ci-name { color: #A0C0FF; }
+.csgo-item.epic     .ci-name { color: #D4A8FF; }
+.csgo-item.legendary .ci-name{ color: var(--gold-light); }
+.csgo-item.secret   .ci-name { color: #F5D0FE; }
+.csgo-item.prize    .ci-name { color: #86EFAC; }
+
+/* Winner card highlight */
+.csgo-item.winner {
+  transform: scale(1.08);
+  z-index: 2;
+}
+.csgo-item.winner.legendary { animation: legendary-pulse 1.5s ease-in-out infinite alternate; }
+.csgo-item.winner.secret    { animation: secret-pulse 1.5s ease-in-out infinite alternate; }
+.csgo-item.winner.prize     { animation: prize-pulse 1.5s ease-in-out infinite alternate; }
+
+/* Result panel below rail */
+.csgo-result {
+  text-align: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s, transform 0.4s;
+  min-height: 60px;
+}
+.csgo-result.shown { opacity: 1; transform: translateY(0); }
+.csgo-result-label {
+  font-family: 'Cinzel', serif; font-size: 18px; font-weight: 900;
+  letter-spacing: 3px; text-transform: uppercase;
+  background: linear-gradient(135deg, var(--cream), var(--gold-light), var(--pink-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.csgo-result-sub {
+  font-size: 12px; color: var(--text-muted); letter-spacing: 2px; margin-top: 4px;
+}
+
+.csgo-next-btn {
+  font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 11px 28px; border-radius: var(--r-md);
+  border: 1px solid var(--pink-main);
+  background: rgba(232,24,122,0.12); color: var(--cream);
+  cursor: pointer; box-shadow: 0 0 16px rgba(232,24,122,0.2);
+  opacity: 0; transition: opacity 0.3s, background 0.15s;
+}
+.csgo-next-btn.shown { opacity: 1; }
+.csgo-next-btn:hover { background: rgba(232,24,122,0.28); }
+
+@media(max-width:480px){
+  .csgo-item { flex: 0 0 90px; width: 90px; height: 126px; }
+  .csgo-item .ci-art { font-size: 28px; }
+  .csgo-item .ci-name { font-size: 8px; }
+  .csgo-fade-left, .csgo-fade-right { width: 60px; }
+  .csgo-result-label { font-size: 15px; }
+  .csgo-next-btn { font-size: 11px; padding: 10px 20px; }
+}
 </style>
   <!-- PWA / iPhone Home Screen -->
   <meta name="apple-mobile-web-app-title" content="Rescue Gacha">
@@ -1708,6 +1885,22 @@ body::after{
     <div class="cro-name" id="cro-name"></div>
   </div>
   <div class="cro-tap">Toca para continuar</div>
+</div>
+
+
+<!-- CS:GO Style Card Reveal -->
+<div class="csgo-overlay" id="csgo-overlay">
+  <div class="csgo-title" id="csgo-title">Invocando...</div>
+  <div class="csgo-rail-wrap">
+    <div class="csgo-fade-left"></div>
+    <div class="csgo-fade-right"></div>
+    <div class="csgo-rail" id="csgo-rail"></div>
+  </div>
+  <div class="csgo-result" id="csgo-result">
+    <div class="csgo-result-label" id="csgo-result-label"></div>
+    <div class="csgo-result-sub" id="csgo-result-sub"></div>
+  </div>
+  <button class="csgo-next-btn" id="csgo-next-btn" onclick="csgoNext()">Siguiente ▶</button>
 </div>
 
 <!-- RESULTS OVERLAY -->
@@ -2622,49 +2815,135 @@ function showSecretReveal(card){
 
 function closeSecret(){document.getElementById('secret-overlay').classList.remove('visible');}
 
-function showResults(cards,hasLegendary){
-  const grid=document.getElementById('results-grid');
-  const title=document.getElementById('results-title');
-  grid.innerHTML='';
+// ── CS:GO reveal queue ──
+let _csgoQueue  = [];
+let _csgoIdx    = 0;
 
-  const specials=cards.filter(c=>c.rarity==='epic'||c.rarity==='legendary');
-  const normals =cards.filter(c=>c.rarity!=='epic'&&c.rarity!=='legendary');
+function showResults(cards, hasLegendary){
+  _csgoQueue = cards;
+  _csgoIdx   = 0;
+  document.getElementById('csgo-overlay').classList.add('visible');
+  csgoRevealNext();
+}
 
-  if(hasLegendary){title.textContent='¡LEGENDARIA INVOCADA! ♛';sndLegendary();}
-  else if(specials.length){title.textContent='¡Carta Épica! ◈';sndEpic();}
-  else{
-    title.textContent='Robo Completada';
-    const hasRare=cards.some(c=>c.rarity==='rare');
-    if(hasRare)sndRare(); else sndCommon();
+function csgoRevealNext(){
+  if(_csgoIdx >= _csgoQueue.length){
+    document.getElementById('csgo-overlay').classList.remove('visible');
+    showSummary(_csgoQueue);
+    return;
+  }
+  const card = _csgoQueue[_csgoIdx++];
+  csgoRevealCard(card);
+}
+
+function csgoNext(){
+  document.getElementById('csgo-next-btn').classList.remove('shown');
+  document.getElementById('csgo-result').classList.remove('shown');
+  setTimeout(csgoRevealNext, 300);
+}
+
+function cardArtForRarity(r){
+  const map = {
+    common:    ['⚡','≋','◉','∿','♪','⌗','◌','✾','⟁','≈'],
+    rare:      ['⸸','✺','⌀','⊕','✝','⚒','∞'],
+    epic:      ['⌇','✿','⊗','⩕'],
+    legendary: ['⌖','✧','◆','★'],
+  };
+  const pool = map[r] || map.common;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function csgoRevealCard(card){
+  const rail    = document.getElementById('csgo-rail');
+  const title   = document.getElementById('csgo-title');
+  const result  = document.getElementById('csgo-result');
+  const label   = document.getElementById('csgo-result-label');
+  const sub     = document.getElementById('csgo-result-sub');
+  const nextBtn = document.getElementById('csgo-next-btn');
+
+  result.classList.remove('shown');
+  nextBtn.classList.remove('shown');
+  title.textContent = 'Invocando...';
+
+  const POOL = ['common','common','common','rare','common','rare','common','epic','common','rare'];
+  const TOTAL = 40;
+  const WIN   = 30;
+
+  const items = [];
+  for(let i = 0; i < TOTAL; i++){
+    if(i === WIN) items.push(card);
+    else {
+      const r = POOL[Math.floor(Math.random() * POOL.length)];
+      items.push({ rarity: r, art: cardArtForRarity(r) });
+    }
   }
 
-  normals.forEach((card,i)=>{
-    const el=document.createElement('div');
-    el.className=`tcg-card ${card.rarity}`;
-    el.innerHTML=`<div class="card-rarity-badge">${rarityLabel(card.rarity).toUpperCase()}</div>${cardLogo(card.rarity)}<div class="card-name">${rarityLabel(card.rarity)}</div>`;
+  rail.innerHTML = items.map((c, i) =>
+    '<div class="csgo-item ' + c.rarity + '" id="csi-' + i + '">' +
+    '<div class="ci-rarity">' + rarityLabel(c.rarity).toUpperCase() + '</div>' +
+    cardLogo(c.rarity) +
+    '<div class="ci-name">' + rarityLabel(c.rarity) + '</div>' +
+    '</div>'
+  ).join('');
+
+  const ITEM_W  = window.innerWidth <= 480 ? 98 : 128;
+  const wrapW   = document.querySelector('.csgo-rail-wrap').offsetWidth;
+  const scrollTo= WIN * ITEM_W + ITEM_W / 2 - wrapW / 2;
+
+  rail.style.transition = 'none';
+  rail.style.transform  = 'translateX(0)';
+
+  const dur = 3500 + Math.random() * 800;
+  setTimeout(() => {
+    rail.style.transition = 'transform ' + dur + 'ms cubic-bezier(0.12, 0.8, 0.22, 1)';
+    rail.style.transform  = 'translateX(-' + scrollTo + 'px)';
+  }, 60);
+
+  let ticks = 0;
+  const tickInt = setInterval(() => {
+    if(++ticks < 20) sndTick();
+    else clearInterval(tickInt);
+  }, dur / 20);
+
+  setTimeout(() => {
+    clearInterval(tickInt);
+    const winEl = document.getElementById('csi-' + WIN);
+    if(winEl) winEl.classList.add('winner');
+
+    if(card.rarity === 'secret')      { sndSecret(); spawnConfetti(); }
+    else if(card.rarity === 'legendary'){ sndLegendary(); spawnConfetti(); }
+    else if(card.rarity === 'epic')   { sndEpic(); spawnConfetti(); }
+    else if(card.rarity === 'rare')   sndRare();
+    else                              sndCommon();
+
+    title.textContent = '';
+    label.textContent = rarityLabel(card.rarity).toUpperCase();
+    sub.textContent   = card.rarity === 'prize' ? card.name : '';
+    result.classList.add('shown');
+
+    const isLast = _csgoIdx >= _csgoQueue.length;
+    nextBtn.textContent = isLast ? '✦ Ver resumen' : 'Siguiente ▶';
+    setTimeout(() => nextBtn.classList.add('shown'), 400);
+  }, dur + 120);
+}
+
+function showSummary(cards){
+  const grid  = document.getElementById('results-grid');
+  const title = document.getElementById('results-title');
+  grid.innerHTML = '';
+  const hasLeg  = cards.some(c => c.rarity === 'legendary');
+  const hasEpic = cards.some(c => c.rarity === 'epic');
+  if(hasLeg)       title.textContent = '¡LEGENDARIA INVOCADA! ♛';
+  else if(hasEpic) title.textContent = '¡Carta Épica! ◈';
+  else             title.textContent = 'Invocación Completada';
+  cards.forEach((card, i) => {
+    const el = document.createElement('div');
+    el.className = 'tcg-card ' + card.rarity;
+    el.innerHTML = '<div class="card-rarity-badge">' + (card.rarity==='secret'?'✦ SECRETA':rarityLabel(card.rarity).toUpperCase()) + '</div>' + cardLogo(card.rarity) + '<div class="card-name">' + rarityLabel(card.rarity) + '</div>';
     grid.appendChild(el);
-    setTimeout(()=>el.classList.add('revealed'),100+i*200);
+    setTimeout(() => el.classList.add('revealed'), 60 + i * 100);
   });
   document.getElementById('results-overlay').classList.add('visible');
-
-  if(specials.length){
-    let idx=0;
-    function showNext(){
-      if(idx>=specials.length){
-        // All animations done — add specials to the grid
-        specials.forEach((card,i)=>{
-          const el=document.createElement('div');
-          el.className=`tcg-card ${card.rarity}`;
-          el.innerHTML=`<div class="card-rarity-badge">${card.rarity==='secret'?'✦ SECRETA':rarityLabel(card.rarity).toUpperCase()}</div>${cardLogo(card.rarity)}<div class="card-name">${rarityLabel(card.rarity)}</div>`;
-          grid.appendChild(el);
-          setTimeout(()=>el.classList.add('revealed'),50+i*200);
-        });
-        return;
-      }
-      showCardReveal(specials[idx],()=>{idx++;showNext();});
-    }
-    setTimeout(showNext,normals.length*200+700);
-  }
 }
 
 function showCardReveal(card,onDone){

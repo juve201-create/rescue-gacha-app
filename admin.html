@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rescue Gacha — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Crimson Pro', serif;
+  background: #0D0518;
+  color: #F0E6C8;
+  min-height: 100vh;
+}
+
+/* Login */
+.admin-login {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 20px;
+}
+.login-box {
+  background: linear-gradient(175deg, #1E0A38, #120720);
+  border: 1px solid rgba(232,24,122,0.3);
+  border-radius: 16px; padding: 32px 24px;
+  width: 100%; max-width: 320px;
+  box-shadow: 0 0 60px rgba(232,24,122,0.15);
+}
+.login-box h1 {
+  font-family: 'Cinzel', serif; font-size: 20px;
+  letter-spacing: 3px; text-align: center;
+  color: #E8187A; margin-bottom: 6px;
+}
+.login-box p {
+  font-size: 12px; color: #9D7DB8; text-align: center;
+  letter-spacing: 2px; margin-bottom: 24px;
+}
+.login-box input {
+  width: 100%; background: rgba(61,20,102,0.4);
+  border: 1px solid #4A1575; border-radius: 8px;
+  padding: 11px 14px; color: #F0E6C8;
+  font-family: 'Cinzel', serif; font-size: 13px;
+  outline: none; margin-bottom: 12px;
+  -webkit-appearance: none;
+}
+.login-box input:focus { border-color: #E8187A; }
+.login-box button {
+  width: 100%; background: linear-gradient(135deg, #E8187A, #9D0050);
+  border: none; border-radius: 8px; padding: 13px;
+  color: white; font-family: 'Cinzel', serif;
+  font-size: 14px; font-weight: 700; letter-spacing: 2px;
+  cursor: pointer; box-shadow: 0 4px 0 #500025;
+}
+.error-msg { color: #F87171; font-size: 11px; text-align: center; margin-bottom: 10px; min-height: 16px; }
+
+/* Dashboard */
+.dashboard { display: none; }
+.topbar {
+  background: linear-gradient(135deg, #1E0A38, #120720);
+  border-bottom: 1px solid rgba(232,24,122,0.2);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar h1 { font-family: 'Cinzel', serif; font-size: 18px; color: #E8187A; letter-spacing: 3px; }
+.logout-btn {
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+  padding: 6px 14px; border-radius: 6px;
+  border: 1px solid rgba(232,24,122,0.4);
+  background: rgba(232,24,122,0.1); color: #F472B6;
+  cursor: pointer;
+}
+
+.content { padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+.stats-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px; margin-bottom: 32px;
+}
+.stat-card {
+  background: linear-gradient(175deg, #1E0A38, #120720);
+  border: 1px solid #4A1575; border-radius: 12px;
+  padding: 20px; text-align: center;
+}
+.stat-card .number {
+  font-family: 'Cinzel', serif; font-size: 36px; font-weight: 900;
+  color: #E8187A; display: block;
+}
+.stat-card .label {
+  font-size: 11px; color: #9D7DB8; letter-spacing: 2px;
+  text-transform: uppercase; margin-top: 4px;
+}
+
+.section-title {
+  font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700;
+  letter-spacing: 2px; color: #D4A017; margin-bottom: 14px;
+  text-transform: uppercase;
+}
+
+.table-wrap {
+  background: linear-gradient(175deg, #1E0A38, #120720);
+  border: 1px solid #4A1575; border-radius: 12px;
+  overflow: hidden; margin-bottom: 32px;
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: #9D7DB8; padding: 12px 16px; text-align: left;
+  border-bottom: 1px solid #4A1575; background: rgba(61,20,102,0.3);
+}
+td {
+  padding: 12px 16px; font-size: 13px; color: #F0E6C8;
+  border-bottom: 1px solid rgba(74,21,117,0.3);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(232,24,122,0.05); }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 4px;
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700;
+  letter-spacing: 1px;
+}
+.badge-green { background: rgba(74,222,128,0.15); color: #4ADE80; border: 1px solid #4ADE80; }
+.badge-red   { background: rgba(248,113,113,0.15); color: #F87171; border: 1px solid #F87171; }
+.badge-gold  { background: rgba(212,160,23,0.15); color: #D4A017; border: 1px solid #D4A017; }
+
+.add-gems-btn {
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  border: 1px solid rgba(232,24,122,0.5);
+  background: rgba(232,24,122,0.1); color: #F472B6;
+  letter-spacing: 1px;
+}
+.add-gems-btn:hover { background: rgba(232,24,122,0.25); }
+
+.loading { text-align: center; padding: 40px; color: #9D7DB8; font-style: italic; }
+.refresh-btn {
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+  padding: 8px 18px; border-radius: 6px; cursor: pointer;
+  border: 1px solid #D4A017; background: rgba(212,160,23,0.1);
+  color: #D4A017; letter-spacing: 1px; margin-bottom: 20px;
+}
+
+@media(max-width:600px){
+  .content { padding: 14px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="admin-login" id="admin-login">
+  <div class="login-box">
+    <h1>RESCUE GACHA</h1>
+    <p>PANEL DE ADMINISTRACIÓN</p>
+    <div class="error-msg" id="admin-error"></div>
+    <input type="password" id="admin-pass" placeholder="Contraseña de admin" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button onclick="adminLogin()">ENTRAR</button>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <h1>⚔ ADMIN</h1>
+    <button class="logout-btn" onclick="adminLogout()">Cerrar sesión</button>
+  </div>
+  <div class="content">
+
+    <button class="refresh-btn" onclick="loadAll()">↻ Actualizar datos</button>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="number" id="stat-users">—</span>
+        <span class="label">Usuarios</span>
+      </div>
+      <div class="stat-card">
+        <span class="number" id="stat-payments">—</span>
+        <span class="label">Pagos</span>
+      </div>
+      <div class="stat-card">
+        <span class="number" id="stat-revenue">—</span>
+        <span class="label">Ingresos MXN</span>
+      </div>
+      <div class="stat-card">
+        <span class="number" id="stat-prizes">—</span>
+        <span class="label">Premios activos</span>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <p class="section-title">Usuarios</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Créditos</th>
+            <th>Registro</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="4" class="loading">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Payments -->
+    <p class="section-title">Pagos recientes</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Monto</th>
+            <th>Créditos</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="payments-tbody">
+          <tr><td colspan="5" class="loading">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Prizes -->
+    <p class="section-title">Premios pendientes de canjear</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Premio</th>
+            <th>Código</th>
+            <th>Usuario</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="prizes-tbody">
+          <tr><td colspan="5" class="loading">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://cceuvzxtrlglnkwjggmi.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU';
+const ADMIN_PASS    = 'RescueTCG2025Admin!';
+
+async function sb(table, query='') {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON,
+      'Content-Type': 'application/json'
+    }
+  });
+  return res.json();
+}
+
+async function sbPatch(table, filter, body) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': 'Bearer ' + SUPABASE_ANON,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+function adminLogin() {
+  const pass = document.getElementById('admin-pass').value;
+  if (pass === ADMIN_PASS) {
+    sessionStorage.setItem('admin_auth', '1');
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadAll();
+  } else {
+    document.getElementById('admin-error').textContent = 'Contraseña incorrecta';
+  }
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('admin_auth');
+  location.reload();
+}
+
+async function loadAll() {
+  loadUsers();
+  loadPayments();
+  loadPrizes();
+}
+
+async function loadUsers() {
+  const users = await sb('users', '?select=id,email,gems,created_at&order=created_at.desc');
+  const tbody = document.getElementById('users-tbody');
+  const payments = await sb('payments', '?select=user_id,amount_mxn');
+
+  document.getElementById('stat-users').textContent = users.length;
+
+  const totalRevenue = (await sb('payments', '?select=amount_mxn')).reduce((a,p) => a + (p.amount_mxn||0), 0);
+  document.getElementById('stat-revenue').textContent = '$' + totalRevenue;
+
+  tbody.innerHTML = users.map(u => `
+    <tr>
+      <td>${u.email}</td>
+      <td><span class="badge badge-gold">✦ ${u.gems}</span></td>
+      <td>${new Date(u.created_at).toLocaleDateString('es-MX')}</td>
+      <td>
+        <button class="add-gems-btn" onclick="addGems('${u.id}','${u.email}',${u.gems})">+ Créditos</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" class="loading">Sin usuarios</td></tr>';
+}
+
+async function loadPayments() {
+  const paym

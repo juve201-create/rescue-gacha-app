@@ -18,7 +18,7 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Only cache GET requests - never POST, DELETE, PATCH etc
+  // Only cache GET requests — never POST, DELETE, PATCH
   if (e.request.method !== 'GET') {
     e.respondWith(fetch(e.request));
     return;

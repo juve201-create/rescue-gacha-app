@@ -2859,6 +2859,7 @@ function handleRedeemOverlay(e){
   if(e.target===document.getElementById('redeem-modal-overlay')) closeRedeemModal();
 }
 function closeRedeemWin(){
+  _redeemInProgress = false;
   document.getElementById('redeem-win').classList.remove('visible');
   renderRedeemRows();
 }
@@ -2894,8 +2895,18 @@ function renderRedeemRows(){
   });
 }
 
+let _redeemInProgress = false;
+
 async function doRedeem(rarity, label){
   if(!currentUser) return;
+  if(_redeemInProgress) return; // Block spam
+  _redeemInProgress = true;
+
+  // Disable all redeem buttons immediately
+  document.querySelectorAll('.redeem-btn').forEach(b => {
+    b.disabled = true;
+    b.className = 'redeem-btn inactive';
+  });
 
   // Remove 1 card of that rarity from collection
   let removed = false;

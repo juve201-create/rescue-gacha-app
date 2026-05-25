@@ -2873,19 +2873,25 @@ function renderRedeemRows(){
     { key:'common',    label:'◇ Común',       color:'#AAAACC' },
   ];
   const container = document.getElementById('redeem-rows');
-  container.innerHTML = rarities.map(r => {
+  container.innerHTML = '';
+  rarities.forEach(function(r) {
     const count = counts[r.key] || 0;
     const canRedeem = count >= 1;
-    return '<div class="redeem-row ' + r.key + '">' +
+    const row = document.createElement('div');
+    row.className = 'redeem-row ' + r.key;
+    row.innerHTML =
       '<div class="redeem-row-info">' +
         '<div class="redeem-row-label">' + r.label + '</div>' +
         '<div class="redeem-row-count">Tienes: <strong>' + count + '</strong> carta' + (count !== 1 ? 's' : '') + '</div>' +
-      '</div>' +
-      '<button class="redeem-btn ' + (canRedeem ? 'active' : 'inactive') + '" ' +
-        (canRedeem ? 'onclick="doRedeem('' + r.key + '','' + r.label + '')"' : 'disabled') +
-        '>Canjear 1</button>' +
-    '</div>';
-  }).join('');
+      '</div>';
+    const btn = document.createElement('button');
+    btn.className = 'redeem-btn ' + (canRedeem ? 'active' : 'inactive');
+    btn.textContent = 'Canjear 1';
+    btn.disabled = !canRedeem;
+    if(canRedeem) btn.addEventListener('click', function(){ doRedeem(r.key, r.label); });
+    row.appendChild(btn);
+    container.appendChild(row);
+  });
 }
 
 async function doRedeem(rarity, label){

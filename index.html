@@ -2186,7 +2186,7 @@ function loginSuccess(user, col, prizes){
   hideLoginScreen();
 
   gems           = user.gems || 0;
-  collection     = col.map(c => ({ rarity: c.rarity }));
+  collection     = (col||[]).map(c => ({ rarity: c.rarity }));
   window._prizes = prizes.map(p => ({
     id: p.prize_id, name: p.name, code: p.code,
     redeemed: p.redeemed, db_id: p.id,
@@ -2225,16 +2225,9 @@ async function initAuth(){
 
 async function logoutUser(){
   sndClick();
-  currentUser = null;
   clearSession();
-  gems = 0; collection = []; window._prizes = [];
-  document.getElementById('gems-display').textContent  = '0';
-  document.getElementById('cards-display').textContent = '0';
-  document.getElementById('user-bar-name').textContent  = '—';
-  document.getElementById('user-bar-email').textContent = '—';
-  renderCollection();
-  updatePrizeBadge();
-  showLoginScreen();
+  // Reload page — cleanest way to go back to login
+  window.location.reload();
 }
 
 async function autoSave(){
@@ -2620,7 +2613,6 @@ const WEIGHTS = {
 
 const MACHINE_FRAMES=['◈','⚔','✦','★','♛','◇'];
 let gems=0,selectedPack='mini',collection=[],pulling=false;
-const seen=new Set();
 
 function selectPack(el){
   document.querySelectorAll('.pack-option,.pack-option-img').forEach(p=>p.classList.remove('selected'));
@@ -3353,8 +3345,7 @@ function closeResults(){
 
 function addToCollection(cards){
   cards.forEach(c=>{
-    collection.push(c);
-    seen.add(c.name);
+    collection.push({rarity: c.rarity}); // only store rarity
     saveCardToDB(c.rarity);
   });
   renderCollection();

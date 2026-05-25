@@ -3005,150 +3005,6 @@ function getCardCounts(){
   return counts;
 }
 
-
-// ── Craft Sounds ──
-
-function sndCraftCoin(){
-  // 8-bit moneda — corta, aguda, juguetona
-  resumeAC();
-  const now = AC.currentTime;
-  // Coin bounce: high ping + shimmer
-  [1047,1319,1568,1319,1047].forEach((f,i) => {
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(f, now + i*0.07);
-    env.gain.setValueAtTime(0.12, now + i*0.07);
-    env.gain.exponentialRampToValueAtTime(0.001, now + i*0.07 + 0.08);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + i*0.07); osc.stop(now + i*0.07 + 0.1);
-  });
-  // Extra sparkle
-  [2093,2637,3136].forEach((f,i) => {
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = f;
-    env.gain.setValueAtTime(0.07, now + 0.3 + i*0.06);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 0.3 + i*0.06 + 0.15);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + 0.3 + i*0.06); osc.stop(now + 0.55);
-  });
-}
-
-function sndCraftTreasure(){
-  // 8-bit tesoro — dramático, ascendente, victorioso
-  resumeAC();
-  const now = AC.currentTime;
-
-  // Drum roll intro
-  for(let i=0;i<8;i++){
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'square';
-    osc.frequency.value = 110;
-    env.gain.setValueAtTime(0.08, now + i*0.04);
-    env.gain.exponentialRampToValueAtTime(0.001, now + i*0.04 + 0.035);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + i*0.04); osc.stop(now + i*0.04 + 0.04);
-  }
-
-  // Fanfare melody: treasure chest open
-  const melody = [262,330,392,523,659,784,1047];
-  melody.forEach((f,i) => {
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'square';
-    osc.frequency.value = f;
-    env.gain.setValueAtTime(0.13, now + 0.35 + i*0.1);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 0.35 + i*0.1 + 0.18);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + 0.35 + i*0.1); osc.stop(now + 0.35 + i*0.1 + 0.2);
-  });
-
-  // Shimmer at the end
-  [1047,1319,1568,2093,1568,1319,1047].forEach((f,i) => {
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = f;
-    env.gain.setValueAtTime(0.07, now + 1.1 + i*0.06);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 1.1 + i*0.06 + 0.12);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + 1.1 + i*0.06); osc.stop(now + 1.5);
-  });
-}
-
-function sndCraftVault(){
-  // 8-bit bóveda de banco — pesado, grave, imponente, luego resolución épica
-  resumeAC();
-  const now = AC.currentTime;
-
-  // Heavy thud — vault door
-  [55,65,73].forEach((f,i) => {
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(f*2, now + i*0.04);
-    osc.frequency.exponentialRampToValueAtTime(f, now + i*0.04 + 0.2);
-    env.gain.setValueAtTime(0.4, now + i*0.04);
-    env.gain.exponentialRampToValueAtTime(0.001, now + i*0.04 + 0.4);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + i*0.04); osc.stop(now + i*0.04 + 0.45);
-  });
-
-  // Mechanical click sequence — tumblers
-  for(let i=0;i<5;i++){
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'square';
-    osc.frequency.value = 220 + i*80;
-    env.gain.setValueAtTime(0.10, now + 0.5 + i*0.15);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 0.5 + i*0.15 + 0.08);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + 0.5 + i*0.15); osc.stop(now + 0.5 + i*0.15 + 0.1);
-  }
-
-  // Vault OPEN — massive chord swell
-  [65,98,130,164,196,261,329].forEach((f,i) => {
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.value = f;
-    env.gain.setValueAtTime(0, now + 1.3);
-    env.gain.linearRampToValueAtTime(0.10, now + 1.5);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 3.0);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + 1.3); osc.stop(now + 3.1);
-  });
-
-  // Gold coins cascade
-  for(let i=0;i<20;i++){
-    const f = 600 + Math.random()*1200;
-    const t = now + 1.5 + i*0.1 + Math.random()*0.08;
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'square';
-    osc.frequency.value = f;
-    env.gain.setValueAtTime(0.06, t);
-    env.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(t); osc.stop(t + 0.1);
-  }
-
-  // Final triumphant arpeggio
-  [523,659,784,1047,1319,1568,2093].forEach((f,i) => {
-    const osc = AC.createOscillator();
-    const env = AC.createGain();
-    osc.type = 'triangle';
-    osc.frequency.value = f;
-    env.gain.setValueAtTime(0.09, now + 2.3 + i*0.08);
-    env.gain.exponentialRampToValueAtTime(0.001, now + 2.3 + i*0.08 + 0.25);
-    osc.connect(env); env.connect(AC.destination);
-    osc.start(now + 2.3 + i*0.08); osc.stop(now + 2.3 + i*0.08 + 0.3);
-  });
-}
-
 async function doCraft(targetRarity){
   const cost = { rare:'common', epic:'rare', legendary:'epic' };
   const sourceRarity = cost[targetRarity];
@@ -3196,10 +3052,8 @@ async function doCraft(targetRarity){
     } catch(e){}
   }
 
-  // Play sound based on what was crafted
-  if(targetRarity === 'rare')      { sndCraftCoin();     spawnConfetti(); }
-  else if(targetRarity === 'epic') { sndCraftTreasure(); spawnConfetti(); }
-  else                             { sndCraftVault();    spawnConfetti(); }
+  sndRare();
+  spawnConfetti();
   renderCollection();
   updateCraftModal();
 }
@@ -3722,8 +3576,8 @@ function closeResults(){
     window._pendingPrize = null;
     setTimeout(()=>showPrizeReveal(p), 400);
   }
-  const closeBtn = document.querySelector('.close-results-btn');
-  if(closeBtn){ const r=closeBtn.getBoundingClientRect(); spawnSparks(r.left+r.width/2,r.top); }
+  const r=btn.getBoundingClientRect();
+  spawnSparks(r.left+r.width/2,r.top);
 }
 
 function addToCollection(cards){

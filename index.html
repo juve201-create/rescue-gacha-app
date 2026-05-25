@@ -1682,6 +1682,100 @@ body::after{
   .rarity-count-number{font-size:22px;}
   .craft-modal{padding:18px 14px;}
 }
+
+/* ── Redeem Collection Modal ── */
+.redeem-modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(2,12,4,0.95);backdrop-filter:blur(8px);
+  z-index:600;align-items:center;justify-content:center;padding:16px;
+}
+.redeem-modal-overlay.visible{display:flex;}
+.redeem-modal{
+  background:linear-gradient(175deg,#041A08,#020D04);
+  border:1px solid rgba(74,222,128,0.4);border-radius:18px;
+  padding:24px 18px;width:100%;max-width:360px;
+  box-shadow:0 0 50px rgba(74,222,128,0.15),0 24px 64px rgba(0,0,0,0.8);
+  position:relative;overflow:hidden;max-height:90vh;overflow-y:auto;
+}
+.redeem-modal::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#4ADE80,transparent);
+}
+.redeem-modal-close{
+  position:absolute;top:12px;right:14px;
+  background:none;border:none;color:rgba(74,222,128,0.5);
+  font-size:20px;cursor:pointer;
+}
+.redeem-modal h2{
+  font-family:'Cinzel',serif;font-size:16px;font-weight:700;
+  letter-spacing:2px;text-align:center;color:#4ADE80;
+  margin-bottom:4px;
+  text-shadow:0 0 12px rgba(74,222,128,0.4);
+}
+.redeem-modal-sub{
+  font-size:11px;color:rgba(74,222,128,0.6);text-align:center;
+  letter-spacing:1px;margin-bottom:20px;font-style:italic;
+}
+
+/* Redeem rows */
+.redeem-row{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(74,222,128,0.05);
+  border:1px solid rgba(74,222,128,0.15);
+  border-radius:10px;padding:12px 14px;margin-bottom:8px;
+}
+.redeem-row-info{flex:1;}
+.redeem-row-label{
+  font-family:'Cinzel',serif;font-size:12px;font-weight:700;
+  letter-spacing:1px;margin-bottom:2px;
+}
+.redeem-row-count{font-size:11px;color:rgba(74,222,128,0.7);}
+.redeem-row.common    .redeem-row-label{color:#AAAACC;}
+.redeem-row.rare      .redeem-row-label{color:#7AA4F0;}
+.redeem-row.epic      .redeem-row-label{color:#C084FC;}
+.redeem-row.legendary .redeem-row-label{color:var(--gold-light);}
+.redeem-row.secret    .redeem-row-label{color:#E879F9;}
+
+.redeem-btn{
+  font-family:'Cinzel',serif;font-size:10px;font-weight:700;
+  padding:7px 14px;border-radius:6px;cursor:pointer;
+  letter-spacing:1px;white-space:nowrap;border:none;
+  transition:all 0.15s;
+}
+.redeem-btn.active{
+  background:linear-gradient(135deg,#4ADE80,#16A34A);
+  color:#041A08;box-shadow:0 2px 0 #0A5E24,0 4px 12px rgba(74,222,128,0.3);
+}
+.redeem-btn.inactive{
+  background:rgba(74,222,128,0.08);color:rgba(74,222,128,0.3);
+  border:1px solid rgba(74,222,128,0.15);cursor:not-allowed;
+}
+
+/* Win message */
+.redeem-win{
+  display:none;
+  background:linear-gradient(135deg,rgba(74,222,128,0.15),rgba(74,222,128,0.05));
+  border:1px solid #4ADE80;border-radius:12px;
+  padding:20px 16px;text-align:center;margin-top:12px;
+}
+.redeem-win.visible{display:block;}
+.redeem-win-title{
+  font-family:'Cinzel',serif;font-size:14px;font-weight:900;
+  color:#4ADE80;letter-spacing:2px;margin-bottom:8px;
+  text-shadow:0 0 16px rgba(74,222,128,0.6);
+}
+.redeem-win-msg{font-size:13px;color:#86EFAC;line-height:1.5;}
+.redeem-win-close{
+  margin-top:14px;
+  font-family:'Cinzel',serif;font-size:11px;font-weight:700;
+  padding:8px 20px;border-radius:6px;
+  border:1px solid #4ADE80;background:rgba(74,222,128,0.1);
+  color:#4ADE80;cursor:pointer;letter-spacing:1px;
+}
+
+@media(max-width:480px){
+  .redeem-modal{padding:18px 14px;}
+}
 </style>
   <!-- PWA / iPhone Home Screen -->
   <meta name="apple-mobile-web-app-title" content="Rescue Gacha">
@@ -1913,6 +2007,7 @@ body::after{
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <p class="section-title" style="margin:0">BIBLIOTECA</p>
         <button class="view-collection-btn" onclick="sndClick();openCraftModal()">◈ Colección</button>
+        <button class="view-collection-btn" style="border-color:rgba(74,222,128,0.5);color:#4ADE80;background:rgba(74,222,128,0.08);" onclick="sndClick();openRedeemModal()">🎴 Canjear</button>
         <button class="view-prizes-btn" onclick="sndClick();openPrizesModal()">
           ★ Premios <span class="prize-count-badge" id="prize-count-badge">0</span>
         </button>
@@ -1931,6 +2026,22 @@ body::after{
 
 
 
+
+
+<!-- Redeem Collection Modal -->
+<div class="redeem-modal-overlay" id="redeem-modal-overlay" onclick="handleRedeemOverlay(event)">
+  <div class="redeem-modal">
+    <button class="redeem-modal-close" onclick="closeRedeemModal()">✕</button>
+    <h2>🎴 Canjear Colección</h2>
+    <p class="redeem-modal-sub">Cambia tus cartas digitales por cartas físicas en tienda</p>
+    <div id="redeem-rows"></div>
+    <div class="redeem-win" id="redeem-win">
+      <div class="redeem-win-title">🎉 ¡FELICIDADES!</div>
+      <div class="redeem-win-msg" id="redeem-win-msg"></div>
+      <button class="redeem-win-close" onclick="closeRedeemWin()">¡Entendido!</button>
+    </div>
+  </div>
+</div>
 
 <!-- Craft / Collection Modal -->
 <div class="craft-modal-overlay" id="craft-modal-overlay" onclick="handleCraftOverlay(event)">
@@ -2733,6 +2844,110 @@ function cardLogo(rarity){
 
 
 
+
+
+// ── Redeem Collection Modal ──
+function openRedeemModal(){
+  renderRedeemRows();
+  document.getElementById('redeem-win').classList.remove('visible');
+  document.getElementById('redeem-modal-overlay').classList.add('visible');
+}
+function closeRedeemModal(){
+  document.getElementById('redeem-modal-overlay').classList.remove('visible');
+}
+function handleRedeemOverlay(e){
+  if(e.target===document.getElementById('redeem-modal-overlay')) closeRedeemModal();
+}
+function closeRedeemWin(){
+  document.getElementById('redeem-win').classList.remove('visible');
+  renderRedeemRows();
+}
+
+function renderRedeemRows(){
+  const counts = getCardCounts();
+  const rarities = [
+    { key:'secret',    label:'✦ Secreta',    color:'#E879F9' },
+    { key:'legendary', label:'♛ Legendaria',  color:'var(--gold-light)' },
+    { key:'epic',      label:'◈ Épica',       color:'#C084FC' },
+    { key:'rare',      label:'★ Rara',        color:'#7AA4F0' },
+    { key:'common',    label:'◇ Común',       color:'#AAAACC' },
+  ];
+  const container = document.getElementById('redeem-rows');
+  container.innerHTML = rarities.map(r => {
+    const count = counts[r.key] || 0;
+    const canRedeem = count >= 1;
+    return '<div class="redeem-row ' + r.key + '">' +
+      '<div class="redeem-row-info">' +
+        '<div class="redeem-row-label">' + r.label + '</div>' +
+        '<div class="redeem-row-count">Tienes: <strong>' + count + '</strong> carta' + (count !== 1 ? 's' : '') + '</div>' +
+      '</div>' +
+      '<button class="redeem-btn ' + (canRedeem ? 'active' : 'inactive') + '" ' +
+        (canRedeem ? 'onclick="doRedeem('' + r.key + '','' + r.label + '')"' : 'disabled') +
+        '>Canjear 1</button>' +
+    '</div>';
+  }).join('');
+}
+
+async function doRedeem(rarity, label){
+  if(!currentUser) return;
+
+  // Remove 1 card of that rarity from collection
+  let removed = false;
+  collection = collection.filter(c => {
+    if(c.rarity === rarity && !removed){ removed = true; return false; }
+    return true;
+  });
+
+  // Delete from DB
+  try{
+    const res = await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?user_id=eq.' + currentUser.id + '&rarity=eq.' + rarity + '&limit=1&select=id', {
+      headers:{
+        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
+        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
+      }
+    });
+    const rows = await res.json();
+    if(rows.length){
+      await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?id=eq.' + rows[0].id, {
+        method:'DELETE',
+        headers:{
+          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
+          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
+        }
+      });
+    }
+
+    // Log the redemption in a new table
+    await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/card_redemptions', {
+      method:'POST',
+      headers:{
+        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
+        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
+        'Content-Type':'application/json',
+        'Prefer':'return=representation'
+      },
+      body: JSON.stringify({
+        user_id: currentUser.id,
+        email: currentUser.email,
+        rarity: rarity,
+        redeemed_at: new Date().toISOString()
+      })
+    });
+  } catch(e){ console.error('Redeem error:', e); }
+
+  // Show win message
+  sndLegendary();
+  spawnConfetti();
+  const rarityName = rarityLabel(rarity);
+  document.getElementById('redeem-win-msg').innerHTML =
+    '¡Ganaste una carta <strong>' + rarityName + '</strong> física en<br>' +
+    '<strong>Rescue TCG</strong> de rareza <strong>' + rarityName + '</strong>!!!<br><br>' +
+    '<span style="font-size:11px;color:rgba(74,222,128,0.7);">Muestra esta pantalla en tienda para reclamar tu carta.</span>';
+  document.getElementById('redeem-win').classList.add('visible');
+
+  renderCollection();
+  updateCraftModal();
+}
 
 // ── Craft / Collection Modal ──
 function openCraftModal(){

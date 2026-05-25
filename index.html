@@ -3374,14 +3374,16 @@ function renderCollection(){
   document.getElementById('stat-prize').textContent=prizeCount;
 
   if(!collection.length){grid.innerHTML='<div class="empty-collection">Tu biblioteca está vacío. Invoca para comenzar...</div>';return;}
-  const unique={};
-  collection.forEach(c=>{unique[c.name]=c;});
+  // Group by rarity only — show count per rarity
+  const rarityCounts={common:0,rare:0,epic:0,legendary:0,secret:0};
+  collection.forEach(c=>{ if(rarityCounts[c.rarity]!==undefined) rarityCounts[c.rarity]++; });
   grid.innerHTML='';
-  Object.values(unique).forEach(c=>{
-    const count=collection.filter(x=>x.name===c.name).length;
+  const rarityOrder=['secret','legendary','epic','rare','common'];
+  rarityOrder.forEach(r=>{
+    if(rarityCounts[r]===0) return;
     const el=document.createElement('div');
-    el.className=`mini-card ${c.rarity}`;
-    el.innerHTML=`${c.art} ${rarityLabel(c.rarity)}${count>1?` <span style="opacity:.5">×${count}</span>`:''}`;
+    el.className=`mini-card ${r}`;
+    el.innerHTML=`${rarityLabel(r)} <span style="opacity:.7">×${rarityCounts[r]}</span>`;
     grid.appendChild(el);
   });
 }

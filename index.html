@@ -3247,8 +3247,10 @@ function csgoRevealCard(card){
       } else {
         // Last card — show prominent "Ver resultado" and hide skip all
         document.getElementById('csgo-pull-next').style.display = 'none';
-        document.getElementById('csgo-next-btn').style.display = 'inline-block';
-        document.getElementById('csgo-next-btn').textContent = remaining === 0 && _csgoQueue.length === 1 ? '✦ Ver resultado' : '✦ Ver resumen';
+        const nb = document.getElementById('csgo-next-btn');
+        nb.style.display = 'inline-block';
+        nb.classList.add('shown');
+        nb.textContent = _csgoQueue.length === 1 ? '✦ Ver resultado' : '✦ Ver resumen';
         document.getElementById('csgo-skip-all-btn').style.display = 'none';
       }
     }, 200);

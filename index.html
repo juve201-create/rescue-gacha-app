@@ -1569,6 +1569,119 @@ body::after{
   .csgo-pull-next-btn { font-size: 14px; padding: 12px 20px; letter-spacing: 2px; }
   .csgo-queue-badge { font-size: 10px; padding: 2px 7px; }
 }
+
+/* ── Craft Modal ── */
+.craft-modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,2,15,0.94);backdrop-filter:blur(8px);
+  z-index:600;align-items:center;justify-content:center;padding:16px;
+}
+.craft-modal-overlay.visible{display:flex;}
+.craft-modal{
+  background:linear-gradient(175deg,#1E0A38,#120720);
+  border:1px solid var(--border-card);border-radius:18px;
+  padding:24px 18px;width:100%;max-width:360px;
+  box-shadow:0 0 50px rgba(232,24,122,0.2),0 24px 64px rgba(0,0,0,0.8);
+  position:relative;overflow:hidden;max-height:90vh;overflow-y:auto;
+}
+.craft-modal::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),var(--pink-main),transparent);
+}
+.craft-modal-close{
+  position:absolute;top:12px;right:14px;
+  background:none;border:none;color:var(--text-muted);
+  font-size:20px;cursor:pointer;
+}
+.craft-modal h2{
+  font-family:'Cinzel',serif;font-size:16px;font-weight:700;
+  letter-spacing:2px;text-align:center;color:var(--cream);
+  margin-bottom:4px;
+}
+.craft-modal-sub{
+  font-size:11px;color:var(--text-muted);text-align:center;
+  letter-spacing:1px;margin-bottom:20px;font-style:italic;
+}
+
+/* Rarity counts grid */
+.rarity-counts{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;
+}
+.rarity-count-card{
+  border-radius:10px;border:1px solid;padding:12px 10px;text-align:center;
+}
+.rarity-count-card.common   {background:rgba(26,26,46,0.8);border-color:#4A4A6A;}
+.rarity-count-card.rare     {background:rgba(10,26,56,0.8);border-color:#3B6AE0;}
+.rarity-count-card.epic     {background:rgba(30,10,56,0.8);border-color:var(--purple-bright);}
+.rarity-count-card.legendary{background:rgba(42,26,0,0.8);border-color:var(--gold);}
+.rarity-count-card.secret   {background:rgba(15,5,32,0.8);border-color:#E879F9;}
+
+.rarity-count-label{
+  font-family:'Cinzel',serif;font-size:8px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;
+}
+.common    .rarity-count-label{color:#8A8AAA;}
+.rare      .rarity-count-label{color:#7AA4F0;}
+.epic      .rarity-count-label{color:#C084FC;}
+.legendary .rarity-count-label{color:var(--gold-light);}
+.secret    .rarity-count-label{color:#E879F9;}
+
+.rarity-count-number{
+  font-family:'Cinzel',serif;font-size:28px;font-weight:900;display:block;
+}
+.common    .rarity-count-number{color:#AAAACC;}
+.rare      .rarity-count-number{color:#7AA4F0;}
+.epic      .rarity-count-number{color:#C084FC;}
+.legendary .rarity-count-number{color:var(--gold-light);}
+.secret    .rarity-count-number{color:#E879F9;}
+
+/* Craft recipes */
+.craft-title{
+  font-family:'Cinzel',serif;font-size:11px;font-weight:700;
+  letter-spacing:2px;color:var(--gold);text-transform:uppercase;
+  margin-bottom:10px;
+}
+.craft-recipe{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(61,20,102,0.2);border:1px solid var(--border-card);
+  border-radius:10px;padding:12px;margin-bottom:8px;
+}
+.craft-recipe-info{flex:1;}
+.craft-recipe-title{
+  font-family:'Cinzel',serif;font-size:11px;font-weight:700;
+  color:var(--cream);letter-spacing:1px;margin-bottom:2px;
+}
+.craft-recipe-cost{font-size:10px;color:var(--text-muted);}
+.craft-recipe-cost span{color:var(--gold-light);}
+.craft-btn{
+  font-family:'Cinzel',serif;font-size:10px;font-weight:700;
+  letter-spacing:1px;padding:7px 14px;border-radius:6px;
+  border:none;cursor:pointer;transition:all 0.15s;white-space:nowrap;
+}
+.craft-btn.can-craft{
+  background:linear-gradient(135deg,var(--gold),#92400E);color:white;
+  box-shadow:0 2px 0 #3A1800,0 4px 12px rgba(212,160,23,0.3);
+}
+.craft-btn.cannot-craft{
+  background:rgba(61,20,102,0.3);color:var(--text-dim);
+  border:1px solid var(--border-card);cursor:not-allowed;
+}
+
+/* View collection button */
+.view-collection-btn{
+  font-family:'Cinzel',serif;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  padding:5px 12px;border-radius:5px;
+  border:1px solid rgba(212,160,23,0.4);
+  background:rgba(212,160,23,0.08);color:var(--gold);
+  cursor:pointer;transition:all 0.15s;
+}
+.view-collection-btn:hover{background:rgba(212,160,23,0.18);}
+
+@media(max-width:480px){
+  .rarity-count-number{font-size:22px;}
+  .craft-modal{padding:18px 14px;}
+}
 </style>
   <!-- PWA / iPhone Home Screen -->
   <meta name="apple-mobile-web-app-title" content="Rescue Gacha">
@@ -1754,10 +1867,7 @@ body::after{
       <span class="gem-icon">✦</span>
       <span id="gems-display">0</span> Maná
     </div>
-    <div class="gem-pill" style="border-color:rgba(212,160,23,0.4);">
-      <span class="gem-icon">◈</span>
-      <span id="cards-display">0</span> cartas
-    </div>
+
     <button class="add-credits-pill" onclick="sndClick();openCreditsModal()">
       + Créditos
     </button>
@@ -1821,6 +1931,66 @@ body::after{
   </div>
 
 
+
+
+<!-- Craft / Collection Modal -->
+<div class="craft-modal-overlay" id="craft-modal-overlay" onclick="handleCraftOverlay(event)">
+  <div class="craft-modal">
+    <button class="craft-modal-close" onclick="closeCraftModal()">✕</button>
+    <h2>Colección</h2>
+    <p class="craft-modal-sub">Tus cartas · Craftea nuevas rarezas</p>
+
+    <div class="rarity-counts">
+      <div class="rarity-count-card common">
+        <div class="rarity-count-label">Común</div>
+        <span class="rarity-count-number" id="craft-common">0</span>
+      </div>
+      <div class="rarity-count-card rare">
+        <div class="rarity-count-label">Rara</div>
+        <span class="rarity-count-number" id="craft-rare">0</span>
+      </div>
+      <div class="rarity-count-card epic">
+        <div class="rarity-count-label">Épica</div>
+        <span class="rarity-count-number" id="craft-epic">0</span>
+      </div>
+      <div class="rarity-count-card legendary">
+        <div class="rarity-count-label">Legendaria</div>
+        <span class="rarity-count-number" id="craft-legendary">0</span>
+      </div>
+      <div class="rarity-count-card secret" style="grid-column:span 2;">
+        <div class="rarity-count-label">✦ Secreta</div>
+        <span class="rarity-count-number" id="craft-secret">0</span>
+      </div>
+    </div>
+
+    <p class="craft-title">Craftear cartas</p>
+
+    <div class="craft-recipe" id="craft-r2c">
+      <div class="craft-recipe-info">
+        <div class="craft-recipe-title">◇ → ★ Rara</div>
+        <div class="craft-recipe-cost">Cuesta <span>20 Comunes</span></div>
+      </div>
+      <button class="craft-btn" id="craft-btn-rare" onclick="doCraft('rare')">Craftear</button>
+    </div>
+
+    <div class="craft-recipe" id="craft-r3c">
+      <div class="craft-recipe-info">
+        <div class="craft-recipe-title">★ → ◈ Épica</div>
+        <div class="craft-recipe-cost">Cuesta <span>20 Raras</span></div>
+      </div>
+      <button class="craft-btn" id="craft-btn-epic" onclick="doCraft('epic')">Craftear</button>
+    </div>
+
+    <div class="craft-recipe" id="craft-r4c">
+      <div class="craft-recipe-info">
+        <div class="craft-recipe-title">◈ → ♛ Legendaria</div>
+        <div class="craft-recipe-cost">Cuesta <span>20 Épicas</span></div>
+      </div>
+      <button class="craft-btn" id="craft-btn-legendary" onclick="doCraft('legendary')">Craftear</button>
+    </div>
+
+  </div>
+</div>
 
 <!-- Prizes Wallet Modal -->
 <div class="prizes-modal-overlay" id="prizes-modal-overlay" onclick="handlePrizesOverlayClick(event)">
@@ -2572,6 +2742,99 @@ function cardLogo(rarity){
 
 
 
+
+// ── Craft / Collection Modal ──
+function openCraftModal(){
+  updateCraftModal();
+  document.getElementById('craft-modal-overlay').classList.add('visible');
+}
+function closeCraftModal(){
+  document.getElementById('craft-modal-overlay').classList.remove('visible');
+}
+function handleCraftOverlay(e){
+  if(e.target===document.getElementById('craft-modal-overlay')) closeCraftModal();
+}
+
+function updateCraftModal(){
+  const counts = getCardCounts();
+  document.getElementById('craft-common').textContent    = counts.common;
+  document.getElementById('craft-rare').textContent      = counts.rare;
+  document.getElementById('craft-epic').textContent      = counts.epic;
+  document.getElementById('craft-legendary').textContent = counts.legendary;
+  document.getElementById('craft-secret').textContent    = counts.secret;
+
+  // Update craft buttons
+  updateCraftBtn('craft-btn-rare',      counts.common    >= 20);
+  updateCraftBtn('craft-btn-epic',      counts.rare      >= 20);
+  updateCraftBtn('craft-btn-legendary', counts.epic      >= 20);
+}
+
+function updateCraftBtn(id, canCraft){
+  const btn = document.getElementById(id);
+  if(!btn) return;
+  btn.className = 'craft-btn ' + (canCraft ? 'can-craft' : 'cannot-craft');
+  btn.disabled = !canCraft;
+}
+
+function getCardCounts(){
+  const counts = {common:0,rare:0,epic:0,legendary:0,secret:0};
+  (collection||[]).forEach(c => { if(counts[c.rarity]!==undefined) counts[c.rarity]++; });
+  return counts;
+}
+
+async function doCraft(targetRarity){
+  const cost = { rare:'common', epic:'rare', legendary:'epic' };
+  const sourceRarity = cost[targetRarity];
+  if(!sourceRarity) return;
+
+  const counts = getCardCounts();
+  const sourceKey = sourceRarity;
+  if(counts[sourceKey] < 20){ sndClick(); return; }
+
+  // Remove 20 source cards
+  let removed = 0;
+  collection = collection.filter(c => {
+    if(c.rarity === sourceRarity && removed < 20){ removed++; return false; }
+    return true;
+  });
+
+  // Add 1 target card
+  const newCard = { rarity: targetRarity };
+  collection.push(newCard);
+
+  // Save to DB
+  saveCardToDB(targetRarity);
+
+  // Remove source cards from DB (remove 20 of that rarity)
+  if(currentUser){
+    try{
+      // Get IDs of 20 source cards from DB
+      const res = await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?user_id=eq.' + currentUser.id + '&rarity=eq.' + sourceRarity + '&limit=20&select=id', {
+        headers:{
+          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
+          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
+        }
+      });
+      const rows = await res.json();
+      if(rows.length){
+        const ids = rows.map(r=>r.id).join(',');
+        await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?id=in.(' + ids + ')', {
+          method:'DELETE',
+          headers:{
+            'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
+            'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
+          }
+        });
+      }
+    } catch(e){}
+  }
+
+  sndRare();
+  spawnConfetti();
+  renderCollection();
+  updateCraftModal();
+}
+
 // ── Prizes Wallet Modal ──
 window._prizes = window._prizes || [];
 
@@ -3104,13 +3367,12 @@ function renderCollection(){
   collection.forEach(c=>{if(counts[c.rarity]!==undefined)counts[c.rarity]++;});
   // Count prizes separately from collection array
   const prizeCount = (window._prizes||[]).length;
-  document.getElementById('stat-common').textContent=`◇ ${counts.common}`;
-  document.getElementById('stat-rare').textContent=`★ ${counts.rare}`;
-  document.getElementById('stat-epic').textContent=`◈ ${counts.epic}`;
-  document.getElementById('stat-legendary').textContent=`♛ ${counts.legendary}`;
-  document.getElementById('stat-secret').textContent=`✦ ${counts.secret}`;
-  document.getElementById('stat-prize').textContent=`★ ${prizeCount}`;
-  document.getElementById('cards-display').textContent=collection.length;
+  document.getElementById('stat-common').textContent=counts.common;
+  document.getElementById('stat-rare').textContent=counts.rare;
+  document.getElementById('stat-epic').textContent=counts.epic;
+  document.getElementById('stat-legendary').textContent=counts.legendary;
+  document.getElementById('stat-secret').textContent=counts.secret;
+  document.getElementById('stat-prize').textContent=prizeCount;
 
   if(!collection.length){grid.innerHTML='<div class="empty-collection">Tu biblioteca está vacío. Invoca para comenzar...</div>';return;}
   const unique={};

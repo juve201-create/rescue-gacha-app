@@ -1910,21 +1910,20 @@ body::after{
   <!-- COLLECTION -->
   <div class="collection-area">
     <div class="collection-header">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <p class="section-title" style="margin:0">BIBLIOTECA</p>
+        <button class="view-collection-btn" onclick="sndClick();openCraftModal()">◈ Colección</button>
         <button class="view-prizes-btn" onclick="sndClick();openPrizesModal()">
-          ★ Ver Premios <span class="prize-count-badge" id="prize-count-badge">0</span>
+          ★ Premios <span class="prize-count-badge" id="prize-count-badge">0</span>
         </button>
       </div>
-      <div class="collection-stats">
-        <span class="stat-pill sc" id="stat-common">◇ 0</span>
-        <span class="stat-pill sr" id="stat-rare">★ 0</span>
-        <span class="stat-pill se" id="stat-epic">◈ 0</span>
-        <span class="stat-pill sl" id="stat-legendary">♛ 0</span>
-        <span class="stat-pill ss" id="stat-secret">✦ 0</span>
-        <span class="stat-pill sp" id="stat-prize">★ 0</span>
-      </div>
     </div>
+    <span id="stat-common" style="display:none">0</span>
+    <span id="stat-rare"   style="display:none">0</span>
+    <span id="stat-epic"   style="display:none">0</span>
+    <span id="stat-legendary" style="display:none">0</span>
+    <span id="stat-secret" style="display:none">0</span>
+    <span id="stat-prize"  style="display:none">0</span>
     <div class="collection-grid" id="collection-grid">
       <div class="empty-collection">Tu biblioteca está vacío. Invoca para comenzar...</div>
     </div>

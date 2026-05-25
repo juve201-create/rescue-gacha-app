@@ -1,0 +1,22 @@
+{
+  "name": "Rescue Gacha",
+  "short_name": "Rescue Gacha",
+  "description": "Portal de invocación de cartas TCG",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0518",
+  "theme_color": "#E8187A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/IMG_0198.JPG",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/IMG_0198.JPG",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

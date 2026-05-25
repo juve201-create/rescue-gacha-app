@@ -3172,6 +3172,7 @@ function csgoRevealCard(card){
   document.getElementById('csgo-pull-next').style.display = 'none';
   document.getElementById('csgo-skip-current').style.display = 'inline-block';
   document.getElementById('csgo-skip-all-btn').style.opacity = '0.5';
+  document.getElementById('csgo-skip-all-btn').style.display = 'inline-block';
   title.textContent = 'Invocando...';
 
   const POOL = ['common','common','common','rare','common','rare','common','epic','common','rare'];
@@ -3244,9 +3245,11 @@ function csgoRevealCard(card){
         pullNext.style.display = 'flex';
         document.getElementById('csgo-next-btn').style.display = 'none';
       } else {
-        // Last card — show "Ver resumen"
+        // Last card — show prominent "Ver resultado" and hide skip all
         document.getElementById('csgo-pull-next').style.display = 'none';
         document.getElementById('csgo-next-btn').style.display = 'inline-block';
+        document.getElementById('csgo-next-btn').textContent = remaining === 0 && _csgoQueue.length === 1 ? '✦ Ver resultado' : '✦ Ver resumen';
+        document.getElementById('csgo-skip-all-btn').style.display = 'none';
       }
     }, 200);
   }

@@ -86,6 +86,7 @@ body{font-family:Georgia,serif;background:#0D0518;color:#F0E6C8;min-height:100vh
     <div class="tab" id="tab-users" onclick="loadTab('users')">Usuarios</div>
     <div class="tab" id="tab-payments" onclick="loadTab('payments')">Pagos</div>
     <div class="tab" id="tab-prizes" onclick="loadTab('prizes')">Premios</div>
+    <div class="tab" id="tab-redemptions" onclick="loadTab('redemptions')">🎴 Canjes</div>
   </div>
   <div class="content" id="tab-content"><div class="loading">Cargando...</div></div>
 </div>
@@ -141,6 +142,7 @@ function loadTab(tab) {
   if (tab === "users")    loadUsers();
   if (tab === "payments") loadPayments();
   if (tab === "prizes")   loadPrizes();
+  if (tab === "redemptions") loadRedemptions();
 }
 
 function sbFetch(table, query) {
@@ -298,6 +300,41 @@ function confirmGems() {
     closeModal();
     loadTab("users");
   });
+}
+
+async function loadRedemptions() {
+  sbFetch("card_redemptions","?select=*&order=redeemed_at.desc&limit=200").then(function(rows) {
+    var el = document.getElementById("tab-content");
+    if (!rows.length) { el.innerHTML = "<div class=\"empty\">Sin canjes aún</div>"; return; }
+    var html = "<p class=\"sec-title\">Canjes de cartas físicas (" + rows.length + ")</p><div class=\"list\">";
+    var rarityColors = {
+      common: "#AAAACC", rare: "#7AA4F0", epic: "#C084FC",
+      legendary: "#D4A017", secret: "#E879F9"
+    };
+    var rarityLabels = {
+      common: "Común", rare: "Rara", epic: "Épica",
+      legendary: "Legendaria", secret: "Secreta"
+    };
+    rows.forEach(function(r) {
+      var color = rarityColors[r.rarity] || "#F0E6C8";
+      var label = rarityLabels[r.rarity] || r.rarity;
+      html += "<div class=\"list-item\">";
+      html += "<div class=\"list-item-icon\">🎴</div>";
+      html += "<div class=\"list-item-info\">";
+      html += "<div class=\"list-item-title\">" + (r.email || "—") + "</div>";
+      html += "<div class=\"list-item-sub\"><span style=\"color:" + color + ";font-weight:700;\">" + label + "</span> · " + fmtDate(r.redeemed_at) + " " + fmtTime(r.redeemed_at) + "</div>";
+      html += "</div>";
+      html += "<span class=\"badge\" style=\"background:rgba(74,222,128,0.1);color:#4ADE80;border:1px solid #4ADE80;\">Canjeado</span>";
+      html += "</div>";
+    });
+    html += "</div>";
+    el.innerHTML = html;
+  });
+}
+
+function fmtTime(d) {
+  if (!d) return "";
+  return new Date(d).toLocaleTimeString("es-MX", {hour:"2-digit",minute:"2-digit"});
 }
 
 if (sessionStorage.getItem("rg_admin") === "1") {

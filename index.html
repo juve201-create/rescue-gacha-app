@@ -2774,7 +2774,7 @@ async function doPull(){
   if(gems<pack.cost){alert(`Necesitas ${pack.cost} de Maná. Tienes ${gems}.`);return;}
   pulling=true;
   gems-=pack.cost;
-  document.getElementById('gems-display').textContent=gems; autoSave();
+  document.getElementById('gems-display').textContent=gems; await autoSave();
 
   sndPullStart();
 
@@ -2807,7 +2807,7 @@ async function doPull(){
     if(!prizeCard){ const p=rollPrize(); if(p) prizeCard=p; }
   }
 
-  addToCollection(drawn); autoSave();
+  addToCollection(drawn); await autoSave();
   if(secretCard){ showSecretReveal(secretCard); }
   else {
     showResults(drawn, hasLegendary);
@@ -3211,12 +3211,12 @@ function handleMPClick(e, amount, price, label){
     '</div>';
 }
 
-function simulatePayment(amount){
+async function simulatePayment(amount){
   // Admin manual credit add
   gems += amount;
   document.getElementById('gems-display').textContent = gems;
   closeCreditsModal();
-  autoSave();
+  await autoSave();
   sndJackpot();
   const pill = document.querySelector('.gem-pill');
   pill.style.transition = 'all 0.2s';

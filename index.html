@@ -2071,11 +2071,17 @@ async function logoutUser(){
 async function autoSave(){
   if(!currentUser) return;
   try{
-    await fetch(BACKEND + '/api/gems', {
+    const res = await fetch(BACKEND + '/api/gems', {
       method:'POST',
       headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
       body: JSON.stringify({ action:'save_gems', user_id: currentUser.id, gems })
     });
+    const data = await res.json();
+    // Sync gems with what server actually saved
+    if(data.ok && typeof data.gems === 'number'){
+      gems = data.gems;
+      document.getElementById('gems-display').textContent = gems;
+    }
   } catch(e){}
 }
 

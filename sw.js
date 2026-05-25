@@ -1,4 +1,4 @@
-const CACHE = 'rescue-gacha-v3';
+const CACHE = 'rescue-gacha-v4';
 const ASSETS = ['/', '/index.html', '/icon.jpg', '/manifest.json'];
 
 self.addEventListener('install', e => {

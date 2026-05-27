@@ -2078,7 +2078,7 @@ body::after{
     <div class="craft-recipe" id="craft-r2c">
       <div class="craft-recipe-info">
         <div class="craft-recipe-title">◇ → ★ Rara</div>
-        <div class="craft-recipe-cost">Cuesta <span>20 Comunes</span></div>
+        <div class="craft-recipe-cost">Cuesta <span>10 Comunes</span></div>
       </div>
       <button class="craft-btn" id="craft-btn-rare" onclick="doCraft('rare')">Craftear</button>
     </div>
@@ -2086,7 +2086,7 @@ body::after{
     <div class="craft-recipe" id="craft-r3c">
       <div class="craft-recipe-info">
         <div class="craft-recipe-title">★ → ◈ Épica</div>
-        <div class="craft-recipe-cost">Cuesta <span>20 Raras</span></div>
+        <div class="craft-recipe-cost">Cuesta <span>10 Raras</span></div>
       </div>
       <button class="craft-btn" id="craft-btn-epic" onclick="doCraft('epic')">Craftear</button>
     </div>
@@ -2094,7 +2094,7 @@ body::after{
     <div class="craft-recipe" id="craft-r4c">
       <div class="craft-recipe-info">
         <div class="craft-recipe-title">◈ → ♛ Legendaria</div>
-        <div class="craft-recipe-cost">Cuesta <span>20 Épicas</span></div>
+        <div class="craft-recipe-cost">Cuesta <span>10 Épicas</span></div>
       </div>
       <button class="craft-btn" id="craft-btn-legendary" onclick="doCraft('legendary')">Craftear</button>
     </div>
@@ -2712,9 +2712,9 @@ const CARDS = {
   ],
 };
 
-// Weights out of 10000
-// Probabilidades iguales sin importar el sobre:
-const BASE_WEIGHTS = {common:8500,rare:1200,epic:250,legendary:49,secret:1};
+// Probabilidades por rareza (sobre 10,000 tiradas)
+// Común: 60% | Rara: 30% | Épica: 8% | Legendaria: 1.99% | Secreta: 0.01% (1 en 10,000)
+const BASE_WEIGHTS = {common:7600, rare:1900, epic:400, legendary:100, secret:1};
 const WEIGHTS = {
   mini:    BASE_WEIGHTS,
   normal:  BASE_WEIGHTS,
@@ -2987,9 +2987,9 @@ function updateCraftModal(){
   document.getElementById('craft-secret').textContent    = counts.secret;
 
   // Update craft buttons
-  updateCraftBtn('craft-btn-rare',      counts.common    >= 20);
-  updateCraftBtn('craft-btn-epic',      counts.rare      >= 20);
-  updateCraftBtn('craft-btn-legendary', counts.epic      >= 20);
+  updateCraftBtn('craft-btn-rare',      counts.common    >= 10);
+  updateCraftBtn('craft-btn-epic',      counts.rare      >= 10);
+  updateCraftBtn('craft-btn-legendary', counts.epic      >= 10);
 }
 
 function updateCraftBtn(id, canCraft){
@@ -3156,12 +3156,12 @@ async function doCraft(targetRarity){
 
   const counts = getCardCounts();
   const sourceKey = sourceRarity;
-  if(counts[sourceKey] < 20){ sndClick(); return; }
+  if(counts[sourceKey] < 10){ sndClick(); return; }
 
-  // Remove 20 source cards
+  // Remove 10 source cards
   let removed = 0;
   collection = collection.filter(c => {
-    if(c.rarity === sourceRarity && removed < 20){ removed++; return false; }
+    if(c.rarity === sourceRarity && removed < 10){ removed++; return false; }
     return true;
   });
 
@@ -3176,7 +3176,7 @@ async function doCraft(targetRarity){
   if(currentUser){
     try{
       // Get IDs of 20 source cards from DB
-      const res = await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?user_id=eq.' + currentUser.id + '&rarity=eq.' + sourceRarity + '&limit=20&select=id', {
+      const res = await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?user_id=eq.' + currentUser.id + '&rarity=eq.' + sourceRarity + '&limit=10&select=id', {
         headers:{
           'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
           'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
@@ -3403,13 +3403,13 @@ function genCode(prefix){
 }
 
 const PRIZE_CARDS = [
-  { id:'p1', odds:100,  name:'Refresco Gratis',          art:'🥤', desc:'1 refresco de cualquier sabor', prefix:'RFSC' },
-  { id:'p2', odds:250,  name:'Papas Gratis',             art:'🍟', desc:'1 orden de papas fritas',       prefix:'PAPA' },
-  { id:'p3', odds:500,  name:'½ Orden Gratis',           art:'🍔', desc:'Media orden de tu elección',    prefix:'HALF' },
-  { id:'p4', odds:1000, name:'Orden Completa',           art:'🎉', desc:'1 orden completa gratis',       prefix:'ORD1' },
-  { id:'p5', odds:1500, name:'½ Orden + Papas',          art:'🍔', desc:'Media orden + papas gratis',    prefix:'HPAP' },
-  { id:'p6', odds:2500, name:'Orden + Papas',            art:'🏆', desc:'1 orden completa + papas',      prefix:'OPAP' },
-  { id:'p7', odds:5000, name:'Orden + Papas + Refresco', art:'👑', desc:'¡El combo completo gratis!',    prefix:'FULL' },
+  { id:'p1', odds:50,   name:'Refresco Gratis',          art:'🥤', desc:'1 refresco de cualquier sabor', prefix:'RFSC' },
+  { id:'p2', odds:100,  name:'Papas Gratis',             art:'🍟', desc:'1 orden de papas fritas',       prefix:'PAPA' },
+  { id:'p3', odds:200,  name:'½ Orden Gratis',           art:'🍔', desc:'Media orden de tu elección',    prefix:'HALF' },
+  { id:'p4', odds:450,  name:'Orden Completa',           art:'🎉', desc:'1 orden completa gratis',       prefix:'ORD1' },
+  { id:'p5', odds:600,  name:'½ Orden + Papas',          art:'🍔', desc:'Media orden + papas gratis',    prefix:'HPAP' },
+  { id:'p6', odds:1000, name:'Orden + Papas',            art:'🏆', desc:'1 orden completa + papas',      prefix:'OPAP' },
+  { id:'p7', odds:2000, name:'Orden + Papas + Refresco', art:'👑', desc:'¡El combo completo gratis!',    prefix:'FULL' },
 ];
 
 function rollPrize() {

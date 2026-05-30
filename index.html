@@ -2890,13 +2890,14 @@ function selectPack(el){
 // ── PITY GLOBAL ──────────────────────────────────────────
 async function loadGlobalPity(){
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/global_pity?id=eq.1&select=pulls_since_secret`,{
-      headers:{ apikey: SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}` }
+    const res  = await fetch(`${BACKEND}/api/gems`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     });
     const data = await res.json();
-    if(data && data[0]){
-      globalPity  = data[0].pulls_since_secret || 0;
-      pityActive  = globalPity >= 1250;
+    if(data.ok){
+      globalPity = data.pulls_since_secret || 0;
+      pityActive = globalPity >= 1250;
       updatePityBar();
     }
   }catch(e){ console.error('loadGlobalPity',e); }
@@ -2904,20 +2905,18 @@ async function loadGlobalPity(){
 
 async function updateGlobalPity(secretPulled, pullCount){
   try{
-    let newPity = secretPulled ? 0 : globalPity + pullCount;
-    globalPity  = newPity;
-    pityActive  = globalPity >= 1250;
-    updatePityBar();
-    await fetch(`${SUPABASE_URL}/rest/v1/global_pity?id=eq.1`,{
-      method:'PATCH',
-      headers:{
-        apikey: SUPABASE_ANON_KEY,
-        Authorization:`Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type':'application/json',
-        Prefer:'return=minimal'
-      },
-      body: JSON.stringify({ pulls_since_secret: newPity, updated_at: new Date().toISOString() })
+    const token = JSON.parse(localStorage.getItem(SESS_KEY)||'{}').token;
+    const res   = await fetch(`${BACKEND}/api/gems`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+      body: JSON.stringify({ action:'update_pity', pull_count: pullCount, secret_pulled: secretPulled })
     });
+    const data  = await res.json();
+    if(data.ok){
+      globalPity = data.pulls_since_secret;
+      pityActive = globalPity >= 1250;
+      updatePityBar();
+    }
   }catch(e){ console.error('updateGlobalPity',e); }
 }
 

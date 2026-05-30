@@ -151,6 +151,7 @@ body::after{
   border-radius:10px;
   transition:height 0.8s ease, background 0.3s;
   height:0%;
+  min-height:4px;
 }
 
 .pity-bar-label{
@@ -2557,13 +2558,15 @@ function loginSuccess(user, col, prizes){
   updatePrizeBadge();
   sndClick();
 
-  // Cargar pity después de que el DOM esté completamente pintado
-  requestAnimationFrame(() => {
-    setTimeout(async () => {
-      await loadGlobalPity();
-      // Segunda llamada para asegurar que la barra se pinte correctamente
-      requestAnimationFrame(() => updatePityBar());
-    }, 400);
+  // Cargar pity — múltiples intentos para garantizar que la barra se pinte
+  loadGlobalPity().then(() => {
+    // Primer intento inmediato
+    updatePityBar();
+    // Segundo intento tras el primer repaint
+    requestAnimationFrame(() => updatePityBar());
+    // Tercer y cuarto intento con delay para cubrir latencia del backend
+    setTimeout(() => updatePityBar(), 500);
+    setTimeout(() => updatePityBar(), 1500);
   });
 }
 

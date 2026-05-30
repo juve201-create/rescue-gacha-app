@@ -2491,8 +2491,12 @@ function loginSuccess(user, col, prizes){
   document.getElementById('user-bar-email').textContent = user.email;
   renderCollection();
   updatePrizeBadge();
-  loadGlobalPity();
   sndClick();
+
+  // Cargar pity después de que el DOM esté completamente pintado
+  requestAnimationFrame(() => {
+    setTimeout(() => loadGlobalPity(), 300);
+  });
 }
 
 async function initAuth(){
@@ -2895,29 +2899,35 @@ async function loadGlobalPity(){
       headers: { 'Content-Type': 'application/json' }
     });
     const data = await res.json();
+    console.log('[PITY] load:', data);
     if(data.ok){
       globalPity = data.pulls_since_secret || 0;
       pityActive = globalPity >= 1250;
       updatePityBar();
     }
-  }catch(e){ console.error('loadGlobalPity',e); }
+  }catch(e){ console.error('[PITY] loadGlobalPity error:',e); }
 }
 
 async function updateGlobalPity(secretPulled, pullCount){
   try{
-    const token = JSON.parse(localStorage.getItem(SESS_KEY)||'{}').token;
-    const res   = await fetch(`${BACKEND}/api/gems`, {
+    const token = getToken();
+    if(!token){ console.warn('[PITY] No token, skipping update'); return; }
+    console.log('[PITY] updating — pullCount:', pullCount, 'secretPulled:', secretPulled);
+    const res = await fetch(`${BACKEND}/api/gems`, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
       body: JSON.stringify({ action:'update_pity', pull_count: pullCount, secret_pulled: secretPulled })
     });
-    const data  = await res.json();
+    const data = await res.json();
+    console.log('[PITY] update response:', data);
     if(data.ok){
       globalPity = data.pulls_since_secret;
       pityActive = globalPity >= 1250;
       updatePityBar();
+    } else {
+      console.error('[PITY] backend error:', data);
     }
-  }catch(e){ console.error('updateGlobalPity',e); }
+  }catch(e){ console.error('[PITY] updateGlobalPity error:',e); }
 }
 
 function updatePityBar(){

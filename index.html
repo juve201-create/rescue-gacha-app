@@ -140,16 +140,16 @@ body::after{
   border-radius:10px;
   overflow:hidden;
   position:relative;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
 }
 
 .pity-bar-fill{
+  position:absolute;
+  bottom:0;
+  left:0;
   width:100%;
-  background:linear-gradient(180deg,#9333EA,#E8187A);
+  background:linear-gradient(0deg,#E8187A,#9333EA);
   border-radius:10px;
-  transition:height 0.6s ease, background 0.3s;
+  transition:height 0.8s ease, background 0.3s;
   height:0%;
 }
 
@@ -2932,19 +2932,12 @@ function updatePityBar(){
   const sidebar  = document.getElementById('pity-sidebar');
   if(!bar) return;
 
-  // Forzar reflow para que la transición CSS funcione correctamente
-  bar.style.transition = 'none';
-  bar.style.height = '0%';
-  bar.offsetHeight; // trigger reflow
-  bar.style.transition = 'height 0.8s ease, background 0.3s';
+  bar.style.height = pct + '%';
+  bar.style.background = pityActive
+    ? 'linear-gradient(0deg,#FF8C00,#FFD700)'
+    : 'linear-gradient(0deg,#E8187A,#9333EA)';
 
-  requestAnimationFrame(() => {
-    bar.style.height = pct + '%';
-    bar.style.background = pityActive
-      ? 'linear-gradient(0deg,#FFD700,#FF8C00)'
-      : 'linear-gradient(0deg,#E8187A,#9333EA)';
-    if(label) label.textContent = pct + '%';
-  });
+  if(label) label.textContent = pct + '%';
 
   if(sidebar){
     sidebar.style.boxShadow = pityActive

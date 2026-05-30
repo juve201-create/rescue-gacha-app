@@ -2587,10 +2587,11 @@ async function initAuth(){
         const data = await res.json();
         if(data.ok){ loginSuccess(data.user, data.collection||[], data.prizes||[]); return; }
       }
-    } catch(e){}
+    } catch(e){ console.warn('[AUTH] session restore failed:', e); }
     clearSession();
   }
-  showLoginScreen();
+  // Solo mostrar login si no hay usuario activo
+  if(!currentUser) showLoginScreen();
 }
 
 async function logoutUser(){

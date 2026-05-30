@@ -2846,53 +2846,18 @@ const PACKS = {
 };
 
 const CARDS = {
-  common:[
-    {name:'Pikachu Base',   set:'Base Set', art:'☇',price:'$1.50'},
-    {name:'Magikarp',       set:'Base Set', art:'≋',price:'$0.80'},
-    {name:'Rattata',        set:'Base Set', art:'◉',price:'$0.60'},
-    {name:'Caterpie',       set:'Jungle',   art:'∿',price:'$0.70'},
-    {name:'Jigglypuff',     set:'Jungle',   art:'♪',price:'$1.20'},
-    {name:'Psyduck',        set:'Fossil',   art:'⌗',price:'$0.90'},
-    {name:'Gastly',         set:'Fossil',   art:'◌',price:'$1.10'},
-    {name:'Bulbasaur',      set:'Base Set', art:'✾',price:'$2.00'},
-    {name:'Charmander',     set:'Base Set', art:'⟁',price:'$2.50'},
-    {name:'Squirtle',       set:'Base Set', art:'≈',price:'$2.00'},
-  ],
-  rare:[
-    {name:'Gengar Holo',    set:'Base Set', art:'⸸',price:'$18.00'},
-    {name:'Gyarados',       set:'Base Set', art:'✺',price:'$22.00'},
-    {name:'Alakazam',       set:'Base Set', art:'⌀',price:'$15.00'},
-    {name:'Arcanine',       set:'Jungle',   art:'⊕',price:'$12.00'},
-    {name:'Scyther Holo',   set:'Jungle',   art:'✝',price:'$20.00'},
-    {name:'Machamp 1st Ed', set:'Base Set', art:'⚒',price:'$35.00'},
-    {name:'Dragonair',      set:'Base Set', art:'∞',price:'$14.00'},
-  ],
-  epic:[
-    {name:'Blastoise Holo', set:'Base Set', art:'⌇',price:'$120.00'},
-    {name:'Venusaur Holo',  set:'Base Set', art:'✿',price:'$95.00'},
-    {name:'Raichu Holo',    set:'Base Set', art:'☇',price:'$85.00'},
-    {name:'Mewtwo Holo',    set:'Base Set', art:'⊗',price:'$150.00'},
-    {name:'Zapdos Holo',    set:'Fossil',   art:'⩕',price:'$110.00'},
-  ],
-  legendary:[
-    {name:'Charizard Holo',       set:'Base Set',art:'⌖',price:'$350.00'},
-    {name:'Pikachu Illus. Rare',  set:'Promo',   art:'✧',price:'$500.00'},
-    {name:'Shadowless Blastoise', set:'Base Set',art:'◆',price:'$800.00'},
-    {name:'Mew Trophy Card',      set:'Promo',   art:'★',price:'$1,200.00'},
-  ],
-  secret:[
-    {name:'Pikachu Illustrator',  set:'Promo Exclusivo',  art:'⎔',price:'$5,275,000'},
-    {name:'Black Star Umbreon',   set:'Neo Destiny',       art:'●',price:'$70,000'},
-    {name:'Prerelease Raichu',    set:'Error de Impresión',art:'⚡',price:'$10,000'},
-    {name:'No. 1 Trainer',        set:'Trophy 1999',       art:'♛',price:'$90,000'},
-  ],
+  common:    Array(10).fill(null).map((_,i) => ({ rarity:'common',    art:'🌿' })),
+  rare:      Array(7).fill(null).map((_,i)  => ({ rarity:'rare',      art:'⚔️' })),
+  epic:      Array(5).fill(null).map((_,i)  => ({ rarity:'epic',      art:'🌀' })),
+  legendary: Array(4).fill(null).map((_,i)  => ({ rarity:'legendary', art:'🌸' })),
+  secret:    Array(4).fill(null).map((_,i)  => ({ rarity:'secret',    art:'💠' })),
 };
 
 // Probabilidades por rareza (sobre 10,000 tiradas)
 // Común: 60% | Rara: 30% | Épica: 8% | Legendaria: 1.99% | Secreta: 0.01% (1 en 10,000)
 // Pity global: 1/25,000 normal → 1/500 al llegar a 1500 tiradas globales
-const BASE_WEIGHTS        = {common:759924, rare:190000, epic:40000, legendary:10000, secret:76};     // ~1/25,000 secreta
-const BASE_WEIGHTS_PITY   = {common:758100, rare:189900, epic:40000, legendary:10000, secret:2000};   // ~1/500 secreta (pity activo)
+const BASE_WEIGHTS        = {common:779960, rare:180000, epic:35000, legendary:5000, secret:40};     // 78% / 18% / 3.5% / 0.5% / 1/25000
+const BASE_WEIGHTS_PITY   = {common:778000, rare:180000, epic:35000, legendary:5000, secret:2000};   // ~1/500 secreta (pity activo)
 let   globalPity          = 0;   // tiradas desde la última secreta (se sincroniza con Supabase)
 let   pityActive          = false;
 const WEIGHTS = {

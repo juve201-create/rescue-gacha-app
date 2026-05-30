@@ -2563,13 +2563,11 @@ function loginSuccess(user, col, prizes){
   console.log('[LOGIN] cards-display after set:', document.getElementById('cards-display').textContent);
   console.log('[LOGIN] pity-bar-fill exists:', !!document.getElementById('pity-bar-fill'));
 
-  // Cargar pity
-  loadGlobalPity().then(() => {
-    console.log('[LOGIN] globalPity after load:', globalPity);
-    updatePityBar();
-    requestAnimationFrame(() => updatePityBar());
-    setTimeout(() => updatePityBar(), 500);
-    setTimeout(() => updatePityBar(), 1500);
+  // Cargar pity y renderizar colección después de un frame
+  requestAnimationFrame(() => {
+    renderCollection();
+    loadGlobalPity();
+    setTimeout(() => { renderCollection(); updatePityBar(); }, 600);
   });
 }
 
@@ -2969,18 +2967,23 @@ function selectPack(el){
 // ── PITY GLOBAL ──────────────────────────────────────────
 async function loadGlobalPity(){
   try{
+    console.log('[PITY] fetching...');
     const res  = await fetch(`${BACKEND}/api/gems`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
     const data = await res.json();
-    console.log('[PITY] load:', data);
+    console.log('[PITY] response:', data);
     if(data.ok){
       globalPity = data.pulls_since_secret || 0;
       pityActive = globalPity >= 1250;
-      updatePityBar();
     }
-  }catch(e){ console.error('[PITY] loadGlobalPity error:',e); }
+  }catch(e){
+    console.error('[PITY] loadGlobalPity error:', e);
+  }
+  // Siempre actualizar la barra, aunque falle el fetch
+  console.log('[PITY] updating bar with globalPity:', globalPity);
+  updatePityBar();
 }
 
 async function updateGlobalPity(secretPulled, pullCount){

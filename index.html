@@ -2541,8 +2541,8 @@ function loginSuccess(user, col, prizes){
   currentUser = user;
   hideLoginScreen();
 
-  gems           = user.gems || 0;
-  collection     = (col||[]).map(c => ({ rarity: c.rarity }));
+  gems       = user.gems || 0;
+  collection = (col||[]).map(c => ({ rarity: c.rarity }));
   window._prizes = prizes.map(p => ({
     id: p.prize_id, name: p.name, code: p.code,
     redeemed: p.redeemed, db_id: p.id,
@@ -2552,18 +2552,17 @@ function loginSuccess(user, col, prizes){
 
   console.log('[LOGIN] collection.length:', collection.length, '| gems:', gems);
 
-  document.getElementById('gems-display').textContent   = gems;
-  document.getElementById('cards-display').textContent  = collection.length;
-  document.getElementById('user-bar-name').textContent  = user.email.split('@')[0];
-  document.getElementById('user-bar-email').textContent = user.email;
-  renderCollection();
+  // Helper seguro para setear textContent
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+
+  setText('gems-display',    gems);
+  setText('user-bar-name',   user.email.split('@')[0]);
+  setText('user-bar-email',  user.email);
+
   updatePrizeBadge();
   sndClick();
 
-  console.log('[LOGIN] cards-display after set:', document.getElementById('cards-display').textContent);
-  console.log('[LOGIN] pity-bar-fill exists:', !!document.getElementById('pity-bar-fill'));
-
-  // Cargar pity y renderizar colección después de un frame
+  // Renderizar colección y pity después de un frame para asegurar que el DOM esté listo
   requestAnimationFrame(() => {
     renderCollection();
     loadGlobalPity();

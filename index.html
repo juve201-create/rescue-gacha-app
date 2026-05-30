@@ -170,24 +170,52 @@ body::after{
   text-align:center;
 }
 
-.pity-counter{
-  font-size:9px;
-  color:#9D7DB8;
-  white-space:nowrap;
+.pity-counter{ display:none; }
+.pity-status{ display:none; }
+
+.pity-tooltip{
   display:none;
+  position:fixed;
+  right:80px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:200;
+  max-width:220px;
+  animation:fadeInLeft 0.2s ease;
 }
 
-.pity-sidebar:hover .pity-counter{ display:block; }
+.pity-tooltip.visible{ display:block; }
 
-.pity-status{
-  font-size:9px;
-  color:#9D7DB8;
-  white-space:nowrap;
-  text-align:center;
-  display:none;
+@keyframes fadeInLeft{
+  from{ opacity:0; transform:translateY(-50%) translateX(10px); }
+  to{   opacity:1; transform:translateY(-50%) translateX(0); }
 }
 
-.pity-sidebar:hover .pity-status{ display:block; }
+.pity-tooltip-inner{
+  background:rgba(13,5,24,0.97);
+  border:1px solid rgba(232,24,122,0.5);
+  border-radius:14px;
+  padding:14px 36px 14px 14px;
+  font-size:13px;
+  color:#F0E6C8;
+  line-height:1.5;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(232,24,122,0.15);
+  position:relative;
+}
+
+.pity-tooltip-close{
+  position:absolute;
+  top:8px; right:8px;
+  background:none;
+  border:none;
+  color:#9D7DB8;
+  font-size:14px;
+  cursor:pointer;
+  line-height:1;
+  padding:2px 4px;
+}
+
+.pity-tooltip-close:hover{ color:#E8187A; }
 
 .pity-hint{
   font-size:8px;
@@ -2036,7 +2064,7 @@ body::after{
 <div class="app">
 
   <!-- PITY SIDEBAR -->
-  <div class="pity-sidebar" id="pity-sidebar">
+  <div class="pity-sidebar" id="pity-sidebar" onclick="showPityTooltip()">
     <div class="pity-sidebar-title">✦ CARTA SECRETA</div>
     <div class="pity-bar-wrap">
       <div class="pity-bar-track">
@@ -2044,9 +2072,15 @@ body::after{
       </div>
       <div class="pity-bar-label" id="pity-bar-label">0%</div>
     </div>
-    <div class="pity-counter" id="pity-counter">0 / 1,500</div>
-    <div class="pity-status" id="pity-status">1 / 1,000,000</div>
     <div class="pity-hint">Tiradas globales de todos los jugadores</div>
+  </div>
+
+  <!-- PITY TOOLTIP -->
+  <div class="pity-tooltip" id="pity-tooltip">
+    <div class="pity-tooltip-inner">
+      🌟 ¡Al llegar a 100% la carta secreta aparece con una frecuencia mucho mayor!
+      <button class="pity-tooltip-close" onclick="hidePityTooltip(event)">✕</button>
+    </div>
   </div>
 
   <!-- HEADER -->
@@ -2856,8 +2890,8 @@ const CARDS = {
 
 // Probabilidades por rareza (sobre 10,000 tiradas)
 // Común: 60% | Rara: 30% | Épica: 8% | Legendaria: 1.99% | Secreta: 0.01% (1 en 10,000)
-// Pity global: 1/1,000,000 normal → 1/500 al llegar a 1500 tiradas globales
-const BASE_WEIGHTS        = {common:759924, rare:190000, epic:40000, legendary:10000, secret:1};      // ~1/1,000,000 secreta
+// Pity global: 1/25,000 normal → 1/500 al llegar a 1500 tiradas globales
+const BASE_WEIGHTS        = {common:759924, rare:190000, epic:40000, legendary:10000, secret:76};     // ~1/25,000 secreta
 const BASE_WEIGHTS_PITY   = {common:758100, rare:189900, epic:40000, legendary:10000, secret:2000};   // ~1/500 secreta (pity activo)
 let   globalPity          = 0;   // tiradas desde la última secreta (se sincroniza con Supabase)
 let   pityActive          = false;
@@ -2919,26 +2953,17 @@ function updatePityBar(){
   const pct     = Math.min(100, Math.round((globalPity / 1500) * 100));
   const bar     = document.getElementById('pity-bar-fill');
   const label   = document.getElementById('pity-bar-label');
-  const counter = document.getElementById('pity-counter');
-  const status  = document.getElementById('pity-status');
-  const track   = document.querySelector('.pity-bar-track');
   if(!bar) return;
 
-  // Barra vertical (por defecto): height representa el progreso
   bar.style.height = pct + '%';
-  // CSS var para barra horizontal en hover
   document.querySelector('.pity-sidebar').style.setProperty('--pity-pct', pct + '%');
 
   bar.style.background = pityActive
     ? 'linear-gradient(180deg,#FFD700,#FF8C00)'
     : 'linear-gradient(180deg,#9333EA,#E8187A)';
 
-  if(label)   label.textContent  = pct + '%';
-  if(counter) counter.textContent = `${Math.min(globalPity,1500).toLocaleString()} / 1,500`;
-  if(status)  status.textContent  = pityActive ? '🔥 ¡PITY ACTIVO! 1/500' : '1 / 1,000,000';
-  if(status)  status.style.color  = pityActive ? '#FFD700' : '#9D7DB8';
+  if(label) label.textContent = pct + '%';
 
-  // Pulso cuando pity activo
   const sidebar = document.getElementById('pity-sidebar');
   if(sidebar){
     sidebar.style.boxShadow = pityActive
@@ -2948,6 +2973,15 @@ function updatePityBar(){
       ? 'rgba(255,215,0,0.5)'
       : 'rgba(232,24,122,0.3)';
   }
+}
+
+function showPityTooltip(){
+  document.getElementById('pity-tooltip').classList.add('visible');
+}
+
+function hidePityTooltip(e){
+  e.stopPropagation();
+  document.getElementById('pity-tooltip').classList.remove('visible');
 }
 
 function rollRarity(pack){

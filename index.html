@@ -2550,6 +2550,8 @@ function loginSuccess(user, col, prizes){
     desc: (window._PRIZE_DESCS && window._PRIZE_DESCS[p.prize_id]) || '',
   }));
 
+  console.log('[LOGIN] collection.length:', collection.length, '| gems:', gems);
+
   document.getElementById('gems-display').textContent   = gems;
   document.getElementById('cards-display').textContent  = collection.length;
   document.getElementById('user-bar-name').textContent  = user.email.split('@')[0];
@@ -2558,13 +2560,14 @@ function loginSuccess(user, col, prizes){
   updatePrizeBadge();
   sndClick();
 
-  // Cargar pity — múltiples intentos para garantizar que la barra se pinte
+  console.log('[LOGIN] cards-display after set:', document.getElementById('cards-display').textContent);
+  console.log('[LOGIN] pity-bar-fill exists:', !!document.getElementById('pity-bar-fill'));
+
+  // Cargar pity
   loadGlobalPity().then(() => {
-    // Primer intento inmediato
+    console.log('[LOGIN] globalPity after load:', globalPity);
     updatePityBar();
-    // Segundo intento tras el primer repaint
     requestAnimationFrame(() => updatePityBar());
-    // Tercer y cuarto intento con delay para cubrir latencia del backend
     setTimeout(() => updatePityBar(), 500);
     setTimeout(() => updatePityBar(), 1500);
   });

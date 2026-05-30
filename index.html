@@ -672,16 +672,80 @@ body::after{
 .close-results-btn:hover{background:rgba(232,24,122,0.3);}
 
 /* ════════════════════════════
-   SECRET REVEAL
+   SECRET REVEAL — PORTAL MÁGICO
 ════════════════════════════ */
 .secret-overlay{
   display:none;position:fixed;inset:0;
-  background:radial-gradient(ellipse at center,#2D0A4E 0%,#000 70%);
+  background:radial-gradient(ellipse at center,#0a0020 0%,#000 80%);
   z-index:500;align-items:center;justify-content:center;
-  flex-direction:column;gap:20px;padding:20px 12px;
+  flex-direction:column;gap:24px;padding:20px 12px;
+  overflow:hidden;
 }
 .secret-overlay.visible{display:flex;}
 
+/* Portal rings */
+.secret-portal-wrap{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:0;height:0;
+  pointer-events:none;
+}
+.secret-portal-ring{
+  position:absolute;
+  border-radius:50%;
+  border:3px solid transparent;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  opacity:0;
+}
+.ring-1{
+  width:200px;height:200px;
+  border-color:#E879F9;
+  box-shadow:0 0 30px #E879F9, inset 0 0 30px rgba(232,121,249,0.3);
+  animation:none;
+}
+.ring-2{
+  width:320px;height:320px;
+  border-color:#818CF8;
+  box-shadow:0 0 40px #818CF8, inset 0 0 40px rgba(129,140,248,0.2);
+  animation:none;
+}
+.ring-3{
+  width:460px;height:460px;
+  border-color:#38BDF8;
+  box-shadow:0 0 50px #38BDF8, inset 0 0 50px rgba(56,189,248,0.1);
+  animation:none;
+}
+.secret-portal-core{
+  position:absolute;
+  top:50%;left:50%;
+  width:120px;height:120px;
+  transform:translate(-50%,-50%) scale(0);
+  border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,#E879F9 40%,transparent 70%);
+  opacity:0;
+  filter:blur(8px);
+}
+
+@keyframes ring-spin-cw  { to{ transform:translate(-50%,-50%) scale(1) rotate(360deg); } }
+@keyframes ring-spin-ccw { to{ transform:translate(-50%,-50%) scale(1) rotate(-360deg); } }
+@keyframes ring-pulse{
+  0%,100%{ box-shadow:0 0 30px #E879F9, inset 0 0 30px rgba(232,121,249,0.3); }
+  50%    { box-shadow:0 0 60px #E879F9, inset 0 0 60px rgba(232,121,249,0.5); }
+}
+@keyframes portal-core-pulse{
+  0%,100%{ filter:blur(8px); opacity:0.8; }
+  50%    { filter:blur(4px); opacity:1; }
+}
+
+/* Carta */
+.secret-content{
+  position:relative;z-index:502;
+  display:flex;flex-direction:column;
+  align-items:center;gap:16px;
+  transition:opacity 1s ease, transform 1s ease;
+}
 .secret-card-big{
   width:180px;min-height:250px;border-radius:14px;
   border:3px solid #E879F9;
@@ -691,10 +755,11 @@ body::after{
   gap:10px;padding:18px 12px;
   box-shadow:0 0 80px rgba(232,121,249,0.9),0 0 140px rgba(99,102,241,0.5);
   animation:secret-pulse 1.5s ease-in-out infinite alternate;
-  opacity:0;transform:scale(0.4) rotateY(180deg);
-  transition:opacity 0.9s ease,transform 0.9s ease;
 }
-.secret-card-big.revealed{opacity:1;transform:scale(1) rotateY(0deg);}
+@keyframes secret-pulse{
+  from{ box-shadow:0 0 60px rgba(232,121,249,0.7),0 0 100px rgba(99,102,241,0.4); }
+  to  { box-shadow:0 0 100px rgba(232,121,249,1),0 0 180px rgba(99,102,241,0.7); }
+}
 .secret-card-big .s-art  {font-size:72px;line-height:1;animation:rainbow-spin 2s linear infinite;}
 .secret-card-big .s-badge{
   font-family:'Cinzel',serif;font-size:8px;font-weight:700;letter-spacing:2px;
@@ -702,34 +767,31 @@ body::after{
   animation:badge-shimmer 2s linear infinite;
   color:white;padding:3px 12px;border-radius:3px;
 }
-.secret-card-big .s-name {font-family:'Cinzel',serif;font-size:16px;color:#F5D0FE;text-align:center;font-weight:700;}
-.secret-card-big .s-set  {font-size:11px;color:#A78BFA;font-style:italic;}
-.secret-card-big .s-price{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:#E879F9;}
+.secret-card-big .s-name{font-family:'Cinzel',serif;font-size:16px;color:#F5D0FE;text-align:center;font-weight:700;}
 
 .secret-title{
   font-family:'Cinzel',serif;font-size:24px;font-weight:900;
   letter-spacing:3px;text-transform:uppercase;
   color:#E879F9;text-shadow:0 0 20px #E879F9,0 0 40px #818CF8;
-  text-align:center;opacity:0;animation:fade-in-up 0.6s 0.3s ease forwards;
-}
-.secret-sub{
-  font-size:12px;letter-spacing:2px;text-transform:uppercase;
-  color:#A78BFA;text-align:center;
-  opacity:0;animation:fade-in-up 0.6s 0.6s ease forwards;
-}
-@keyframes fade-in-up{
-  from{opacity:0;transform:translateY(14px);}
-  to  {opacity:1;transform:translateY(0);}
+  text-align:center;
 }
 .secret-close-btn{
   font-family:'Cinzel',serif;font-size:14px;font-weight:700;
   letter-spacing:2px;text-transform:uppercase;
-  padding:11px 28px;border:1.5px solid #E879F9;border-radius:var(--r-md);
+  padding:11px 28px;border:1.5px solid #E879F9;border-radius:8px;
   background:transparent;color:#E879F9;cursor:pointer;
   box-shadow:0 0 20px rgba(232,121,249,0.3);
-  opacity:0;animation:fade-in-up 0.6s 1.8s ease forwards;transition:all 0.2s;
+  transition:all 0.2s;
 }
 .secret-close-btn:hover{background:rgba(232,121,249,0.15);}
+
+@keyframes screen-shake{
+  0%,100%{ transform:translate(0,0); }
+  20%    { transform:translate(-8px,4px); }
+  40%    { transform:translate(8px,-4px); }
+  60%    { transform:translate(-6px,6px); }
+  80%    { transform:translate(6px,-2px); }
+}
 
 /* ════════════════════════════
    CONFETTI
@@ -2377,12 +2439,24 @@ body::after{
   <button class="close-results-btn" onclick="sndClick();closeResults()">Guardar en BIBLIOTECA ⚔</button>
 </div>
 
-<!-- SECRET OVERLAY -->
+<!-- SECRET OVERLAY — PORTAL MÁGICO -->
 <div class="secret-overlay" id="secret-overlay">
-  <div class="secret-title">✦ CARTA SECRETA ✦</div>
 
-  <div class="secret-card-big" id="secret-card-big"></div>
-  <button class="secret-close-btn" onclick="sndClick();closeSecret()">Preservar en el BIBLIOTECA</button>
+  <canvas id="fireworks-canvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:501;"></canvas>
+
+  <div class="secret-portal-wrap" id="secret-portal-wrap">
+    <div class="secret-portal-ring ring-1"></div>
+    <div class="secret-portal-ring ring-2"></div>
+    <div class="secret-portal-ring ring-3"></div>
+    <div class="secret-portal-core" id="secret-portal-core"></div>
+  </div>
+
+  <div class="secret-content" id="secret-content" style="opacity:0;transform:scale(0.5) translateY(40px);">
+    <div class="secret-title">✦ CARTA SECRETA ✦</div>
+    <div class="secret-card-big" id="secret-card-big"></div>
+    <button class="secret-close-btn" onclick="sndClick();closeSecret()">¡Reclamar carta!</button>
+  </div>
+
 </div>
 
 <script>
@@ -3693,16 +3767,177 @@ function rarityLabel(r){
 }
 
 function showSecretReveal(card){
-  const big=document.getElementById('secret-card-big');
-  big.className='secret-card-big';
-  big.innerHTML=`<div class="s-badge">✦ SECRETA ✦</div>${cardLogo('secret')}<div class="s-name">Secreta</div>`;
-  document.getElementById('secret-overlay').classList.add('visible');
+  // Interrumpir cualquier reveal de CS en curso
+  if(window._csgoSkipFn) window._csgoSkipFn();
+  document.getElementById('csgo-overlay')?.classList.remove('visible');
+
+  const overlay = document.getElementById('secret-overlay');
+  const content = document.getElementById('secret-content');
+  const big     = document.getElementById('secret-card-big');
+  const core    = document.getElementById('secret-portal-core');
+  const rings   = document.querySelectorAll('.secret-portal-ring');
+
+  // Resetear estado
+  big.innerHTML = `<div class="s-badge">✦ SECRETA ✦</div>${cardLogo('secret')}<div class="s-name">Secreta</div>`;
+  content.style.opacity   = '0';
+  content.style.transform = 'scale(0.5) translateY(40px)';
+  rings.forEach(r=>{ r.style.animation='none'; r.style.opacity='0'; r.style.transform='translate(-50%,-50%) scale(0)'; });
+  core.style.opacity   = '0';
+  core.style.transform = 'translate(-50%,-50%) scale(0)';
+
+  overlay.classList.add('visible');
   sndSecret();
-  spawnConfetti();
-  setTimeout(()=>big.classList.add('revealed'),100);
+
+  // ── FASE 1: Portal se abre (0-2s) ──
+  setTimeout(()=>{
+    // Tiembla la pantalla
+    overlay.style.animation = 'screen-shake 0.4s ease';
+    setTimeout(()=>overlay.style.animation='', 400);
+
+    // Aparece el núcleo del portal
+    core.style.transition = 'all 0.6s ease';
+    core.style.opacity    = '1';
+    core.style.transform  = 'translate(-50%,-50%) scale(1)';
+    core.style.animation  = 'portal-core-pulse 1s ease-in-out infinite';
+  }, 200);
+
+  // Ring 1 — inner
+  setTimeout(()=>{
+    const r = rings[0];
+    r.style.transition = 'opacity 0.3s';
+    r.style.opacity    = '1';
+    r.style.animation  = 'ring-spin-cw 3s linear infinite, ring-pulse 1s ease-in-out infinite';
+    r.style.transform  = 'translate(-50%,-50%) scale(1)';
+  }, 500);
+
+  // Ring 2 — mid
+  setTimeout(()=>{
+    const r = rings[1];
+    r.style.transition = 'opacity 0.3s';
+    r.style.opacity    = '0.8';
+    r.style.animation  = 'ring-spin-ccw 4s linear infinite';
+    r.style.transform  = 'translate(-50%,-50%) scale(1)';
+  }, 800);
+
+  // Ring 3 — outer
+  setTimeout(()=>{
+    const r = rings[2];
+    r.style.transition = 'opacity 0.3s';
+    r.style.opacity    = '0.6';
+    r.style.animation  = 'ring-spin-cw 6s linear infinite';
+    r.style.transform  = 'translate(-50%,-50%) scale(1)';
+  }, 1100);
+
+  // ── FASE 2: Explosión del portal (2-2.5s) ──
+  setTimeout(()=>{
+    // Flash blanco
+    const flash = document.createElement('div');
+    flash.style.cssText = 'position:fixed;inset:0;background:white;z-index:503;opacity:0;transition:opacity 0.15s;pointer-events:none;';
+    document.body.appendChild(flash);
+    requestAnimationFrame(()=>{ flash.style.opacity='1'; });
+    setTimeout(()=>{
+      flash.style.opacity='0';
+      setTimeout(()=>flash.remove(), 300);
+    }, 150);
+
+    // Colapsar el portal
+    rings.forEach(r=>{ r.style.transition='all 0.3s ease'; r.style.opacity='0'; r.style.transform='translate(-50%,-50%) scale(2)'; });
+    core.style.transition = 'all 0.3s ease';
+    core.style.opacity    = '0';
+    core.style.transform  = 'translate(-50%,-50%) scale(3)';
+
+    // Fuegos artificiales
+    startFireworks();
+    spawnConfetti();
+  }, 2200);
+
+  // ── FASE 3: Aparece la carta (2.5s) ──
+  setTimeout(()=>{
+    content.style.transition = 'opacity 0.8s ease, transform 0.8s cubic-bezier(0.34,1.56,0.64,1)';
+    content.style.opacity    = '1';
+    content.style.transform  = 'scale(1) translateY(0)';
+  }, 2500);
 }
 
-function closeSecret(){document.getElementById('secret-overlay').classList.remove('visible');}
+function startFireworks(){
+  const canvas = document.getElementById('fireworks-canvas');
+  if(!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx     = canvas.getContext('2d');
+  const particles = [];
+  const colors  = ['#E879F9','#818CF8','#38BDF8','#FFD700','#FF6EB4','#4ADE80','#FB923C'];
+
+  function spawnBurst(x, y){
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    for(let i=0;i<80;i++){
+      const angle  = (Math.PI*2/80)*i;
+      const speed  = 2 + Math.random()*6;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle)*speed,
+        vy: Math.sin(angle)*speed,
+        alpha: 1,
+        color,
+        size: 2+Math.random()*3,
+        trail: [],
+      });
+    }
+  }
+
+  // Lanzar bursts aleatorios
+  const burstInterval = setInterval(()=>{
+    const x = 100 + Math.random()*(window.innerWidth-200);
+    const y = 50  + Math.random()*(window.innerHeight/2);
+    spawnBurst(x, y);
+  }, 300);
+
+  // Bursts iniciales
+  spawnBurst(window.innerWidth*0.3, window.innerHeight*0.3);
+  spawnBurst(window.innerWidth*0.7, window.innerHeight*0.25);
+  spawnBurst(window.innerWidth*0.5, window.innerHeight*0.4);
+
+  let frame = 0;
+  function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      p.trail.push({x:p.x, y:p.y});
+      if(p.trail.length>6) p.trail.shift();
+      p.x    += p.vx;
+      p.y    += p.vy;
+      p.vy   += 0.1;
+      p.vx   *= 0.98;
+      p.alpha -= 0.018;
+      if(p.alpha <= 0){ particles.splice(i,1); continue; }
+      // Trail
+      for(let t=0;t<p.trail.length;t++){
+        ctx.beginPath();
+        ctx.arc(p.trail[t].x, p.trail[t].y, p.size*(t/p.trail.length)*0.5, 0, Math.PI*2);
+        ctx.fillStyle = p.color + Math.floor((p.alpha*(t/p.trail.length))*255).toString(16).padStart(2,'0');
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fillStyle = p.color + Math.floor(p.alpha*255).toString(16).padStart(2,'0');
+      ctx.fill();
+    }
+    frame++;
+    if(frame < 360) requestAnimationFrame(animate);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); }
+  }
+  animate();
+
+  // Detener nuevos bursts después de 6s
+  setTimeout(()=>clearInterval(burstInterval), 6000);
+}
+
+function closeSecret(){
+  document.getElementById('secret-overlay').classList.remove('visible');
+  // Limpiar canvas de fuegos artificiales
+  const canvas = document.getElementById('fireworks-canvas');
+  if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+}
 
 // ── CS:GO reveal queue ──
 let _csgoQueue  = [];

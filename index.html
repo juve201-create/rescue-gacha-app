@@ -141,26 +141,16 @@ body::after{
   overflow:hidden;
   position:relative;
   display:flex;
-  align-items:flex-end;
-}
-
-.pity-sidebar:hover .pity-bar-track{
-  width:100%;
-  height:16px;
-  align-items:center;
+  flex-direction:column;
+  justify-content:flex-end;
 }
 
 .pity-bar-fill{
   width:100%;
   background:linear-gradient(180deg,#9333EA,#E8187A);
   border-radius:10px;
-  transition:height 0.6s ease, width 0.6s ease, background 0.3s;
+  transition:height 0.6s ease, background 0.3s;
   height:0%;
-}
-
-.pity-sidebar:hover .pity-bar-fill{
-  height:100% !important;
-  width:var(--pity-pct,0%);
 }
 
 .pity-bar-label{
@@ -2495,7 +2485,11 @@ function loginSuccess(user, col, prizes){
 
   // Cargar pity después de que el DOM esté completamente pintado
   requestAnimationFrame(() => {
-    setTimeout(() => loadGlobalPity(), 300);
+    setTimeout(async () => {
+      await loadGlobalPity();
+      // Segunda llamada para asegurar que la barra se pinte correctamente
+      requestAnimationFrame(() => updatePityBar());
+    }, 400);
   });
 }
 
@@ -2935,17 +2929,22 @@ function updatePityBar(){
   const pct      = Math.min(100, Math.round((globalPity / PITY_MAX) * 100));
   const bar      = document.getElementById('pity-bar-fill');
   const label    = document.getElementById('pity-bar-label');
+  const sidebar  = document.getElementById('pity-sidebar');
   if(!bar) return;
 
-  bar.style.height = pct + '%';
-  const sidebar = document.getElementById('pity-sidebar');
-  if(sidebar) sidebar.style.setProperty('--pity-pct', pct + '%');
+  // Forzar reflow para que la transición CSS funcione correctamente
+  bar.style.transition = 'none';
+  bar.style.height = '0%';
+  bar.offsetHeight; // trigger reflow
+  bar.style.transition = 'height 0.8s ease, background 0.3s';
 
-  bar.style.background = pityActive
-    ? 'linear-gradient(180deg,#FFD700,#FF8C00)'
-    : `linear-gradient(180deg, #9333EA ${100-pct}%, #E8187A 100%)`;
-
-  if(label) label.textContent = pct + '%';
+  requestAnimationFrame(() => {
+    bar.style.height = pct + '%';
+    bar.style.background = pityActive
+      ? 'linear-gradient(0deg,#FFD700,#FF8C00)'
+      : 'linear-gradient(0deg,#E8187A,#9333EA)';
+    if(label) label.textContent = pct + '%';
+  });
 
   if(sidebar){
     sidebar.style.boxShadow = pityActive
@@ -2954,13 +2953,11 @@ function updatePityBar(){
     sidebar.style.borderColor = pityActive
       ? 'rgba(255,215,0,0.6)'
       : 'rgba(232,24,122,0.3)';
-    // Pulso dorado cuando pity activo
-    if(pityActive){
-      sidebar.style.animation = 'pity-pulse 1.5s ease-in-out infinite';
-    } else {
-      sidebar.style.animation = '';
-    }
+    sidebar.style.animation = pityActive
+      ? 'pity-pulse 1.5s ease-in-out infinite'
+      : '';
   }
+  console.log('[PITY BAR] pct:', pct, '% | globalPity:', globalPity, '| pityActive:', pityActive);
 }
 
 function showPityTooltip(){

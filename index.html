@@ -170,6 +170,11 @@ body::after{
   text-align:center;
 }
 
+@keyframes pity-pulse{
+  0%,100%{ box-shadow:0 0 20px rgba(255,215,0,0.4), 0 0 40px rgba(255,140,0,0.2); }
+  50%{     box-shadow:0 0 40px rgba(255,215,0,0.7), 0 0 80px rgba(255,140,0,0.4); }
+}
+
 .pity-counter{ display:none; }
 .pity-status{ display:none; }
 
@@ -2078,7 +2083,7 @@ body::after{
   <!-- PITY TOOLTIP -->
   <div class="pity-tooltip" id="pity-tooltip">
     <div class="pity-tooltip-inner">
-      🌟 ¡Al llegar a 100% la carta secreta aparece con una frecuencia mucho mayor!
+      🌟 ¡Al llegar a 100% (1,250 tiradas globales) la carta secreta aparece con una frecuencia mucho mayor!
       <button class="pity-tooltip-close" onclick="hidePityTooltip(event)">✕</button>
     </div>
   </div>
@@ -2513,7 +2518,9 @@ async function initAuth(){
 async function logoutUser(){
   sndClick();
   clearSession();
-  // Reload page — cleanest way to go back to login
+  globalPity = 0;
+  pityActive = false;
+  updatePityBar();
   window.location.reload();
 }
 
@@ -2855,7 +2862,7 @@ const CARDS = {
 
 // Probabilidades por rareza (sobre 10,000 tiradas)
 // Común: 60% | Rara: 30% | Épica: 8% | Legendaria: 1.99% | Secreta: 0.01% (1 en 10,000)
-// Pity global: 1/25,000 normal → 1/500 al llegar a 1500 tiradas globales
+// Pity global: 1/25,000 normal → 1/500 al llegar a 1250 tiradas globales
 const BASE_WEIGHTS        = {common:779960, rare:180000, epic:35000, legendary:5000, secret:40};     // 78% / 18% / 3.5% / 0.5% / 1/25000
 const BASE_WEIGHTS_PITY   = {common:778000, rare:180000, epic:35000, legendary:5000, secret:2000};   // ~1/500 secreta (pity activo)
 let   globalPity          = 0;   // tiradas desde la última secreta (se sincroniza con Supabase)
@@ -2889,7 +2896,7 @@ async function loadGlobalPity(){
     const data = await res.json();
     if(data && data[0]){
       globalPity  = data[0].pulls_since_secret || 0;
-      pityActive  = globalPity >= 1500;
+      pityActive  = globalPity >= 1250;
       updatePityBar();
     }
   }catch(e){ console.error('loadGlobalPity',e); }
@@ -2899,7 +2906,7 @@ async function updateGlobalPity(secretPulled, pullCount){
   try{
     let newPity = secretPulled ? 0 : globalPity + pullCount;
     globalPity  = newPity;
-    pityActive  = globalPity >= 1500;
+    pityActive  = globalPity >= 1250;
     updatePityBar();
     await fetch(`${SUPABASE_URL}/rest/v1/global_pity?id=eq.1`,{
       method:'PATCH',
@@ -2915,28 +2922,35 @@ async function updateGlobalPity(secretPulled, pullCount){
 }
 
 function updatePityBar(){
-  const pct     = Math.min(100, Math.round((globalPity / 1500) * 100));
-  const bar     = document.getElementById('pity-bar-fill');
-  const label   = document.getElementById('pity-bar-label');
+  const PITY_MAX = 1250;
+  const pct      = Math.min(100, Math.round((globalPity / PITY_MAX) * 100));
+  const bar      = document.getElementById('pity-bar-fill');
+  const label    = document.getElementById('pity-bar-label');
   if(!bar) return;
 
   bar.style.height = pct + '%';
-  document.querySelector('.pity-sidebar').style.setProperty('--pity-pct', pct + '%');
+  const sidebar = document.getElementById('pity-sidebar');
+  if(sidebar) sidebar.style.setProperty('--pity-pct', pct + '%');
 
   bar.style.background = pityActive
     ? 'linear-gradient(180deg,#FFD700,#FF8C00)'
-    : 'linear-gradient(180deg,#9333EA,#E8187A)';
+    : `linear-gradient(180deg, #9333EA ${100-pct}%, #E8187A 100%)`;
 
   if(label) label.textContent = pct + '%';
 
-  const sidebar = document.getElementById('pity-sidebar');
   if(sidebar){
     sidebar.style.boxShadow = pityActive
-      ? '0 0 30px rgba(255,215,0,0.4), 0 0 60px rgba(255,140,0,0.2)'
+      ? '0 0 30px rgba(255,215,0,0.5), 0 0 60px rgba(255,140,0,0.25)'
       : '0 0 20px rgba(232,24,122,0.15)';
     sidebar.style.borderColor = pityActive
-      ? 'rgba(255,215,0,0.5)'
+      ? 'rgba(255,215,0,0.6)'
       : 'rgba(232,24,122,0.3)';
+    // Pulso dorado cuando pity activo
+    if(pityActive){
+      sidebar.style.animation = 'pity-pulse 1.5s ease-in-out infinite';
+    } else {
+      sidebar.style.animation = '';
+    }
   }
 }
 

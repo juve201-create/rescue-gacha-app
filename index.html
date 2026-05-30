@@ -3117,10 +3117,15 @@ async function doPull(){
   await updateGlobalPity(secretPulled, pack.count);
 
   addToCollection(drawn); await autoSave();
-  if(secretCard){ showSecretReveal(secretCard); }
-  else {
+  if(secretCard){
+    window._pendingPrize = prizeCard;
+    // Si hay más cartas además de la secreta, mostrarlas al cerrar el portal
+    const otherCards = drawn.filter(c => c.rarity !== 'secret');
+    window._secretPendingCards    = otherCards.length > 0 ? otherCards : null;
+    window._secretPendingLegendary = hasLegendary;
+    showSecretReveal(secretCard);
+  } else {
     showResults(drawn, hasLegendary);
-    // Prize shows after user closes results summary
     if(prizeCard){ window._pendingPrize = prizeCard; }
     else { window._pendingPrize = null; }
   }
@@ -3934,9 +3939,16 @@ function startFireworks(){
 
 function closeSecret(){
   document.getElementById('secret-overlay').classList.remove('visible');
-  // Limpiar canvas de fuegos artificiales
   const canvas = document.getElementById('fireworks-canvas');
   if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+  // Mostrar cartas restantes si las hay
+  if(window._secretPendingCards && window._secretPendingCards.length > 0){
+    setTimeout(()=>{
+      showResults(window._secretPendingCards, window._secretPendingLegendary);
+      window._secretPendingCards = null;
+    }, 300);
+  }
 }
 
 // ── CS:GO reveal queue ──

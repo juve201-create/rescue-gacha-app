@@ -2550,7 +2550,6 @@ function loginSuccess(user, col, prizes){
     desc: (window._PRIZE_DESCS && window._PRIZE_DESCS[p.prize_id]) || '',
   }));
 
-  console.log('[LOGIN] collection.length:', collection.length, '| gems:', gems);
 
   // Helper seguro para setear textContent
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
@@ -2584,7 +2583,7 @@ async function initAuth(){
         const data = await res.json();
         if(data.ok){ loginSuccess(data.user, data.collection||[], data.prizes||[]); return; }
       }
-    } catch(e){ console.warn('[AUTH] session restore failed:', e); }
+    } catch(e){ console.error('session restore failed', e); }
     clearSession();
   }
   // Solo mostrar login si no hay usuario activo
@@ -2600,21 +2599,42 @@ async function logoutUser(){
   window.location.reload();
 }
 
-async function autoSave(){
+// Gasta gems de forma autoritativa en el servidor
+async function spendGems(cost){
+  if(!currentUser) return false;
+  try{
+    const res = await fetch(BACKEND + '/api/gems', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+      body: JSON.stringify({ action:'spend_gems', user_id: currentUser.id, cost })
+    });
+    const data = await res.json();
+    if(data.ok && typeof data.gems === 'number'){
+      gems = data.gems;
+      const el = document.getElementById('gems-display'); if(el) el.textContent = gems;
+      return true;
+    }
+    // Sin gems suficientes u otro error
+    if(typeof data.gems === 'number'){ gems = data.gems; const el=document.getElementById('gems-display'); if(el) el.textContent = gems; }
+    return false;
+  } catch(e){ console.error('spendGems error:', e); return false; }
+}
+
+// Lee el balance real de gems del servidor
+async function syncGems(){
   if(!currentUser) return;
   try{
     const res = await fetch(BACKEND + '/api/gems', {
       method:'POST',
       headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
-      body: JSON.stringify({ action:'save_gems', user_id: currentUser.id, gems })
+      body: JSON.stringify({ action:'get_gems', user_id: currentUser.id })
     });
     const data = await res.json();
-    // Sync gems with what server actually saved
     if(data.ok && typeof data.gems === 'number'){
       gems = data.gems;
-      document.getElementById('gems-display').textContent = gems;
+      const el = document.getElementById('gems-display'); if(el) el.textContent = gems;
     }
-  } catch(e){}
+  } catch(e){ console.error('syncGems error:', e); }
 }
 
 async function saveCardToDB(rarity){
@@ -2966,13 +2986,11 @@ function selectPack(el){
 // ── PITY GLOBAL ──────────────────────────────────────────
 async function loadGlobalPity(){
   try{
-    console.log('[PITY] fetching...');
     const res  = await fetch(`${BACKEND}/api/gems`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
     const data = await res.json();
-    console.log('[PITY] response:', data);
     if(data.ok){
       globalPity = data.pulls_since_secret || 0;
       pityActive = globalPity >= 1250;
@@ -2981,7 +2999,6 @@ async function loadGlobalPity(){
     console.error('[PITY] loadGlobalPity error:', e);
   }
   // Siempre actualizar la barra, aunque falle el fetch
-  console.log('[PITY] updating bar with globalPity:', globalPity);
   updatePityBar();
 }
 
@@ -2989,14 +3006,12 @@ async function updateGlobalPity(secretPulled, pullCount){
   try{
     const token = getToken();
     if(!token){ console.warn('[PITY] No token, skipping update'); return; }
-    console.log('[PITY] updating — pullCount:', pullCount, 'secretPulled:', secretPulled);
     const res = await fetch(`${BACKEND}/api/gems`, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
       body: JSON.stringify({ action:'update_pity', pull_count: pullCount, secret_pulled: secretPulled })
     });
     const data = await res.json();
-    console.log('[PITY] update response:', data);
     if(data.ok){
       globalPity = data.pulls_since_secret;
       pityActive = globalPity >= 1250;
@@ -3033,7 +3048,6 @@ function updatePityBar(){
       ? 'pity-pulse 1.5s ease-in-out infinite'
       : '';
   }
-  console.log('[PITY BAR] pct:', pct, '% | globalPity:', globalPity, '| pityActive:', pityActive);
 }
 
 function showPityTooltip(){
@@ -3087,58 +3101,67 @@ async function doPull(){
   const pack=PACKS[selectedPack];
   if(gems<pack.cost){alert(`Necesitas ${pack.cost} de Maná. Tienes ${gems}.`);return;}
   pulling=true;
-  gems-=pack.cost;
-  document.getElementById('gems-display').textContent=gems; await autoSave();
 
-  sndPullStart();
+  try{
+    // Gastar gems de forma segura en el servidor ANTES de tirar
+    const spent = await spendGems(pack.cost);
+    if(!spent){
+      alert('No se pudo procesar la tirada. Verifica tu Maná.');
+      pulling=false;
+      return;
+    }
 
-  const machine=document.getElementById('machine');
-  const win=document.getElementById('machine-window');
+    sndPullStart();
 
+    const machine=document.getElementById('machine');
+    const win=document.getElementById('machine-window');
 
-  machine.classList.add('shaking');
-  setTimeout(()=>machine.classList.remove('shaking'),500);
-  machine.classList.add('spinning');
+    machine.classList.add('shaking');
+    setTimeout(()=>machine.classList.remove('shaking'),500);
+    machine.classList.add('spinning');
 
-  let ei=0;
-  const interval=setInterval(()=>{
-    win.textContent=MACHINE_FRAMES[ei++%MACHINE_FRAMES.length];
-    sndTick();
-  },110);
-  await new Promise(r=>setTimeout(r,1300));
-  clearInterval(interval);
-  machine.classList.remove('spinning');
-  sndReelStop();
-  win.textContent=pack.emoji;
+    let ei=0;
+    const interval=setInterval(()=>{
+      win.textContent=MACHINE_FRAMES[ei++%MACHINE_FRAMES.length];
+      sndTick();
+    },110);
+    await new Promise(r=>setTimeout(r,1300));
+    clearInterval(interval);
+    machine.classList.remove('spinning');
+    sndReelStop();
+    win.textContent=pack.emoji;
 
-  const drawn=[];
-  let hasLegendary=false,secretCard=null,prizeCard=null;
-  let secretPulled=false;
-  for(let i=0;i<pack.count;i++){
-    const rarity=rollRarity(selectedPack);
-    if(rarity==='secret'){secretCard=pickCard('secret');drawn.push({...secretCard});secretPulled=true;}
-    else{if(rarity==='legendary')hasLegendary=true;drawn.push(pickCard(rarity));}
-    // Independent prize roll per draw
-    if(!prizeCard){ const p=rollPrize(); if(p) prizeCard=p; }
+    const drawn=[];
+    let hasLegendary=false,secretCard=null,prizeCard=null;
+    let secretPulled=false;
+    for(let i=0;i<pack.count;i++){
+      const rarity=rollRarity(selectedPack);
+      if(rarity==='secret'){secretCard=pickCard('secret');drawn.push({...secretCard});secretPulled=true;}
+      else{if(rarity==='legendary')hasLegendary=true;drawn.push(pickCard(rarity));}
+      if(!prizeCard){ const p=rollPrize(); if(p) prizeCard=p; }
+    }
+
+    // Actualizar pity global en el servidor
+    await updateGlobalPity(secretPulled, pack.count);
+
+    addToCollection(drawn);
+
+    if(secretCard){
+      window._pendingPrize = prizeCard;
+      const otherCards = drawn.filter(c => c.rarity !== 'secret');
+      window._secretPendingCards    = otherCards.length > 0 ? otherCards : null;
+      window._secretPendingLegendary = hasLegendary;
+      showSecretReveal(secretCard);
+    } else {
+      showResults(drawn, hasLegendary);
+      window._pendingPrize = prizeCard || null;
+    }
+  } catch(e){
+    console.error('doPull error:', e);
+    alert('Ocurrió un error durante la tirada.');
+  } finally {
+    pulling=false;
   }
-
-  // Actualizar pity global en Supabase
-  await updateGlobalPity(secretPulled, pack.count);
-
-  addToCollection(drawn); await autoSave();
-  if(secretCard){
-    window._pendingPrize = prizeCard;
-    // Si hay más cartas además de la secreta, mostrarlas al cerrar el portal
-    const otherCards = drawn.filter(c => c.rarity !== 'secret');
-    window._secretPendingCards    = otherCards.length > 0 ? otherCards : null;
-    window._secretPendingLegendary = hasLegendary;
-    showSecretReveal(secretCard);
-  } else {
-    showResults(drawn, hasLegendary);
-    if(prizeCard){ window._pendingPrize = prizeCard; }
-    else { window._pendingPrize = null; }
-  }
-  pulling=false;
 }
 
 
@@ -3231,49 +3254,34 @@ async function doRedeem(rarity, label){
     b.className = 'redeem-btn inactive';
   });
 
-  // Remove 1 card of that rarity from collection
+  // Canjear de forma segura en el servidor
+  try{
+    const res = await fetch(BACKEND + '/api/gems', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+      body: JSON.stringify({ action:'redeem_card', user_id: currentUser.id, rarity })
+    });
+    const data = await res.json();
+    if(!data.ok){
+      alert(data.error || 'No se pudo canjear');
+      _redeemInProgress = false;
+      renderRedeemRows();
+      return;
+    }
+  } catch(e){
+    console.error('Redeem error:', e);
+    alert('Error de conexión al canjear');
+    _redeemInProgress = false;
+    renderRedeemRows();
+    return;
+  }
+
+  // Quitar 1 carta de la colección local (espejo del servidor)
   let removed = false;
   collection = collection.filter(c => {
     if(c.rarity === rarity && !removed){ removed = true; return false; }
     return true;
   });
-
-  // Delete from DB
-  try{
-    const res = await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?user_id=eq.' + currentUser.id + '&rarity=eq.' + rarity + '&limit=1&select=id', {
-      headers:{
-        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
-        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
-      }
-    });
-    const rows = await res.json();
-    if(rows.length){
-      await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?id=eq.' + rows[0].id, {
-        method:'DELETE',
-        headers:{
-          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
-          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
-        }
-      });
-    }
-
-    // Log the redemption in a new table
-    await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/card_redemptions', {
-      method:'POST',
-      headers:{
-        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
-        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
-        'Content-Type':'application/json',
-        'Prefer':'return=representation'
-      },
-      body: JSON.stringify({
-        user_id: currentUser.id,
-        email: currentUser.email,
-        rarity: rarity,
-        redeemed_at: new Date().toISOString()
-      })
-    });
-  } catch(e){ console.error('Redeem error:', e); }
 
   // Show win message
   sndLegendary();
@@ -3281,12 +3289,14 @@ async function doRedeem(rarity, label){
   const rarityName = rarityLabel(rarity);
   document.getElementById('redeem-win-msg').innerHTML =
     '¡Ganaste una carta <strong>' + rarityName + '</strong> física en<br>' +
-    '<strong>Rescue TCG</strong> de rareza <strong>' + rarityName + '</strong>!!!<br><br>' +
+    '<strong>Rescue TCG</strong>!!!<br><br>' +
     '<span style="font-size:11px;color:rgba(74,222,128,0.7);">Muestra esta pantalla en tienda para reclamar tu carta.</span>';
   document.getElementById('redeem-win').classList.add('visible');
 
+  _redeemInProgress = false;
   renderCollection();
   updateCraftModal();
+  renderRedeemRows();
 }
 
 // ── Craft / Collection Modal ──
@@ -3478,46 +3488,28 @@ async function doCraft(targetRarity){
   if(!sourceRarity) return;
 
   const counts = getCardCounts();
-  const sourceKey = sourceRarity;
-  if(counts[sourceKey] < 10){ sndClick(); return; }
+  if(counts[sourceRarity] < 10){ sndClick(); return; }
 
-  // Remove 10 source cards
+  // Craft de forma segura en el servidor
+  if(currentUser){
+    try{
+      const res = await fetch(BACKEND + '/api/gems', {
+        method:'POST',
+        headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+        body: JSON.stringify({ action:'craft', user_id: currentUser.id, rarity: targetRarity })
+      });
+      const data = await res.json();
+      if(!data.ok){ alert(data.error || 'No se pudo craftear'); return; }
+    } catch(e){ console.error('craft error:', e); alert('Error de conexión al craftear'); return; }
+  }
+
+  // Actualizar colección local (espejo del servidor)
   let removed = 0;
   collection = collection.filter(c => {
     if(c.rarity === sourceRarity && removed < 10){ removed++; return false; }
     return true;
   });
-
-  // Add 1 target card
-  const newCard = { rarity: targetRarity };
-  collection.push(newCard);
-
-  // Save to DB
-  saveCardToDB(targetRarity);
-
-  // Remove source cards from DB (remove 20 of that rarity)
-  if(currentUser){
-    try{
-      // Get IDs of 20 source cards from DB
-      const res = await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?user_id=eq.' + currentUser.id + '&rarity=eq.' + sourceRarity + '&limit=10&select=id', {
-        headers:{
-          'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
-          'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
-        }
-      });
-      const rows = await res.json();
-      if(rows.length){
-        const ids = rows.map(r=>r.id).join(',');
-        await fetch('https://cceuvzxtrlglnkwjggmi.supabase.co/rest/v1/collections?id=in.(' + ids + ')', {
-          method:'DELETE',
-          headers:{
-            'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU',
-            'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjZXV2enh0cmxnbG5rd2pnZ21pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NTcxNTEsImV4cCI6MjA5NTAzMzE1MX0.Av142oNLuahNnBAlQOnp6PgyHSOqTA-XJB8oJoZUAUU'
-          }
-        });
-      }
-    } catch(e){}
-  }
+  collection.push({ rarity: targetRarity });
 
   // Play sound based on what was crafted
   if(targetRarity === 'rare')      { sndCraftCoin();     spawnConfetti(); }
@@ -3692,11 +3684,9 @@ function handleMPClick(e, amount, price, label){
 }
 
 async function simulatePayment(amount){
-  // Admin manual credit add
-  gems += amount;
-  document.getElementById('gems-display').textContent = gems;
+  // Admin manual credit add — sincroniza con el servidor
   closeCreditsModal();
-  await autoSave();
+  await syncGems();
   sndJackpot();
   const pill = document.querySelector('.gem-pill');
   pill.style.transition = 'all 0.2s';
@@ -3753,7 +3743,6 @@ function showPrizeReveal(prize) {
   window._prizes.push(prize);
   renderCollection();
   updatePrizeBadge();
-  autoSave();
   const big = document.getElementById('prize-card-big');
   big.className = 'prize-card-big';
   big.innerHTML = `

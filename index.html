@@ -2014,8 +2014,8 @@ body::after{
     <div id="login-error" class="login-error"></div>
 
     <div class="login-field">
-      <label>Usuario</label>
-      <input type="text" id="auth-username" placeholder="tu_usuario" autocomplete="username" maxlength="20">
+      <label id="username-label">Usuario o correo</label>
+      <input type="text" id="auth-username" placeholder="tu_usuario" autocomplete="username" maxlength="40">
     </div>
     <div class="login-field" id="field-email" style="display:none;">
       <label>Correo electrónico</label>
@@ -2031,6 +2031,23 @@ body::after{
     </div>
 
     <button class="login-btn" id="auth-btn" onclick="handleAuth()">Entrar</button>
+  </div>
+</div>
+
+<!-- USERNAME LINK MODAL (para usuarios viejos sin username) -->
+<div class="login-screen hidden" id="username-link-screen" style="z-index:950;">
+  <div class="login-box">
+    <h2 style="font-family:Cinzel,serif;font-size:20px;color:var(--pink-light);text-align:center;margin-bottom:8px;">¡Bienvenido de vuelta!</h2>
+    <p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:20px;">Ahora usamos nombres de usuario. Elige el tuyo para continuar.</p>
+
+    <div id="link-error" class="login-error"></div>
+
+    <div class="login-field">
+      <label>Elige tu nombre de usuario</label>
+      <input type="text" id="link-username" placeholder="tu_usuario" autocomplete="username" maxlength="20">
+    </div>
+
+    <button class="login-btn" id="link-btn" onclick="submitUsernameLink()">Vincular usuario</button>
   </div>
 </div>
 
@@ -2495,12 +2512,60 @@ function hideLoginScreen(){
 
 let authMode = 'login';
 
+function showUsernameLink(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('username-link-screen').classList.remove('hidden');
+  document.getElementById('link-error').textContent = '';
+  document.getElementById('link-username').value = '';
+}
+
+async function submitUsernameLink(){
+  const uname = document.getElementById('link-username').value.trim().toLowerCase();
+  const errEl = document.getElementById('link-error');
+  const btn   = document.getElementById('link-btn');
+
+  if(!/^[a-zA-Z0-9_]{3,20}$/.test(uname)){
+    errEl.textContent = 'Usuario: 3-20 caracteres, solo letras, números y _';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Vinculando...';
+
+  try{
+    const res = await fetch(BACKEND + '/api/auth', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+      body: JSON.stringify({ action:'set_username', username: uname })
+    });
+    const data = await res.json();
+    if(!res.ok || !data.ok){
+      errEl.textContent = data.error || 'No se pudo vincular';
+      btn.disabled = false;
+      btn.textContent = 'Vincular usuario';
+      return;
+    }
+    // Actualizar sesión con el nuevo token y username
+    setSession({ username: data.user.username, email: data.user.email, id: data.user.id, token: data.token });
+    document.getElementById('username-link-screen').classList.add('hidden');
+    const t = window._tempLoginData;
+    loginSuccess(data.user, t.collection||[], t.prizes||[]);
+    window._tempLoginData = null;
+  } catch(e){
+    errEl.textContent = 'Sin conexión al servidor';
+    btn.disabled = false;
+    btn.textContent = 'Vincular usuario';
+  }
+}
+
 function switchTab(mode){
   authMode = mode;
   document.getElementById('tab-login').classList.toggle('active', mode==='login');
   document.getElementById('tab-register').classList.toggle('active', mode==='register');
   document.getElementById('field-confirm').style.display = mode==='register' ? 'block' : 'none';
   document.getElementById('field-email').style.display   = mode==='register' ? 'block' : 'none';
+  document.getElementById('username-label').textContent  = mode==='register' ? 'Usuario' : 'Usuario o correo';
+  document.getElementById('auth-username').placeholder   = mode==='register' ? 'tu_usuario' : 'usuario o correo@email.com';
   document.getElementById('auth-btn').textContent = mode==='login' ? 'Entrar' : 'Crear cuenta';
   document.getElementById('login-error').textContent = '';
 }
@@ -2512,16 +2577,16 @@ function setAuthError(msg){
 }
 
 async function handleAuth(){
-  const username = document.getElementById('auth-username').value.trim().toLowerCase();
+  const loginId  = document.getElementById('auth-username').value.trim().toLowerCase();
   const email    = document.getElementById('auth-email').value.trim().toLowerCase();
   const password = document.getElementById('auth-password').value;
   const confirm  = document.getElementById('auth-confirm').value;
 
-  if(!username || !password){ setAuthError('Completa todos los campos.'); return; }
-  if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){ setAuthError('Usuario: 3-20 caracteres, solo letras, números y _'); return; }
+  if(!loginId || !password){ setAuthError('Completa todos los campos.'); return; }
   if(password.length < 6){ setAuthError('Contraseña mínima: 6 caracteres.'); return; }
 
   if(authMode==='register'){
+    if(!/^[a-zA-Z0-9_]{3,20}$/.test(loginId)){ setAuthError('Usuario: 3-20 caracteres, solo letras, números y _'); return; }
     if(!email){ setAuthError('El correo es obligatorio.'); return; }
     if(!email.includes('@')){ setAuthError('Correo inválido.'); return; }
     if(password!==confirm){ setAuthError('Las contraseñas no coinciden.'); return; }
@@ -2533,8 +2598,8 @@ async function handleAuth(){
 
   try{
     const body = authMode==='register'
-      ? { action:'register', username, email, password }
-      : { action:'login', username, password };
+      ? { action:'register', username: loginId, email, password }
+      : { action:'login', username: loginId, password };  // backend detecta si es email o username
     const res = await fetch(BACKEND + '/api/auth', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -2543,6 +2608,13 @@ async function handleAuth(){
     const data = await res.json();
     if(!res.ok){ setAuthError(data.error || 'Error al conectar'); return; }
     setSession({ username: data.user.username, email: data.user.email, id: data.user.id, token: data.token });
+
+    // Si el usuario no tiene username vinculado, mostrar formulario
+    if(data.needs_username){
+      window._tempLoginData = data;
+      showUsernameLink();
+      return;
+    }
     loginSuccess(data.user, data.collection||[], data.prizes||[]);
   } catch(e){
     setAuthError('Sin conexión al servidor');
@@ -2595,7 +2667,14 @@ async function initAuth(){
       });
       if(res.ok){
         const data = await res.json();
-        if(data.ok){ loginSuccess(data.user, data.collection||[], data.prizes||[]); return; }
+        if(data.ok){
+          if(data.needs_username){
+            window._tempLoginData = data;
+            showUsernameLink();
+            return;
+          }
+          loginSuccess(data.user, data.collection||[], data.prizes||[]); return;
+        }
       }
     } catch(e){ console.error('session restore failed', e); }
     clearSession();

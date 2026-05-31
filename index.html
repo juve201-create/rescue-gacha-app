@@ -2014,7 +2014,11 @@ body::after{
     <div id="login-error" class="login-error"></div>
 
     <div class="login-field">
-      <label>Email</label>
+      <label>Usuario</label>
+      <input type="text" id="auth-username" placeholder="tu_usuario" autocomplete="username" maxlength="20">
+    </div>
+    <div class="login-field" id="field-email" style="display:none;">
+      <label>Correo electrónico</label>
       <input type="email" id="auth-email" placeholder="tucorreo@email.com" autocomplete="email">
     </div>
     <div class="login-field">
@@ -2496,6 +2500,7 @@ function switchTab(mode){
   document.getElementById('tab-login').classList.toggle('active', mode==='login');
   document.getElementById('tab-register').classList.toggle('active', mode==='register');
   document.getElementById('field-confirm').style.display = mode==='register' ? 'block' : 'none';
+  document.getElementById('field-email').style.display   = mode==='register' ? 'block' : 'none';
   document.getElementById('auth-btn').textContent = mode==='login' ? 'Entrar' : 'Crear cuenta';
   document.getElementById('login-error').textContent = '';
 }
@@ -2507,28 +2512,37 @@ function setAuthError(msg){
 }
 
 async function handleAuth(){
+  const username = document.getElementById('auth-username').value.trim().toLowerCase();
   const email    = document.getElementById('auth-email').value.trim().toLowerCase();
   const password = document.getElementById('auth-password').value;
   const confirm  = document.getElementById('auth-confirm').value;
 
-  if(!email || !password){ setAuthError('Completa todos los campos.'); return; }
-  if(!email.includes('@')){ setAuthError('Email inválido.'); return; }
+  if(!username || !password){ setAuthError('Completa todos los campos.'); return; }
+  if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){ setAuthError('Usuario: 3-20 caracteres, solo letras, números y _'); return; }
   if(password.length < 6){ setAuthError('Contraseña mínima: 6 caracteres.'); return; }
-  if(authMode==='register' && password!==confirm){ setAuthError('Las contraseñas no coinciden.'); return; }
+
+  if(authMode==='register'){
+    if(!email){ setAuthError('El correo es obligatorio.'); return; }
+    if(!email.includes('@')){ setAuthError('Correo inválido.'); return; }
+    if(password!==confirm){ setAuthError('Las contraseñas no coinciden.'); return; }
+  }
 
   const btn = document.getElementById('auth-btn');
   btn.disabled = true;
   btn.textContent = 'Cargando...';
 
   try{
+    const body = authMode==='register'
+      ? { action:'register', username, email, password }
+      : { action:'login', username, password };
     const res = await fetch(BACKEND + '/api/auth', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: authMode, email, password })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if(!res.ok){ setAuthError(data.error || 'Error al conectar'); return; }
-    setSession({ email: data.user.email, id: data.user.id, token: data.token });
+    setSession({ username: data.user.username, email: data.user.email, id: data.user.id, token: data.token });
     loginSuccess(data.user, data.collection||[], data.prizes||[]);
   } catch(e){
     setAuthError('Sin conexión al servidor');
@@ -2555,7 +2569,7 @@ function loginSuccess(user, col, prizes){
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
 
   setText('gems-display',    gems);
-  setText('user-bar-name',   user.email.split('@')[0]);
+  setText('user-bar-name',   user.username || user.email.split('@')[0]);
   setText('user-bar-email',  user.email);
 
   updatePrizeBadge();

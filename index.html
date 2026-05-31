@@ -2104,6 +2104,48 @@ body::after{
     </div>
 
     <button class="login-btn" id="auth-btn" onclick="handleAuth()">Entrar</button>
+    <p id="forgot-link" style="text-align:center;margin-top:14px;font-size:12px;color:var(--text-muted);cursor:pointer;text-decoration:underline;" onclick="showForgotScreen()">¿Olvidaste tu contraseña?</p>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD SCREEN -->
+<div class="login-screen hidden" id="forgot-screen" style="z-index:950;">
+  <div class="login-box">
+    <h2 style="font-family:Cinzel,serif;font-size:20px;color:var(--pink-light);text-align:center;margin-bottom:8px;">Recuperar contraseña</h2>
+    <p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:20px;">Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.</p>
+
+    <div id="forgot-error" class="login-error"></div>
+    <div id="forgot-success" style="display:none;color:#4ADE80;font-size:13px;text-align:center;margin-bottom:16px;"></div>
+
+    <div class="login-field">
+      <label>Correo electrónico</label>
+      <input type="email" id="forgot-email" placeholder="tucorreo@email.com" autocomplete="email">
+    </div>
+
+    <button class="login-btn" id="forgot-btn" onclick="submitForgot()">Enviar enlace</button>
+    <p style="text-align:center;margin-top:14px;font-size:12px;color:var(--text-muted);cursor:pointer;text-decoration:underline;" onclick="backToLogin()">Volver al inicio</p>
+  </div>
+</div>
+
+<!-- RESET PASSWORD SCREEN (cuando llega con ?reset=token) -->
+<div class="login-screen hidden" id="reset-screen" style="z-index:950;">
+  <div class="login-box">
+    <h2 style="font-family:Cinzel,serif;font-size:20px;color:var(--pink-light);text-align:center;margin-bottom:8px;">Nueva contraseña</h2>
+    <p style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:20px;">Crea tu nueva contraseña.</p>
+
+    <div id="reset-error" class="login-error"></div>
+    <div id="reset-success" style="display:none;color:#4ADE80;font-size:13px;text-align:center;margin-bottom:16px;"></div>
+
+    <div class="login-field">
+      <label>Nueva contraseña</label>
+      <input type="password" id="reset-password" placeholder="••••••••" autocomplete="new-password">
+    </div>
+    <div class="login-field">
+      <label>Confirmar contraseña</label>
+      <input type="password" id="reset-confirm" placeholder="••••••••" autocomplete="new-password">
+    </div>
+
+    <button class="login-btn" id="reset-btn" onclick="submitReset()">Cambiar contraseña</button>
   </div>
 </div>
 
@@ -2624,6 +2666,96 @@ function toggleOdds(){
   document.querySelector('.odds-section').classList.toggle('open');
 }
 
+// ── Recuperación de contraseña ──
+function showForgotScreen(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('forgot-screen').classList.remove('hidden');
+  document.getElementById('forgot-error').textContent = '';
+  document.getElementById('forgot-success').style.display = 'none';
+  document.getElementById('forgot-email').value = '';
+}
+
+function backToLogin(){
+  document.getElementById('forgot-screen').classList.add('hidden');
+  document.getElementById('reset-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+async function submitForgot(){
+  const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+  const errEl = document.getElementById('forgot-error');
+  const okEl  = document.getElementById('forgot-success');
+  const btn   = document.getElementById('forgot-btn');
+  errEl.textContent = '';
+
+  if(!email || !email.includes('@')){ errEl.textContent = 'Correo inválido.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try{
+    const res = await fetch(BACKEND + '/api/auth', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'forgot_password', email })
+    });
+    const data = await res.json();
+    okEl.textContent = data.msg || 'Si el correo existe, recibirás un enlace.';
+    okEl.style.display = 'block';
+  } catch(e){
+    errEl.textContent = 'Sin conexión al servidor.';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Enviar enlace';
+}
+
+function showResetScreen(token){
+  window._resetToken = token;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('reset-screen').classList.remove('hidden');
+}
+
+async function submitReset(){
+  const pass    = document.getElementById('reset-password').value;
+  const confirm = document.getElementById('reset-confirm').value;
+  const errEl   = document.getElementById('reset-error');
+  const okEl    = document.getElementById('reset-success');
+  const btn     = document.getElementById('reset-btn');
+  errEl.textContent = '';
+
+  if(pass.length < 6){ errEl.textContent = 'Contraseña mínima: 6 caracteres.'; return; }
+  if(pass !== confirm){ errEl.textContent = 'Las contraseñas no coinciden.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Cambiando...';
+
+  try{
+    const res = await fetch(BACKEND + '/api/auth', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'reset_password', reset_token: window._resetToken, new_password: pass })
+    });
+    const data = await res.json();
+    if(!res.ok || !data.ok){
+      errEl.textContent = data.error || 'No se pudo cambiar la contraseña.';
+      btn.disabled = false;
+      btn.textContent = 'Cambiar contraseña';
+      return;
+    }
+    okEl.textContent = '¡Contraseña actualizada! Redirigiendo...';
+    okEl.style.display = 'block';
+    // Limpiar el ?reset= de la URL y volver al login
+    setTimeout(()=>{
+      window.history.replaceState({}, '', window.location.pathname);
+      backToLogin();
+    }, 2000);
+  } catch(e){
+    errEl.textContent = 'Sin conexión al servidor.';
+    btn.disabled = false;
+    btn.textContent = 'Cambiar contraseña';
+  }
+}
+
 function showUsernameLink(){
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('username-link-screen').classList.remove('hidden');
@@ -2768,6 +2900,14 @@ function loginSuccess(user, col, prizes){
 }
 
 async function initAuth(){
+  // Detectar enlace de recuperación de contraseña
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetToken = urlParams.get('reset');
+  if(resetToken){
+    showResetScreen(resetToken);
+    return;
+  }
+
   const sess = getSession();
   if(sess){
     try{

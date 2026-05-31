@@ -813,6 +813,78 @@ body::after{
 .float-spark{position:fixed;font-size:16px;pointer-events:none;z-index:300;animation:float-up 1s ease-out forwards;}
 
 /* ════════════════════════════
+   PROBABILIDADES
+════════════════════════════ */
+.odds-section{
+  max-width:520px;
+  margin:16px auto;
+}
+.odds-toggle{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(175deg,rgba(30,10,56,0.9),rgba(10,4,20,0.95));
+  border:1px solid var(--border-card);
+  border-radius:12px;
+  padding:12px 16px;
+  color:var(--pink-light);
+  font-family:'Cinzel',serif;
+  font-size:13px;
+  letter-spacing:1px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.odds-toggle:hover{ border-color:rgba(232,24,122,0.4); }
+#odds-arrow{ transition:transform 0.3s; font-size:11px; }
+.odds-section.open #odds-arrow{ transform:rotate(180deg); }
+
+.odds-content{
+  display:none;
+  background:linear-gradient(175deg,rgba(30,10,56,0.7),rgba(10,4,20,0.8));
+  border:1px solid var(--border-card);
+  border-top:none;
+  border-radius:0 0 12px 12px;
+  padding:14px 16px;
+  margin-top:-6px;
+}
+.odds-section.open .odds-content{ display:block; }
+
+.odds-group{ margin-bottom:16px; }
+.odds-group:last-child{ margin-bottom:0; }
+.odds-group-title{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin-bottom:8px;
+  padding-bottom:4px;
+  border-bottom:1px solid rgba(232,24,122,0.15);
+}
+.odds-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:4px 0;
+  font-size:13px;
+}
+.odds-label{ font-weight:600; }
+.odds-label.common    { color:#AAAACC; }
+.odds-label.rare      { color:#7AA4F0; }
+.odds-label.epic      { color:#C084FC; }
+.odds-label.legendary { color:var(--gold-light,#FFD700); }
+.odds-label.secret    { color:#E879F9; }
+.odds-label.food      { color:#F0E6C8; }
+.odds-val{ color:var(--text-muted); font-size:12px; }
+.odds-note{
+  font-size:12px;
+  color:var(--text-muted);
+  line-height:1.5;
+}
+.odds-note strong{ color:#E879F9; }
+
+/* ════════════════════════════
    COLLECTION
 ════════════════════════════ */
 .collection-area{
@@ -2255,6 +2327,40 @@ body::after{
     </div>
   </div>
 
+  <!-- PROBABILIDADES -->
+  <div class="odds-section">
+    <button class="odds-toggle" onclick="toggleOdds()">
+      <span>📊 Probabilidades</span>
+      <span id="odds-arrow">▾</span>
+    </button>
+    <div class="odds-content" id="odds-content">
+      <div class="odds-group">
+        <div class="odds-group-title">Cartas por rareza</div>
+        <div class="odds-row"><span class="odds-label common">◇ Común</span><span class="odds-val">1 de cada ~1.3</span></div>
+        <div class="odds-row"><span class="odds-label rare">★ Rara</span><span class="odds-val">1 de cada ~6</span></div>
+        <div class="odds-row"><span class="odds-label epic">◈ Épica</span><span class="odds-val">1 de cada ~29</span></div>
+        <div class="odds-row"><span class="odds-label legendary">♛ Legendaria</span><span class="odds-val">1 de cada 200</span></div>
+        <div class="odds-row"><span class="odds-label secret">🌟 Secreta</span><span class="odds-val">1 de cada 25,000</span></div>
+      </div>
+
+      <div class="odds-group">
+        <div class="odds-group-title">Sistema de pity (carta secreta)</div>
+        <div class="odds-note">Al alcanzar 1,250 tiradas globales de todos los jugadores, la probabilidad de la carta secreta sube a <strong>1 de cada 500</strong> hasta que alguien la obtenga.</div>
+      </div>
+
+      <div class="odds-group">
+        <div class="odds-group-title">Premios de comida</div>
+        <div class="odds-row"><span class="odds-label food">🥤 Refresco</span><span class="odds-val">1 de cada 50</span></div>
+        <div class="odds-row"><span class="odds-label food">🍟 Papas</span><span class="odds-val">1 de cada 100</span></div>
+        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden</span><span class="odds-val">1 de cada 200</span></div>
+        <div class="odds-row"><span class="odds-label food">🎉 Orden completa</span><span class="odds-val">1 de cada 450</span></div>
+        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden + Papas</span><span class="odds-val">1 de cada 600</span></div>
+        <div class="odds-row"><span class="odds-label food">🏆 Orden + Papas</span><span class="odds-val">1 de cada 1,000</span></div>
+        <div class="odds-row"><span class="odds-label food">👑 Combo completo</span><span class="odds-val">1 de cada 2,000</span></div>
+      </div>
+    </div>
+  </div>
+
   <!-- COLLECTION -->
   <div class="collection-area">
     <div class="collection-header">
@@ -2511,6 +2617,10 @@ function hideLoginScreen(){
 }
 
 let authMode = 'login';
+
+function toggleOdds(){
+  document.querySelector('.odds-section').classList.toggle('open');
+}
 
 function showUsernameLink(){
   document.getElementById('login-screen').classList.add('hidden');

@@ -2630,6 +2630,12 @@ body::after{
     <div id="mp-select-prompt" style="text-align:center;padding:12px 0;font-size:12px;color:var(--text-muted);font-style:italic;letter-spacing:1px;">
       Selecciona un paquete para continuar
     </div>
+
+    <!-- Botón verificar pago (respaldo) -->
+    <div style="text-align:center;margin-top:12px;border-top:1px solid rgba(232,24,122,0.15);padding-top:12px;">
+      <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">¿Ya pagaste y no ves tu Maná?</p>
+      <button onclick="verifyPayment(true)" style="font-size:12px;padding:8px 18px;border:1px solid var(--pink-main, #FF1B8D);border-radius:8px;background:rgba(255,27,141,0.1);color:var(--pink-light, #FF6EB4);cursor:pointer;font-weight:bold;">🔄 Verificar mi pago</button>
+    </div>
   </div>
 </div>
 </div>
@@ -2989,6 +2995,15 @@ function loginSuccess(user, col, prizes){
     loadGlobalPity();
     setTimeout(() => { renderCollection(); updatePityBar(); }, 600);
   });
+
+  // Si el usuario acaba de regresar de un pago, verificar y acreditar
+  if(window._justPaid){
+    const status = window._justPaid;
+    window._justPaid = null;
+    if(status === 'success' || status === 'pending'){
+      setTimeout(() => verifyPayment(true), 1200);
+    }
+  }
 }
 
 async function initAuth(){
@@ -2998,6 +3013,14 @@ async function initAuth(){
   if(resetToken){
     showResetScreen(resetToken);
     return;
+  }
+
+  // Detectar regreso de un pago de Mercado Pago
+  const paymentStatus = urlParams.get('payment');
+  if(paymentStatus){
+    window._justPaid = paymentStatus; // 'success', 'pending' o 'failure'
+    // Limpiar la URL
+    window.history.replaceState({}, '', window.location.pathname);
   }
 
   const sess = getSession();
@@ -3055,6 +3078,31 @@ async function spendGems(cost){
     if(typeof data.gems === 'number'){ gems = data.gems; const el=document.getElementById('gems-display'); if(el) el.textContent = gems; }
     return false;
   } catch(e){ console.error('spendGems error:', e); return false; }
+}
+
+// Verifica pagos pendientes directamente con Mercado Pago (respaldo del webhook)
+async function verifyPayment(showFeedback){
+  if(!currentUser) return;
+  try{
+    const res = await fetch(BACKEND + '/api/verify-payment', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    if(data.ok && data.credited > 0){
+      await syncGems();
+      sndJackpot();
+      spawnConfetti();
+      alert(`¡Se acreditaron ${data.credited} de Maná a tu cuenta! 🐰`);
+    } else if(showFeedback){
+      await syncGems();
+      alert('No encontramos pagos nuevos por acreditar. Si ya pagaste, espera un momento y vuelve a intentar.');
+    }
+  } catch(e){
+    console.error('verifyPayment error:', e);
+    if(showFeedback) alert('No se pudo verificar el pago. Intenta de nuevo en un momento.');
+  }
 }
 
 // Lee el balance real de gems del servidor

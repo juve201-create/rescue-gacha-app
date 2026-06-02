@@ -3092,15 +3092,18 @@ async function debugPayments(){
     });
     const d = await res.json();
     let msg = 'Mi user_id:\n' + d.my_user_id + '\n\n';
-    msg += 'Pagos encontrados: ' + (d.total_found || 0) + '\n';
-    if(d.raw_error) msg += '\n⚠️ Error MP: ' + d.raw_error + '\n';
-    if(d.payments && d.payments.length){
-      msg += '\n--- PAGOS ---\n';
-      d.payments.slice(0,5).forEach((p,i) => {
-        msg += `\n${i+1}) id:${p.id}\nstatus:${p.status} | $${p.amount}\nref:${p.external_reference}\n`;
+    msg += 'Mis preferencias guardadas:\n' + (d.my_prefs ? d.my_prefs.join('\n') : 'ninguna') + '\n\n';
+    msg += 'Pagos que ve MP: ' + (d.total_mp_payments || 0) + '\n\n';
+    msg += 'Ejemplos de pref_id en MP:\n' + (d.sample_pref_ids_from_mp ? JSON.stringify(d.sample_pref_ids_from_mp, null, 1) : 'ninguno') + '\n\n';
+    msg += '--- PAGOS QUE CRUZAN ---\n';
+    if(d.matched_payments && d.matched_payments.length){
+      d.matched_payments.forEach((p,i) => {
+        msg += `\n${i+1}) id:${p.id}\nstatus:${p.status} | $${p.amount}\npref:${p.pref}\n`;
       });
+    } else {
+      msg += 'Ninguno cruzó\n';
     }
-    // Mostrar en un overlay para poder leerlo bien en celular
+    if(d.msg) msg += '\n' + d.msg;
     showDebugOverlay(msg);
   } catch(e){
     alert('Error: ' + e.message);

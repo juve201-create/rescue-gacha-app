@@ -2635,6 +2635,7 @@ body::after{
     <div style="text-align:center;margin-top:12px;border-top:1px solid rgba(232,24,122,0.15);padding-top:12px;">
       <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">¿Ya pagaste y no ves tu Maná?</p>
       <button onclick="verifyPayment(true)" style="font-size:12px;padding:8px 18px;border:1px solid var(--pink-main, #FF1B8D);border-radius:8px;background:rgba(255,27,141,0.1);color:var(--pink-light, #FF6EB4);cursor:pointer;font-weight:bold;">🔄 Verificar mi pago</button>
+      <button onclick="debugPayments()" style="font-size:11px;padding:6px 14px;margin-top:8px;border:1px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.05);color:var(--text-muted);cursor:pointer;display:block;margin-left:auto;margin-right:auto;">🔍 Diagnóstico</button>
     </div>
   </div>
 </div>
@@ -3078,6 +3079,44 @@ async function spendGems(cost){
     if(typeof data.gems === 'number'){ gems = data.gems; const el=document.getElementById('gems-display'); if(el) el.textContent = gems; }
     return false;
   } catch(e){ console.error('spendGems error:', e); return false; }
+}
+
+// Diagnóstico temporal — muestra los pagos que ve Mercado Pago
+async function debugPayments(){
+  if(!currentUser){ alert('Inicia sesión primero'); return; }
+  try{
+    const res = await fetch(BACKEND + '/api/verify-payment', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+      body: JSON.stringify({ debug: true })
+    });
+    const d = await res.json();
+    let msg = 'Mi user_id:\n' + d.my_user_id + '\n\n';
+    msg += 'Pagos encontrados: ' + (d.total_found || 0) + '\n';
+    if(d.raw_error) msg += '\n⚠️ Error MP: ' + d.raw_error + '\n';
+    if(d.payments && d.payments.length){
+      msg += '\n--- PAGOS ---\n';
+      d.payments.slice(0,5).forEach((p,i) => {
+        msg += `\n${i+1}) id:${p.id}\nstatus:${p.status} | $${p.amount}\nref:${p.external_reference}\n`;
+      });
+    }
+    // Mostrar en un overlay para poder leerlo bien en celular
+    showDebugOverlay(msg);
+  } catch(e){
+    alert('Error: ' + e.message);
+  }
+}
+
+function showDebugOverlay(text){
+  let o = document.getElementById('debug-overlay');
+  if(!o){
+    o = document.createElement('div');
+    o.id = 'debug-overlay';
+    o.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;padding:20px;overflow-y:auto;';
+    document.body.appendChild(o);
+  }
+  o.innerHTML = '<pre style="color:#4ADE80;font-size:12px;white-space:pre-wrap;word-break:break-all;font-family:monospace;">'+text+'</pre>'
+    + '<button onclick="document.getElementById(\'debug-overlay\').remove()" style="margin-top:16px;padding:12px 24px;background:#FF1B8D;color:white;border:none;border-radius:8px;font-size:14px;width:100%;">Cerrar</button>';
 }
 
 // Verifica pagos pendientes directamente con Mercado Pago (respaldo del webhook)

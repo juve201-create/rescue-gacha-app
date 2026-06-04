@@ -4123,11 +4123,11 @@ async function renderMPBrick(amount){
       body: JSON.stringify({ gems: amount, user_id: currentUser.id, email: currentUser.email })
     });
     const data = await res.json();
-    if(data.ok && data.url){
+    if(data.init_point){
       container.innerHTML =
         '<div style="display:flex;flex-direction:column;gap:8px;">' +
-        '<a href="' + data.url + '" target="_blank" style="display:block;text-align:center;background:linear-gradient(135deg,#009EE3,#0070B3);color:white;font-family:Cinzel,serif;font-size:14px;font-weight:700;letter-spacing:1px;padding:14px;border-radius:8px;text-decoration:none;box-shadow:0 4px 0 #004A7A,0 6px 16px rgba(0,158,227,0.4);">💳 Pagar $' + pkg.price + ' MXN con Mercado Pago</a>' +
-        '<p style="text-align:center;font-size:10px;color:var(--text-muted);letter-spacing:1px;margin:0;">Acepta tarjeta · OXXO · transferencia · Apple Pay</p>' +
+        '<a href="' + data.init_point + '" target="_blank" style="display:block;text-align:center;background:linear-gradient(135deg,#009EE3,#0070B3);color:white;font-family:Cinzel,serif;font-size:14px;font-weight:700;letter-spacing:1px;padding:14px;border-radius:8px;text-decoration:none;box-shadow:0 4px 0 #004A7A,0 6px 16px rgba(0,158,227,0.4);">💳 Pagar $' + pkg.price + ' MXN con Mercado Pago</a>' +
+        '<p style="text-align:center;font-size:10px;color:var(--text-muted);letter-spacing:1px;margin:0;">Acepta tarjeta · Apple Pay</p>' +
         '</div>';
     } else {
       container.innerHTML = renderFallbackButton(amount, pkg);
@@ -4139,8 +4139,8 @@ async function renderMPBrick(amount){
 
 const MP_LINKS = {
   400:  'https://mpago.la/1h1JjKk',
-  900:  'https://mpago.la/2c28dPU',
-  2000: 'https://mpago.la/2sAuGGu',
+  1100: '',
+  2200: '',
   6000: 'https://mpago.la/1TUYCYj',
 };
 
@@ -4151,7 +4151,7 @@ function renderFallbackButton(amount, pkg){
     : '<div style="text-align:center;padding:12px;border:1px dashed var(--text-dim);border-radius:8px;color:var(--text-muted);font-size:12px;font-family:Cinzel,serif;letter-spacing:1px;">Link de pago próximamente</div>';
   return '<div style="display:flex;flex-direction:column;gap:8px;">' +
     btnHtml +
-    '<p style="text-align:center;font-size:10px;color:var(--text-muted);letter-spacing:1px;margin:0;">Acepta tarjeta · OXXO · transferencia · Apple Pay</p>' +
+    '<p style="text-align:center;font-size:10px;color:var(--text-muted);letter-spacing:1px;margin:0;">Acepta tarjeta · Apple Pay</p>' +
 
     '</div>';
 }

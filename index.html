@@ -4780,6 +4780,26 @@ function csgoRevealCard(card){
     else if(card.rarity === 'rare')     sndRare();
     else                                sndCommon();
 
+    // Para épica y legendaria: suspenso → reveal → luego mostrar botón siguiente
+    if(card.rarity === 'epic' || card.rarity === 'legendary'){
+      setTimeout(() => {
+        showSuspense(card.rarity, () => {
+          _doCardReveal(card, () => {
+            showNextButton();
+          });
+        });
+      }, 600);
+      return;
+    }
+
+    title.textContent = '';
+    label.textContent = rarityLabel(card.rarity).toUpperCase();
+    sub.textContent   = card.rarity === 'prize' ? card.name : '';
+    result.classList.add('shown');
+    showNextButton();
+  }
+
+  function showNextButton(){
     title.textContent = '';
     label.textContent = rarityLabel(card.rarity).toUpperCase();
     sub.textContent   = card.rarity === 'prize' ? card.name : '';
@@ -4792,14 +4812,12 @@ function csgoRevealCard(card){
       document.getElementById('csgo-skip-current').style.display = 'none';
       document.getElementById('csgo-skip-all-btn').style.opacity = remaining > 0 ? '1' : '0.4';
       if(remaining > 0){
-        // More cards — show "¡Tirar!" with count
         const pullNext = document.getElementById('csgo-pull-next');
         const badge    = document.getElementById('csgo-queue-badge');
         badge.textContent = remaining + ' restante' + (remaining > 1 ? 's' : '');
         pullNext.style.display = 'flex';
         document.getElementById('csgo-next-btn').style.display = 'none';
       } else {
-        // Last card — show prominent "Ver resultado" and hide skip all
         document.getElementById('csgo-pull-next').style.display = 'none';
         const nb = document.getElementById('csgo-next-btn');
         nb.style.display = 'inline-block';

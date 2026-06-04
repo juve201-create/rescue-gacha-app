@@ -1,4 +1,4 @@
-const CACHE = 'rescue-gacha-v4';
+const CACHE = 'rescue-gacha-v5';
 const ASSETS = ['/', '/index.html', '/icon.jpg', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -18,11 +18,13 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Only cache GET requests — never POST, DELETE, PATCH
-  if (e.request.method !== 'GET') {
-    e.respondWith(fetch(e.request));
-    return;
-  }
+  const url = new URL(e.request.url);
+
+  // Nunca interceptar peticiones al backend o a APIs externas
+  if (url.hostname !== self.location.hostname) return;
+
+  // Solo cachear GET de assets locales
+  if (e.request.method !== 'GET') return;
 
   e.respondWith(
     fetch(e.request)

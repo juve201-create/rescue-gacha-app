@@ -2469,13 +2469,13 @@ body::after{
       <div class="odds-group">
         <div class="odds-group-title">Premios de comida</div>
         <div class="odds-note food-note" style="margin-bottom:10px;">🎁 Los premios de comida son <strong>independientes</strong> de las cartas: puedes ganar una carta y un premio de comida en la misma tirada.</div>
-        <div class="odds-row"><span class="odds-label food">🥤 Refresco</span><span class="odds-val">1 de cada 50</span></div>
-        <div class="odds-row"><span class="odds-label food">🍟 Papas</span><span class="odds-val">1 de cada 100</span></div>
-        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden</span><span class="odds-val">1 de cada 200</span></div>
-        <div class="odds-row"><span class="odds-label food">🎉 Orden completa</span><span class="odds-val">1 de cada 450</span></div>
-        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden + Papas</span><span class="odds-val">1 de cada 600</span></div>
-        <div class="odds-row"><span class="odds-label food">🏆 Orden + Papas</span><span class="odds-val">1 de cada 1,000</span></div>
-        <div class="odds-row"><span class="odds-label food">👑 Combo completo</span><span class="odds-val">1 de cada 2,000</span></div>
+        <div class="odds-row"><span class="odds-label food">🥤 Refresco</span><span class="odds-val">1 de cada 60</span></div>
+        <div class="odds-row"><span class="odds-label food">🍟 Papas</span><span class="odds-val">1 de cada 120</span></div>
+        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden</span><span class="odds-val">1 de cada 350</span></div>
+        <div class="odds-row"><span class="odds-label food">🎉 Orden completa</span><span class="odds-val">1 de cada 750</span></div>
+        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden + Papas</span><span class="odds-val">1 de cada 550</span></div>
+        <div class="odds-row"><span class="odds-label food">🏆 Orden + Papas</span><span class="odds-val">1 de cada 1,050</span></div>
+        <div class="odds-row"><span class="odds-label food">👑 Combo completo</span><span class="odds-val">1 de cada 1,500</span></div>
       </div>
     </div>
   </div>
@@ -4201,13 +4201,13 @@ function genCode(prefix){
 }
 
 const PRIZE_CARDS = [
-  { id:'p1', odds:50,   name:'Refresco Gratis',          art:'🥤', desc:'1 refresco de cualquier sabor', prefix:'RFSC' },
-  { id:'p2', odds:100,  name:'Papas Gratis',             art:'🍟', desc:'1 orden de papas fritas',       prefix:'PAPA' },
-  { id:'p3', odds:200,  name:'½ Orden Gratis',           art:'🍔', desc:'Media orden de tu elección',    prefix:'HALF' },
-  { id:'p4', odds:450,  name:'Orden Completa',           art:'🎉', desc:'1 orden completa gratis',       prefix:'ORD1' },
-  { id:'p5', odds:600,  name:'½ Orden + Papas',          art:'🍔', desc:'Media orden + papas gratis',    prefix:'HPAP' },
-  { id:'p6', odds:1000, name:'Orden + Papas',            art:'🏆', desc:'1 orden completa + papas',      prefix:'OPAP' },
-  { id:'p7', odds:2000, name:'Orden + Papas + Refresco', art:'👑', desc:'¡El combo completo gratis!',    prefix:'FULL' },
+  { id:'p1', odds:60,   name:'Refresco Gratis',          art:'🥤', desc:'1 refresco de cualquier sabor', prefix:'RFSC' },
+  { id:'p2', odds:120,  name:'Papas Gratis',             art:'🍟', desc:'1 orden de papas fritas',       prefix:'PAPA' },
+  { id:'p3', odds:350,  name:'½ Orden Gratis',           art:'🍔', desc:'Media orden de tu elección',    prefix:'HALF' },
+  { id:'p4', odds:750,  name:'Orden Completa',           art:'🎉', desc:'1 orden completa gratis',       prefix:'ORD1' },
+  { id:'p5', odds:550,  name:'½ Orden + Papas',          art:'🍔', desc:'Media orden + papas gratis',    prefix:'HPAP' },
+  { id:'p6', odds:1050, name:'Orden + Papas',            art:'🏆', desc:'1 orden completa + papas',      prefix:'OPAP' },
+  { id:'p7', odds:1500, name:'Orden + Papas + Refresco', art:'👑', desc:'¡El combo completo gratis!',    prefix:'FULL' },
 ];
 
 function rollPrize() {

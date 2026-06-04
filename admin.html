@@ -5,92 +5,191 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0D0518">
 <title>Rescue TCG — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:Georgia,serif;background:#0D0518;color:#F0E6C8;min-height:100vh;}
-.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 16px;background:radial-gradient(ellipse at 50% 100%,#2D0A50 0%,#1A0A2E 40%,#0D0518 100%);}
-.login-box{width:100%;max-width:320px;background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid rgba(232,24,122,0.3);border-radius:18px;padding:32px 22px;box-shadow:0 0 60px rgba(232,24,122,0.15);}
-.login-logo-text{font-family:'Cinzel',serif;font-size:22px;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:6px;}
-.login-sub{font-size:11px;color:#9D7DB8;letter-spacing:3px;text-align:center;margin-bottom:22px;text-transform:uppercase;}
-.login-error{color:#F87171;font-size:11px;text-align:center;margin-bottom:10px;min-height:16px;font-family:'Cinzel',serif;}
-.login-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid #4A1575;border-radius:8px;padding:12px 14px;color:#F0E6C8;font-family:'Cinzel',serif;font-size:14px;outline:none;margin-bottom:12px;-webkit-appearance:none;transition:border-color 0.15s;}
-.login-input:focus{border-color:#E8187A;}
-.login-btn{width:100%;background:linear-gradient(135deg,#E8187A,#9D0050);border:none;border-radius:8px;padding:13px;color:white;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #500025;}
-.dashboard{display:none;}
-.topbar{background:linear-gradient(135deg,#1E0A38,#120720);border-bottom:1px solid rgba(232,24,122,0.2);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
-.topbar-title{font-family:'Cinzel',serif;font-size:15px;font-weight:900;color:#E8187A;letter-spacing:3px;}
+:root{
+  --bg:#0D0518;--bg2:#130824;--bg3:#1E0A38;--bg4:#2A1050;
+  --border:#3D1A5E;--border2:rgba(232,24,122,0.2);
+  --pink:#E8187A;--pink2:#F472B6;--gold:#D4A017;
+  --text:#F0E6C8;--muted:#9D7DB8;--muted2:#6B4E8A;
+  --green:#4ADE80;--blue:#818CF8;--red:#F87171;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LOGIN */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 50% 100%,#2D0A50,#1A0A2E 40%,var(--bg));}
+.login-box{width:100%;max-width:320px;background:linear-gradient(175deg,var(--bg3),var(--bg2));border:1px solid var(--border2);border-radius:20px;padding:36px 24px;box-shadow:0 0 80px rgba(232,24,122,0.12);}
+.login-logo{font-family:'Cinzel',serif;font-size:22px;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:4px;}
+.login-sub{font-size:10px;color:var(--muted);letter-spacing:3px;text-align:center;margin-bottom:28px;text-transform:uppercase;}
+.login-err{color:var(--red);font-size:11px;text-align:center;margin-bottom:10px;min-height:16px;}
+.login-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border-color .15s;}
+.login-input:focus{border-color:var(--pink);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--pink),#9D0050);border:none;border-radius:10px;padding:14px;color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #500025;transition:opacity .15s;}
+.login-btn:disabled{opacity:.6;}
+
+/* LAYOUT */
+.dashboard{display:none;height:100vh;display:none;flex-direction:column;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-title{font-family:'Cinzel',serif;font-size:14px;font-weight:900;color:var(--pink);letter-spacing:3px;}
 .topbar-right{display:flex;gap:8px;}
-.refresh-btn,.logout-btn{font-family:'Cinzel',serif;font-size:10px;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer;letter-spacing:1px;border:1px solid;transition:all 0.15s;}
-.refresh-btn{border-color:rgba(212,160,23,0.5);background:rgba(212,160,23,0.08);color:#D4A017;}
-.logout-btn{border-color:rgba(232,24,122,0.4);background:rgba(232,24,122,0.08);color:#F472B6;}
-.tabs{display:flex;border-bottom:1px solid #4A1575;background:#0D0518;position:sticky;top:48px;z-index:49;overflow-x:auto;scrollbar-width:none;}
+.top-btn{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;cursor:pointer;border:1px solid;transition:all .15s;}
+.top-btn-gold{border-color:rgba(212,160,23,0.4);background:rgba(212,160,23,0.08);color:var(--gold);}
+.top-btn-red{border-color:rgba(232,24,122,0.3);background:rgba(232,24,122,0.06);color:var(--pink2);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
 .tabs::-webkit-scrollbar{display:none;}
-.tab{flex:0 0 auto;padding:10px 16px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9D7DB8;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-.tab.active{color:#E8187A;border-bottom-color:#E8187A;}
-.content{padding:16px;}
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
-.stat-card{background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid #4A1575;border-radius:12px;padding:16px 12px;text-align:center;}
-.stat-number{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:#E8187A;display:block;}
-.stat-label{font-size:10px;color:#9D7DB8;letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
-.sec-title{font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:2px;color:#D4A017;margin-bottom:12px;text-transform:uppercase;}
-.list{display:flex;flex-direction:column;gap:8px;}
-.list-item{background:linear-gradient(135deg,#1E0A38,#120720);border:1px solid #4A1575;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
-.list-item-icon{font-size:22px;flex-shrink:0;}
-.list-item-info{flex:1;min-width:0;}
-.list-item-title{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:#F0E6C8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.list-item-sub{font-size:11px;color:#9D7DB8;margin-top:2px;}
-.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:1px;}
-.badge-green{background:rgba(74,222,128,0.12);color:#4ADE80;border:1px solid #4ADE80;}
-.badge-gold{background:rgba(212,160,23,0.12);color:#D4A017;border:1px solid #D4A017;}
-.badge-manual{background:rgba(129,140,248,0.12);color:#818CF8;border:1px solid #818CF8;}
-.action-btn{font-family:'Cinzel',serif;font-size:9px;font-weight:700;padding:5px 10px;border-radius:5px;cursor:pointer;letter-spacing:1px;border:1px solid rgba(232,24,122,0.5);background:rgba(232,24,122,0.1);color:#F472B6;white-space:nowrap;flex-shrink:0;}
-.code-tag{font-size:11px;font-family:monospace;background:rgba(74,222,128,0.1);padding:2px 8px;border-radius:4px;color:#4ADE80;border:1px dashed rgba(74,222,128,0.4);display:inline-block;margin-top:4px;}
-.empty{text-align:center;padding:32px 20px;color:#4A1575;font-style:italic;font-size:13px;}
-.loading{text-align:center;padding:30px;color:#4A1575;font-style:italic;}
+.tab{flex:0 0 auto;padding:10px 18px;font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s;}
+.tab:hover{color:var(--muted);}
+.tab.active{color:var(--pink);border-bottom-color:var(--pink);}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;padding:0;}
+.section{padding:16px;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;}
+.stat-num{font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:var(--pink);display:block;line-height:1.1;}
+.stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;display:block;}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:12px;}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:14px;pointer-events:none;}
+.search-box{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px 10px 36px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .15s;}
+.search-box:focus{border-color:var(--pink);}
+
+/* USER LIST */
+.user-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.user-card:hover{border-color:var(--border2);background:var(--bg4);}
+.user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--bg4),#3D1A5E);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.user-info{flex:1;min-width:0;}
+.user-name{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.pill-gold{background:rgba(212,160,23,0.1);color:var(--gold);border:1px solid rgba(212,160,23,0.3);}
+.pill-blue{background:rgba(129,140,248,0.1);color:var(--blue);border:1px solid rgba(129,140,248,0.3);}
+.pill-green{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.3);}
+.pill-pink{background:rgba(232,24,122,0.1);color:var(--pink2);border:1px solid rgba(232,24,122,0.3);}
+.user-arrow{color:var(--muted2);font-size:16px;flex-shrink:0;}
+
+/* DETAIL PANEL */
+.detail-panel{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;}
+.detail-panel.open{display:flex;}
+.detail-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.detail-back{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;}
+.detail-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--text);flex:1;}
+.detail-add-btn{background:linear-gradient(135deg,var(--pink),#9D0050);border:none;color:white;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:1px;}
+.detail-body{flex:1;overflow-y:auto;padding:16px;}
+
+/* DETAIL STATS */
+.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.detail-stat{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;}
+.detail-stat-num{font-family:'Cinzel',serif;font-size:18px;font-weight:900;display:block;}
+.detail-stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px;display:block;}
+
+/* RARITY BAR */
+.rarity-section{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.rarity-title{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.rarity-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.rarity-label{font-size:11px;color:var(--muted);width:70px;flex-shrink:0;}
+.rarity-bar-wrap{flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:6px;overflow:hidden;}
+.rarity-bar{height:100%;border-radius:4px;transition:width .5s;}
+.rarity-count{font-size:11px;font-weight:600;width:24px;text-align:right;flex-shrink:0;}
+
+/* LISTS */
+.sub-section{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.sub-title{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.sub-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.sub-row:last-child{border-bottom:none;padding-bottom:0;}
+.sub-row-left{flex:1;min-width:0;}
+.sub-row-name{font-size:12px;font-weight:500;color:var(--text);}
+.sub-row-date{font-size:10px;color:var(--muted);margin-top:2px;}
+.code-chip{font-size:10px;font-family:monospace;background:rgba(74,222,128,0.08);padding:2px 8px;border-radius:4px;color:var(--green);border:1px dashed rgba(74,222,128,0.3);}
+
+/* PAYMENT LIST */
+.pay-list{display:flex;flex-direction:column;gap:6px;}
+.pay-row{display:flex;align-items:center;justify-content:space-between;}
+.pay-amount{font-size:12px;font-weight:600;color:var(--green);}
+.pay-gems{font-size:11px;color:var(--gold);}
+.pay-date{font-size:10px;color:var(--muted);}
+
+/* GENERIC LIST (pagos, premios, canjes) */
+.g-list{display:flex;flex-direction:column;gap:8px;}
+.g-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.g-item-icon{font-size:20px;flex-shrink:0;}
+.g-item-info{flex:1;min-width:0;}
+.g-item-title{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.g-item-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:1px;}
+.badge-green{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.3);}
+.badge-gold{background:rgba(212,160,23,0.1);color:var(--gold);border:1px solid rgba(212,160,23,0.3);}
+.badge-blue{background:rgba(129,140,248,0.1);color:var(--blue);border:1px solid rgba(129,140,248,0.3);}
+.badge-muted{background:rgba(157,125,184,0.1);color:var(--muted);border:1px solid rgba(157,125,184,0.3);}
+.action-btn{font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid rgba(232,24,122,0.4);background:rgba(232,24,122,0.08);color:var(--pink2);white-space:nowrap;flex-shrink:0;font-family:'Inter',sans-serif;}
+
+.empty{text-align:center;padding:32px;color:var(--muted2);font-size:13px;font-style:italic;}
+.loading{text-align:center;padding:30px;color:var(--muted2);font-style:italic;font-size:13px;}
+.sec-count{font-size:11px;color:var(--muted);margin-bottom:12px;}
+
+/* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,2,15,0.92);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;padding:20px;}
-.modal-overlay.visible{display:flex;}
-.modal-box{background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid rgba(232,24,122,0.3);border-radius:14px;padding:24px 20px;width:100%;max-width:300px;}
-.modal-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;color:#F0E6C8;text-align:center;margin-bottom:6px;}
-.modal-sub{font-size:11px;color:#9D7DB8;text-align:center;margin-bottom:16px;}
-.modal-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid #4A1575;border-radius:8px;padding:11px 14px;color:#F0E6C8;font-family:'Cinzel',serif;font-size:16px;outline:none;margin-bottom:12px;-webkit-appearance:none;text-align:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:24px 20px;width:100%;max-width:300px;}
+.modal-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text);text-align:center;margin-bottom:4px;}
+.modal-sub{font-size:11px;color:var(--muted);text-align:center;margin-bottom:18px;}
+.modal-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'Inter',sans-serif;font-size:18px;outline:none;margin-bottom:14px;text-align:center;}
+.modal-input:focus{border-color:var(--pink);}
 .modal-btns{display:flex;gap:8px;}
-.modal-confirm{flex:1;background:linear-gradient(135deg,#E8187A,#9D0050);border:none;border-radius:8px;padding:12px;color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;cursor:pointer;}
-.modal-cancel{flex:1;background:transparent;border:1px solid #4A1575;border-radius:8px;padding:12px;color:#9D7DB8;font-family:'Cinzel',serif;font-size:13px;cursor:pointer;}
-.search-box{width:100%;background:rgba(61,20,102,0.4);border:1px solid #4A1575;border-radius:8px;padding:10px 14px;color:#F0E6C8;font-family:Georgia,serif;font-size:13px;outline:none;margin-bottom:14px;}
-.search-box:focus{border-color:#E8187A;}
+.modal-confirm{flex:1;background:linear-gradient(135deg,var(--pink),#9D0050);border:none;border-radius:10px;padding:12px;color:white;font-family:'Cinzel',serif;font-size:12px;font-weight:700;cursor:pointer;}
+.modal-cancel{flex:1;background:transparent;border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div class="login-screen" id="login-screen">
   <div class="login-box">
-    <div class="login-logo-text">RESCUE TCG</div>
-    <div class="login-sub">Panel Admin</div>
-    <div class="login-error" id="login-error"></div>
-    <input class="login-input" type="password" id="admin-pass" placeholder="Contraseña de admin" autocomplete="current-password">
+    <div class="login-logo">RESCUE TCG</div>
+    <div class="login-sub">Panel Administrativo</div>
+    <div class="login-err" id="login-error"></div>
+    <input class="login-input" type="password" id="admin-pass" placeholder="Contraseña" autocomplete="current-password">
     <button class="login-btn" id="login-btn" onclick="doLogin()">ENTRAR</button>
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
   <div class="topbar">
-    <div class="topbar-title">ADMIN</div>
+    <div class="topbar-title">⚡ ADMIN</div>
     <div class="topbar-right">
-      <button class="refresh-btn" onclick="loadTab(activeTab)">Actualizar</button>
-      <button class="logout-btn" onclick="doLogout()">Salir</button>
+      <button class="top-btn top-btn-gold" onclick="loadTab(activeTab)">↻ Actualizar</button>
+      <button class="top-btn top-btn-red" onclick="doLogout()">Salir</button>
     </div>
   </div>
   <div class="tabs">
-    <div class="tab active" id="tab-stats"       onclick="loadTab('stats')">Stats</div>
-    <div class="tab"        id="tab-users"       onclick="loadTab('users')">Usuarios</div>
-    <div class="tab"        id="tab-payments"    onclick="loadTab('payments')">Pagos</div>
-    <div class="tab"        id="tab-prizes"      onclick="loadTab('prizes')">Premios</div>
+    <div class="tab active" id="tab-stats"       onclick="loadTab('stats')">📊 Stats</div>
+    <div class="tab"        id="tab-users"       onclick="loadTab('users')">👥 Usuarios</div>
+    <div class="tab"        id="tab-payments"    onclick="loadTab('payments')">💳 Pagos</div>
+    <div class="tab"        id="tab-prizes"      onclick="loadTab('prizes')">🎁 Premios</div>
     <div class="tab"        id="tab-redemptions" onclick="loadTab('redemptions')">🎴 Canjes</div>
   </div>
-  <div class="content" id="tab-content"><div class="loading">Cargando...</div></div>
+  <div class="main" id="tab-content"><div class="loading">Cargando...</div></div>
 </div>
 
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <button class="detail-back" onclick="closeDetail()">← Volver</button>
+    <div class="detail-title" id="detail-title">Usuario</div>
+    <button class="detail-add-btn" id="detail-add-btn" onclick="openModal()">+ Maná</button>
+  </div>
+  <div class="detail-body" id="detail-body"><div class="loading">Cargando...</div></div>
+</div>
+
+<!-- MODAL MANÁ -->
 <div class="modal-overlay" id="gems-modal">
   <div class="modal-box">
     <div class="modal-title">Agregar Maná</div>
@@ -104,258 +203,374 @@ body{font-family:Georgia,serif;background:#0D0518;color:#F0E6C8;min-height:100vh
 </div>
 
 <script>
-var BACKEND   = 'https://rescue-gacha-backend.vercel.app';
-var activeTab = 'stats';
+var BACKEND    = 'https://rescue-gacha-backend.vercel.app';
+var activeTab  = 'stats';
 var adminToken = null;
-var modalUserId = null;
-var modalCurrentGems = 0;
-var modalEmail = '';
+var currentDetailUser = null;
+
+function getToken(){ return adminToken || sessionStorage.getItem('rg_admin_token'); }
+function setToken(t){ adminToken=t; sessionStorage.setItem('rg_admin_token',t); }
+function clearToken(){ adminToken=null; sessionStorage.removeItem('rg_admin_token'); }
+
+async function adminFetch(action, body, auth){
+  auth = auth!==false;
+  var h = {'Content-Type':'application/json'};
+  if(auth) h['Authorization']='Bearer '+getToken();
+  var r = await fetch(BACKEND+'/api/admin',{method:'POST',headers:h,body:JSON.stringify(Object.assign({action},body||{}))});
+  return r.json();
+}
 
 // ── Auth ──────────────────────────────────────────────────────
-function getToken() { return adminToken || sessionStorage.getItem('rg_admin_token'); }
-function setToken(t){ adminToken = t; sessionStorage.setItem('rg_admin_token', t); }
-function clearToken(){ adminToken = null; sessionStorage.removeItem('rg_admin_token'); }
-
-async function doLogin() {
+async function doLogin(){
   var pass = document.getElementById('admin-pass').value;
   var btn  = document.getElementById('login-btn');
   var err  = document.getElementById('login-error');
-  if (!pass) { err.textContent = 'Ingresa la contraseña'; return; }
-  btn.disabled = true; btn.textContent = 'Verificando...';
-  try {
-    var res  = await adminFetch('login', { password: pass }, false);
-    if (res.ok) {
-      setToken(res.token);
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('dashboard').style.display = 'block';
+  if(!pass){ err.textContent='Ingresa la contraseña'; return; }
+  btn.disabled=true; btn.textContent='Verificando...';
+  try{
+    var d = await adminFetch('login',{password:pass},false);
+    if(d.ok){
+      setToken(d.token);
+      document.getElementById('login-screen').style.display='none';
+      var dash=document.getElementById('dashboard');
+      dash.style.display='flex'; dash.style.flexDirection='column'; dash.style.height='100vh';
       loadTab('stats');
     } else {
-      err.textContent = res.error || 'Contraseña incorrecta';
+      err.textContent = d.error || 'Contraseña incorrecta';
     }
-  } catch(e) {
-    err.textContent = 'Sin conexión al servidor';
-  }
-  btn.disabled = false; btn.textContent = 'ENTRAR';
+  } catch(e){ err.textContent='Sin conexión al servidor'; }
+  btn.disabled=false; btn.textContent='ENTRAR';
 }
+document.getElementById('admin-pass').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
 
-document.getElementById('admin-pass').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') doLogin();
-});
-
-function doLogout() { clearToken(); location.reload(); }
-
-// ── Fetch admin ───────────────────────────────────────────────
-async function adminFetch(action, body, requireAuth) {
-  requireAuth = requireAuth !== false;
-  var headers = { 'Content-Type': 'application/json' };
-  if (requireAuth) headers['Authorization'] = 'Bearer ' + getToken();
-  var res = await fetch(BACKEND + '/api/admin', {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify(Object.assign({ action: action }, body || {}))
-  });
-  return res.json();
-}
+function doLogout(){ clearToken(); location.reload(); }
 
 // ── Tabs ──────────────────────────────────────────────────────
-function loadTab(tab) {
-  activeTab = tab;
-  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
-  var el = document.getElementById('tab-' + tab);
-  if (el) el.classList.add('active');
-  document.getElementById('tab-content').innerHTML = '<div class="loading">Cargando...</div>';
-  if (tab === 'stats')       loadStats();
-  if (tab === 'users')       loadUsers();
-  if (tab === 'payments')    loadPayments();
-  if (tab === 'prizes')      loadPrizes();
-  if (tab === 'redemptions') loadRedemptions();
+function loadTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  var el=document.getElementById('tab-'+tab);
+  if(el) el.classList.add('active');
+  document.getElementById('tab-content').innerHTML='<div class="loading">Cargando...</div>';
+  if(tab==='stats')       loadStats();
+  if(tab==='users')       loadUsers();
+  if(tab==='payments')    loadPayments();
+  if(tab==='prizes')      loadPrizes();
+  if(tab==='redemptions') loadRedemptions();
 }
 
-function fmtDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('es-MX', {day:'2-digit',month:'2-digit',year:'2-digit'});
-}
-function fmtTime(d) {
-  if (!d) return '';
-  return new Date(d).toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'});
-}
+function fmt(d){ if(!d) return '—'; return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+function fmtT(d){ if(!d) return ''; return new Date(d).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); }
 
 // ── Stats ─────────────────────────────────────────────────────
-async function loadStats() {
+async function loadStats(){
   var d = await adminFetch('stats');
-  if (!d.ok) { document.getElementById('tab-content').innerHTML = '<div class="empty">Error al cargar</div>'; return; }
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Error al cargar</div>'; return; }
   document.getElementById('tab-content').innerHTML =
-    '<div class="stats-grid">' +
-    '<div class="stat-card"><span class="stat-number">' + d.users + '</span><span class="stat-label">Usuarios</span></div>' +
-    '<div class="stat-card"><span class="stat-number">' + d.payments + '</span><span class="stat-label">Pagos</span></div>' +
-    '<div class="stat-card"><span class="stat-number">$' + d.revenue + '</span><span class="stat-label">Ingresos MXN</span></div>' +
-    '<div class="stat-card"><span class="stat-number">' + d.activePrizes + '</span><span class="stat-label">Premios activos</span></div>' +
-    '</div>';
+    '<div class="section">'+
+    '<div class="stats-grid">'+
+    '<div class="stat-card"><span class="stat-num">'+d.users+'</span><span class="stat-lbl">Usuarios</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.payments+'</span><span class="stat-lbl">Compras</span></div>'+
+    '<div class="stat-card"><span class="stat-num">$'+d.revenue+'</span><span class="stat-lbl">Ingresos MXN</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.gemsTotal.toLocaleString()+'</span><span class="stat-lbl">Maná vendido</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.activePrizes+'</span><span class="stat-lbl">Premios activos</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.globalPulls.toLocaleString()+'</span><span class="stat-lbl">Tiradas globales</span></div>'+
+    '</div></div>';
 }
 
 // ── Usuarios ──────────────────────────────────────────────────
-async function loadUsers() {
+var allUsers = [];
+async function loadUsers(){
   var d = await adminFetch('users');
-  if (!d.ok || !d.users) { document.getElementById('tab-content').innerHTML = '<div class="empty">Sin usuarios</div>'; return; }
-  var html = '<input class="search-box" id="user-search" placeholder="Buscar por usuario o correo..." oninput="filterUsers()" autocomplete="off">';
-  html += '<p class="sec-title">Usuarios (' + d.users.length + ')</p><div class="list" id="users-list">';
-  d.users.forEach(function(u) {
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin usuarios</div>'; return; }
+  allUsers = d.users || [];
+  renderUsers(allUsers);
+}
+
+function renderUsers(users){
+  var html = '<div class="section">';
+  html += '<div class="search-wrap"><span class="search-icon">🔍</span><input class="search-box" id="user-search" placeholder="Buscar por usuario o correo..." oninput="filterUsers()" autocomplete="off"></div>';
+  html += '<div class="sec-count">'+users.length+' usuario'+(users.length!==1?'s':'')+'</div>';
+  if(!users.length){ html+='<div class="empty">Sin resultados</div></div>'; document.getElementById('tab-content').innerHTML=html; return; }
+  users.forEach(function(u){
     var name = u.username || u.email;
-    html += '<div class="list-item" data-search="' + (name + ' ' + u.email).toLowerCase() + '">';
-    html += '<div class="list-item-icon">&#128100;</div>';
-    html += '<div class="list-item-info">';
-    html += '<div class="list-item-title">' + name + '</div>';
-    html += '<div class="list-item-sub">' + u.email + ' &nbsp;|&nbsp; <span class="badge badge-gold">&#10022; ' + (u.gems||0) + ' Maná</span></div>';
-    html += '</div>';
-    html += '<button class="action-btn" onclick="openModal(\'' + u.id + '\',\'' + (u.username||u.email) + '\',' + (u.gems||0) + ')">+ Maná</button>';
+    html += '<div class="user-card" onclick="openDetail(\''+u.id+'\')">';
+    html += '<div class="user-avatar">🐰</div>';
+    html += '<div class="user-info">';
+    html += '<div class="user-name">'+name+'</div>';
+    html += '<div class="user-email">'+u.email+'</div>';
+    html += '<div class="user-badges">';
+    html += '<span class="pill pill-gold">✦ '+(u.gems||0).toLocaleString()+' Maná</span>';
+    html += '<span class="pill pill-blue">🃏 '+u.cards+' cartas</span>';
+    if(u.prizes>0) html += '<span class="pill pill-green">🎁 '+u.prizes+' premios</span>';
+    if(u.spent>0)  html += '<span class="pill pill-pink">💵 $'+u.spent+'</span>';
+    html += '</div></div>';
+    html += '<span class="user-arrow">›</span>';
     html += '</div>';
   });
   html += '</div>';
   document.getElementById('tab-content').innerHTML = html;
 }
 
-function filterUsers() {
+function filterUsers(){
   var q = document.getElementById('user-search').value.toLowerCase();
-  document.querySelectorAll('#users-list .list-item').forEach(function(el) {
-    el.style.display = el.dataset.search.includes(q) ? '' : 'none';
+  var filtered = allUsers.filter(function(u){
+    return (u.username||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
   });
+  var currentSearch = q;
+  renderUsers(filtered);
+  // Restaurar el valor del search
+  var searchEl = document.getElementById('user-search');
+  if(searchEl){ searchEl.value=currentSearch; searchEl.focus(); }
+}
+
+// ── Detail ────────────────────────────────────────────────────
+async function openDetail(userId){
+  currentDetailUser = userId;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('detail-title').textContent = 'Cargando...';
+  document.getElementById('detail-body').innerHTML = '<div class="loading">Cargando ficha...</div>';
+
+  var d = await adminFetch('user_detail',{user_id: userId});
+  if(!d.ok){ document.getElementById('detail-body').innerHTML='<div class="empty">Error al cargar</div>'; return; }
+
+  var u  = d.user;
+  var st = d.stats;
+  var name = u.username || u.email;
+  document.getElementById('detail-title').textContent = name;
+
+  var RARITY_COLOR = {common:'#AAAACC',rare:'#7AA4F0',epic:'#C084FC',legendary:'#D4A017',secret:'#E879F9'};
+  var RARITY_LABEL = {common:'Comunes',rare:'Raras',epic:'Épicas',legendary:'Legendarias',secret:'Secretas'};
+  var totalCards = st.totalCards || 1;
+
+  var html = '';
+
+  // Stats principales
+  html += '<div class="detail-stats">';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--gold)">'+st.totalCards+'</span><span class="detail-stat-lbl">Cartas</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--pink2)">'+st.totalRedeemed+'</span><span class="detail-stat-lbl">Canjeadas</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--green)">'+st.totalPrizes+'</span><span class="detail-stat-lbl">Premios</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--blue)">'+st.totalPurchases+'</span><span class="detail-stat-lbl">Compras</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--green)">'+(u.gems||0).toLocaleString()+'</span><span class="detail-stat-lbl">Maná actual</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--gold)">$'+st.totalSpent+'</span><span class="detail-stat-lbl">Total gastado</span></div>';
+  html += '</div>';
+
+  // Cartas por rareza
+  html += '<div class="rarity-section">';
+  html += '<div class="rarity-title">Colección por rareza</div>';
+  ['common','rare','epic','legendary','secret'].forEach(function(r){
+    var count = st.byRarity[r] || 0;
+    var pct   = totalCards > 0 ? Math.round(count/totalCards*100) : 0;
+    html += '<div class="rarity-row">';
+    html += '<span class="rarity-label" style="color:'+RARITY_COLOR[r]+'">'+RARITY_LABEL[r]+'</span>';
+    html += '<div class="rarity-bar-wrap"><div class="rarity-bar" style="width:'+pct+'%;background:'+RARITY_COLOR[r]+'"></div></div>';
+    html += '<span class="rarity-count" style="color:'+RARITY_COLOR[r]+'">'+count+'</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Premios ganados
+  if(d.prizes && d.prizes.length){
+    html += '<div class="sub-section">';
+    html += '<div class="sub-title">Premios de comida ('+d.prizes.length+')</div>';
+    d.prizes.forEach(function(p){
+      html += '<div class="sub-row">';
+      html += '<div class="sub-row-left">';
+      html += '<div class="sub-row-name">'+p.name+'</div>';
+      html += '<div class="sub-row-date">'+fmt(p.created_at)+'</div>';
+      html += '</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px">';
+      html += '<span class="code-chip">'+p.code+'</span>';
+      html += '<span class="badge '+(p.redeemed?'badge-muted':'badge-green')+'">'+(p.redeemed?'Canjeado':'Activo')+'</span>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Canjes de cartas físicas
+  if(d.redemptions && d.redemptions.length){
+    html += '<div class="sub-section">';
+    html += '<div class="sub-title">Canjes físicos ('+d.redemptions.length+')</div>';
+    d.redemptions.forEach(function(r){
+      var c = RARITY_COLOR[r.rarity]||'#F0E6C8';
+      var l = {common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria',secret:'Secreta'}[r.rarity]||r.rarity;
+      html += '<div class="sub-row">';
+      html += '<div class="sub-row-left">';
+      html += '<div class="sub-row-name" style="color:'+c+'">'+l+'</div>';
+      html += '<div class="sub-row-date">'+fmt(r.redeemed_at)+' '+fmtT(r.redeemed_at)+'</div>';
+      html += '</div>';
+      html += '<span class="badge badge-green">🎴 Canjeado</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Historial de compras
+  if(d.payments && d.payments.length){
+    html += '<div class="sub-section">';
+    html += '<div class="sub-title">Compras ('+d.payments.length+')</div>';
+    d.payments.forEach(function(p){
+      html += '<div class="sub-row">';
+      html += '<div class="sub-row-left">';
+      html += '<div class="pay-amount">'+(p.amount_mxn>0?'$'+p.amount_mxn+' MXN':'Crédito manual')+'</div>';
+      html += '<div class="sub-row-date">'+fmt(p.created_at)+'</div>';
+      html += '</div>';
+      html += '<span class="badge badge-gold">✦ '+p.gems_granted+' Maná</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('detail-body').innerHTML = html;
+}
+
+function closeDetail(){
+  document.getElementById('detail-panel').classList.remove('open');
+  currentDetailUser = null;
 }
 
 // ── Modal Maná ────────────────────────────────────────────────
-function openModal(userId, name, currentGems) {
-  modalUserId = userId;
-  modalCurrentGems = currentGems;
-  document.getElementById('modal-sub').textContent = name + ' — Maná actual: ' + currentGems;
-  document.getElementById('modal-amount').value = '';
-  document.getElementById('gems-modal').classList.add('visible');
-  setTimeout(function(){ document.getElementById('modal-amount').focus(); }, 100);
+var modalUserId=null, modalCurrentGems=0;
+
+function openModal(){
+  if(!currentDetailUser){ alert('Selecciona un usuario primero'); return; }
+  var u = allUsers.find(function(u){ return u.id===currentDetailUser; });
+  modalUserId = currentDetailUser;
+  modalCurrentGems = u ? u.gems : 0;
+  document.getElementById('modal-sub').textContent = (u ? (u.username||u.email) : '') + ' — Maná actual: '+(modalCurrentGems||0);
+  document.getElementById('modal-amount').value='';
+  document.getElementById('gems-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('modal-amount').focus(); },150);
 }
 
-function closeModal() {
-  document.getElementById('gems-modal').classList.remove('visible');
-  modalUserId = null;
-}
+function closeModal(){ document.getElementById('gems-modal').classList.remove('open'); }
 
-async function confirmGems() {
+async function confirmGems(){
   var amount = parseInt(document.getElementById('modal-amount').value);
-  if (!amount || amount <= 0) { alert('Ingresa una cantidad válida'); return; }
-  var btn = document.getElementById('modal-confirm-btn');
-  btn.disabled = true; btn.textContent = 'Agregando...';
-  var d = await adminFetch('add_gems', { user_id: modalUserId, amount: amount });
-  btn.disabled = false; btn.textContent = 'Agregar';
-  if (d.ok) {
+  if(!amount||amount<=0){ alert('Ingresa una cantidad válida'); return; }
+  var btn=document.getElementById('modal-confirm-btn');
+  btn.disabled=true; btn.textContent='Agregando...';
+  var d = await adminFetch('add_gems',{user_id:modalUserId,amount});
+  btn.disabled=false; btn.textContent='Agregar';
+  if(d.ok){
     closeModal();
-    loadTab('users');
+    alert('✅ '+amount.toLocaleString()+' Maná agregados correctamente');
+    // Recargar detalle
+    openDetail(modalUserId);
+    // Actualizar lista
+    var u=allUsers.find(function(u){ return u.id===modalUserId; });
+    if(u) u.gems=d.gems;
   } else {
-    alert(d.error || 'Error al agregar Maná');
+    alert(d.error||'Error al agregar Maná');
   }
 }
 
-document.getElementById('modal-amount').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') confirmGems();
-});
+document.getElementById('modal-amount').addEventListener('keydown',function(e){ if(e.key==='Enter') confirmGems(); });
 
 // ── Pagos ─────────────────────────────────────────────────────
-async function loadPayments() {
+async function loadPayments(){
   var d = await adminFetch('payments');
-  if (!d.ok) { document.getElementById('tab-content').innerHTML = '<div class="empty">Sin pagos</div>'; return; }
-  var payments = d.payments || [];
-  if (!payments.length) { document.getElementById('tab-content').innerHTML = '<div class="empty">Sin pagos</div>'; return; }
-  var html = '<p class="sec-title">Pagos (' + payments.length + ')</p><div class="list">';
-  payments.forEach(function(p) {
-    var name = (p.users && (p.users.username || p.users.email)) || '—';
-    var isManual = p.status === 'manual';
-    html += '<div class="list-item">';
-    html += '<div class="list-item-icon">&#128179;</div>';
-    html += '<div class="list-item-info">';
-    html += '<div class="list-item-title">' + name + '</div>';
-    html += '<div class="list-item-sub">$' + p.amount_mxn + ' MXN &nbsp;|&nbsp; <span class="badge badge-gold">&#10022; ' + p.gems_granted + '</span> &nbsp;|&nbsp; ' + fmtDate(p.created_at) + '</div>';
-    html += '</div>';
-    html += '<span class="badge ' + (isManual ? 'badge-manual' : 'badge-green') + '">' + (isManual ? 'Manual' : p.status) + '</span>';
-    html += '</div>';
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin pagos</div>'; return; }
+  var payments=d.payments||[];
+  if(!payments.length){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin pagos registrados</div>'; return; }
+  var html='<div class="section"><div class="sec-count">'+payments.length+' pagos</div><div class="g-list">';
+  payments.forEach(function(p){
+    var name=(p.users&&(p.users.username||p.users.email))||'—';
+    var isManual=p.status==='manual';
+    html+='<div class="g-item">';
+    html+='<div class="g-item-icon">💳</div>';
+    html+='<div class="g-item-info">';
+    html+='<div class="g-item-title">'+name+'</div>';
+    html+='<div class="g-item-sub">$'+p.amount_mxn+' MXN · <span style="color:var(--gold)">✦ '+p.gems_granted+'</span> · '+fmt(p.created_at)+'</div>';
+    html+='</div>';
+    html+='<span class="badge '+(isManual?'badge-blue':'badge-green')+'">'+(isManual?'Manual':'Aprobado')+'</span>';
+    html+='</div>';
   });
-  html += '</div>';
-  document.getElementById('tab-content').innerHTML = html;
+  html+='</div></div>';
+  document.getElementById('tab-content').innerHTML=html;
 }
 
 // ── Premios ───────────────────────────────────────────────────
-async function loadPrizes() {
+async function loadPrizes(){
   var d = await adminFetch('prizes');
-  if (!d.ok) { document.getElementById('tab-content').innerHTML = '<div class="empty">Error</div>'; return; }
-  var prizes = d.prizes || [];
-  var active   = prizes.filter(function(p) { return !p.redeemed; });
-  var redeemed = prizes.filter(function(p) { return  p.redeemed; });
-  var html = '';
-  if (active.length) {
-    html += '<p class="sec-title">Pendientes (' + active.length + ')</p><div class="list">';
-    active.forEach(function(p) {
-      var name = (p.users && (p.users.username || p.users.email)) || '—';
-      html += '<div class="list-item">';
-      html += '<div class="list-item-icon">&#127873;</div>';
-      html += '<div class="list-item-info">';
-      html += '<div class="list-item-title">' + p.name + '</div>';
-      html += '<div class="list-item-sub">' + name + '</div>';
-      html += '<div class="code-tag">' + p.code + '</div>';
-      html += '</div>';
-      html += '<button class="action-btn" onclick="redeemPrize(\'' + p.id + '\',this)">Canjear</button>';
-      html += '</div>';
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Error</div>'; return; }
+  var prizes=d.prizes||[];
+  var active  =prizes.filter(function(p){ return !p.redeemed; });
+  var redeemed=prizes.filter(function(p){ return  p.redeemed; });
+  var html='<div class="section">';
+  if(active.length){
+    html+='<div class="sec-count">'+active.length+' pendiente'+(active.length!==1?'s':'')+'</div><div class="g-list">';
+    active.forEach(function(p){
+      var name=(p.users&&(p.users.username||p.users.email))||'—';
+      html+='<div class="g-item">';
+      html+='<div class="g-item-icon">🎁</div>';
+      html+='<div class="g-item-info">';
+      html+='<div class="g-item-title">'+p.name+'</div>';
+      html+='<div class="g-item-sub">'+name+'</div>';
+      html+='<span class="code-chip" style="margin-top:4px;display:inline-block">'+p.code+'</span>';
+      html+='</div>';
+      html+='<button class="action-btn" onclick="redeemPrize(\''+p.id+'\',this)">Canjear</button>';
+      html+='</div>';
     });
-    html += '</div>';
+    html+='</div>';
   }
-  if (redeemed.length) {
-    html += '<p class="sec-title" style="margin-top:20px;">Canjeados (' + redeemed.length + ')</p><div class="list">';
-    redeemed.forEach(function(p) {
-      var name = (p.users && (p.users.username || p.users.email)) || '—';
-      html += '<div class="list-item" style="opacity:0.45;">';
-      html += '<div class="list-item-icon">&#9989;</div>';
-      html += '<div class="list-item-info">';
-      html += '<div class="list-item-title">' + p.name + '</div>';
-      html += '<div class="list-item-sub">' + name + ' &middot; ' + fmtDate(p.created_at) + '</div>';
-      html += '</div></div>';
+  if(redeemed.length){
+    html+='<div class="sec-count" style="margin-top:20px">'+redeemed.length+' canjeado'+(redeemed.length!==1?'s':'')+'</div><div class="g-list">';
+    redeemed.forEach(function(p){
+      var name=(p.users&&(p.users.username||p.users.email))||'—';
+      html+='<div class="g-item" style="opacity:.4">';
+      html+='<div class="g-item-icon">✅</div>';
+      html+='<div class="g-item-info">';
+      html+='<div class="g-item-title">'+p.name+'</div>';
+      html+='<div class="g-item-sub">'+name+' · '+fmt(p.created_at)+'</div>';
+      html+='</div></div>';
     });
-    html += '</div>';
+    html+='</div>';
   }
-  if (!prizes.length) html = '<div class="empty">Sin premios</div>';
-  document.getElementById('tab-content').innerHTML = html;
+  if(!prizes.length) html+='<div class="empty">Sin premios registrados</div>';
+  html+='</div>';
+  document.getElementById('tab-content').innerHTML=html;
 }
 
-async function redeemPrize(id, btn) {
-  btn.textContent = '...'; btn.disabled = true;
-  var d = await adminFetch('redeem_prize', { prize_id: id });
-  if (d.ok) loadPrizes();
-  else { btn.textContent = 'Canjear'; btn.disabled = false; alert(d.error || 'Error'); }
+async function redeemPrize(id,btn){
+  btn.textContent='...'; btn.disabled=true;
+  var d=await adminFetch('redeem_prize',{prize_id:id});
+  if(d.ok) loadPrizes();
+  else{ btn.textContent='Canjear'; btn.disabled=false; alert(d.error||'Error'); }
 }
 
 // ── Canjes de cartas ──────────────────────────────────────────
-async function loadRedemptions() {
-  var d = await adminFetch('redemptions');
-  if (!d.ok) { document.getElementById('tab-content').innerHTML = '<div class="empty">Error</div>'; return; }
-  var rows = d.redemptions || [];
-  if (!rows.length) { document.getElementById('tab-content').innerHTML = '<div class="empty">Sin canjes aún</div>'; return; }
-  var rarityColors = {common:'#AAAACC',rare:'#7AA4F0',epic:'#C084FC',legendary:'#D4A017',secret:'#E879F9'};
-  var rarityLabels = {common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria',secret:'Secreta'};
-  var html = '<p class="sec-title">Canjes de cartas (' + rows.length + ')</p><div class="list">';
-  rows.forEach(function(r) {
-    var color = rarityColors[r.rarity] || '#F0E6C8';
-    var label = rarityLabels[r.rarity] || r.rarity;
-    html += '<div class="list-item">';
-    html += '<div class="list-item-icon">🎴</div>';
-    html += '<div class="list-item-info">';
-    html += '<div class="list-item-title">' + (r.email || '—') + '</div>';
-    html += '<div class="list-item-sub"><span style="color:' + color + ';font-weight:700;">' + label + '</span> · ' + fmtDate(r.redeemed_at) + ' ' + fmtTime(r.redeemed_at) + '</div>';
-    html += '</div>';
-    html += '<span class="badge badge-green">Canjeado</span>';
-    html += '</div>';
+async function loadRedemptions(){
+  var d=await adminFetch('redemptions');
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Error</div>'; return; }
+  var rows=d.redemptions||[];
+  if(!rows.length){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin canjes aún</div>'; return; }
+  var RC={common:'#AAAACC',rare:'#7AA4F0',epic:'#C084FC',legendary:'#D4A017',secret:'#E879F9'};
+  var RL={common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria',secret:'Secreta'};
+  var html='<div class="section"><div class="sec-count">'+rows.length+' canjes</div><div class="g-list">';
+  rows.forEach(function(r){
+    var c=RC[r.rarity]||'#F0E6C8';
+    var l=RL[r.rarity]||r.rarity;
+    html+='<div class="g-item">';
+    html+='<div class="g-item-icon">🎴</div>';
+    html+='<div class="g-item-info">';
+    html+='<div class="g-item-title">'+(r.email||'—')+'</div>';
+    html+='<div class="g-item-sub"><span style="color:'+c+';font-weight:600">'+l+'</span> · '+fmt(r.redeemed_at)+' '+fmtT(r.redeemed_at)+'</div>';
+    html+='</div>';
+    html+='<span class="badge badge-green">Canjeado</span>';
+    html+='</div>';
   });
-  html += '</div>';
-  document.getElementById('tab-content').innerHTML = html;
+  html+='</div></div>';
+  document.getElementById('tab-content').innerHTML=html;
 }
 
 // ── Restore session ───────────────────────────────────────────
-if (sessionStorage.getItem('rg_admin_token')) {
-  adminToken = sessionStorage.getItem('rg_admin_token');
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
+if(sessionStorage.getItem('rg_admin_token')){
+  adminToken=sessionStorage.getItem('rg_admin_token');
+  document.getElementById('login-screen').style.display='none';
+  var dash=document.getElementById('dashboard');
+  dash.style.display='flex'; dash.style.flexDirection='column'; dash.style.height='100vh';
   loadTab('stats');
 }
 </script>

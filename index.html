@@ -4740,10 +4740,13 @@ function csgoRevealCard(card){
   nextBtn.classList.remove('shown');
   nextBtn.style.display = 'none';
   document.getElementById('csgo-pull-next').style.display = 'none';
-  document.getElementById('csgo-skip-current').style.display = 'inline-block';
+
+  // Ocultar saltar para épica y legendaria — merecen verse completas
+  const isSpecial = card.rarity === 'epic' || card.rarity === 'legendary';
+  document.getElementById('csgo-skip-current').style.display = isSpecial ? 'none' : 'inline-block';
   document.getElementById('csgo-skip-all-btn').style.opacity = '0.5';
-  document.getElementById('csgo-skip-all-btn').style.display = 'inline-block';
-  title.textContent = 'Invocando...';
+  document.getElementById('csgo-skip-all-btn').style.display = isSpecial ? 'none' : 'inline-block';
+  title.textContent = isSpecial ? '✦ Algo poderoso se acerca...' : 'Invocando...';
 
   const POOL = ['common','common','common','rare','common','rare','common','epic','common','rare'];
   const TOTAL = 40;

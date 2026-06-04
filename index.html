@@ -1035,10 +1035,209 @@ body::after{
   color:rgba(255,255,255,0.4);
   opacity:0;animation:fade-in-up 0.5s 1.5s ease forwards;
 }
-@keyframes particle-fly{
-  0%  {transform:translate(0,0) scale(1);opacity:1;}
-  100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;}
+/* ═══════════════════════════════════════════
+   SUSPENSE OVERLAY
+═══════════════════════════════════════════ */
+.suspense-overlay{
+  display:none;position:fixed;inset:0;z-index:299;
+  background:#000;align-items:center;justify-content:center;
+  flex-direction:column;gap:18px;overflow:hidden;
 }
+.suspense-overlay.visible{display:flex;}
+.suspense-bg-glow{
+  position:absolute;inset:0;opacity:0;
+  transition:opacity 0.6s ease, background 0.6s ease;
+  pointer-events:none;
+}
+.suspense-overlay.glow-epic   .suspense-bg-glow{opacity:1;background:radial-gradient(ellipse at center,rgba(147,51,234,0.25) 0%,transparent 70%);}
+.suspense-overlay.glow-legendary .suspense-bg-glow{opacity:1;background:radial-gradient(ellipse at center,rgba(212,160,23,0.25) 0%,transparent 70%);}
+
+.suspense-title{
+  font-family:'Cinzel',serif;font-size:13px;font-weight:900;
+  letter-spacing:5px;color:rgba(255,255,255,0.25);
+  text-transform:uppercase;
+  animation:sus-fade-in 0.5s 0.2s ease forwards;opacity:0;
+  position:relative;z-index:2;
+}
+.suspense-card{
+  width:180px;min-height:250px;border-radius:14px;
+  border:3px solid #333;
+  background:linear-gradient(160deg,#0D0518,#1E0A38);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;padding:18px 12px;
+  opacity:0;transform:scale(0.5) translateY(40px);
+  animation:sus-card-in 0.5s 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  position:relative;z-index:2;overflow:hidden;
+}
+/* Patrón de fondo en la carta de suspenso */
+.suspense-back-pattern{
+  position:absolute;inset:0;opacity:0.12;
+  background:
+    repeating-linear-gradient(45deg,#FF1B8D 0,#FF1B8D 1px,transparent 0,transparent 50%),
+    repeating-linear-gradient(-45deg,#3D1A5E 0,#3D1A5E 1px,transparent 0,transparent 50%);
+  background-size:20px 20px;
+}
+.suspense-question{
+  font-size:80px;line-height:1;
+  opacity:0;
+  animation:sus-q-in 0.4s 0.8s ease forwards;
+  position:relative;z-index:2;
+  filter:drop-shadow(0 0 20px rgba(255,255,255,0.3));
+}
+.suspense-brand{
+  font-family:'Cinzel',serif;font-size:9px;font-weight:700;
+  letter-spacing:3px;color:rgba(255,255,255,0.2);
+  position:relative;z-index:2;
+  opacity:0;animation:sus-fade-in 0.4s 0.9s ease forwards;
+}
+.suspense-hint{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;
+  color:rgba(255,255,255,0.2);text-transform:uppercase;
+  opacity:0;animation:sus-fade-in 0.5s 1.2s ease forwards;
+  position:relative;z-index:2;
+}
+
+/* Animaciones del suspenso */
+@keyframes sus-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes sus-card-in{
+  from{opacity:0;transform:scale(0.5) translateY(40px);}
+  to{opacity:1;transform:scale(1) translateY(0);}
+}
+@keyframes sus-q-in{
+  from{opacity:0;transform:scale(2);filter:blur(8px);}
+  to{opacity:1;transform:scale(1);filter:none;}
+}
+@keyframes sus-shake{
+  0%,100%{transform:translate(0,0) rotate(0deg);}
+  10%{transform:translate(-5px,-2px) rotate(-1.5deg);}
+  20%{transform:translate(5px,2px) rotate(1.5deg);}
+  30%{transform:translate(-5px,2px) rotate(-1deg);}
+  40%{transform:translate(5px,-2px) rotate(1deg);}
+  50%{transform:translate(-3px,-1px) rotate(-0.5deg);}
+  60%{transform:translate(3px,1px) rotate(0.5deg);}
+  70%{transform:translate(-3px,1px) rotate(-0.5deg);}
+  80%{transform:translate(3px,-1px) rotate(0.5deg);}
+  90%{transform:translate(-2px,0) rotate(0deg);}
+}
+.suspense-card.shaking{animation:sus-card-in 0.5s 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards,sus-shake 0.12s 1.3s ease-in-out infinite;}
+.suspense-card.glow-epic{
+  border-color:#9333EA;
+  box-shadow:0 0 40px rgba(147,51,234,0.8),0 0 80px rgba(147,51,234,0.3);
+  transition:border-color 0.4s ease,box-shadow 0.4s ease;
+}
+.suspense-card.glow-legendary{
+  border-color:#D4A017;
+  box-shadow:0 0 40px rgba(212,160,23,0.8),0 0 80px rgba(212,160,23,0.3);
+  transition:border-color 0.4s ease,box-shadow 0.4s ease;
+}
+@keyframes sus-exit{
+  from{opacity:1;transform:scale(1);}
+  to{opacity:0;transform:scale(1.1);}
+}
+.suspense-overlay.exiting{animation:sus-exit 0.3s ease forwards;}
+
+/* ═══════════════════════════════════════════
+   DISEÑOS ABSTRACTOS POR RAREZA
+═══════════════════════════════════════════ */
+
+/* Arte abstracto para el reveal grande (.cro-art) */
+.rarity-art{
+  width:110px;height:110px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.rarity-art .art-symbol{
+  font-size:52px;position:relative;z-index:2;line-height:1;
+  filter:drop-shadow(0 0 12px currentColor);
+}
+.rarity-art .art-bg{position:absolute;inset:0;border-radius:50%;}
+.rarity-art .art-ring{
+  position:absolute;border-radius:50%;border:2px solid;
+  animation:art-ring-spin 4s linear infinite;
+}
+
+/* COMMON */
+.rarity-art.art-common .art-bg{background:radial-gradient(circle,#3A3A5A,#1A1A2A);}
+.rarity-art.art-common .art-ring{width:85%;height:85%;border-color:rgba(170,170,200,0.3);animation-direction:reverse;}
+.rarity-art.art-common .art-symbol{color:#AAAACC;}
+
+/* RARE */
+.rarity-art.art-rare .art-bg{background:radial-gradient(circle,#1A3A7A,#081828);}
+.rarity-art.art-rare .art-ring{width:85%;height:85%;border-color:rgba(59,130,246,0.5);}
+.rarity-art.art-rare .art-ring2{width:65%;height:65%;border-color:rgba(147,197,253,0.3);animation-direction:reverse;animation-duration:2.5s;}
+.rarity-art.art-rare .art-symbol{color:#93C5FD;}
+.rarity-art.art-rare::after{
+  content:'';position:absolute;top:-50%;left:30%;
+  width:20%;height:200%;
+  background:linear-gradient(to bottom,transparent,rgba(147,197,253,0.15),transparent);
+  animation:rare-shine 3s ease-in-out infinite;
+}
+@keyframes rare-shine{0%,100%{opacity:0;transform:translateX(-60px)}50%{opacity:1;transform:translateX(60px)}}
+
+/* EPIC */
+.rarity-art.art-epic .art-bg{background:radial-gradient(circle,#4A0E8E,#1E0A38);}
+.rarity-art.art-epic .art-ring{width:90%;height:90%;border-color:rgba(147,51,234,0.6);animation-duration:3s;}
+.rarity-art.art-epic .art-ring2{width:70%;height:70%;border-color:rgba(192,132,252,0.4);animation-direction:reverse;animation-duration:2s;}
+.rarity-art.art-epic .art-ring3{width:50%;height:50%;border-color:rgba(216,180,254,0.3);animation-duration:1.5s;}
+.rarity-art.art-epic .art-symbol{color:#D8B4FE;animation:epic-pulse 1.5s ease-in-out infinite alternate;}
+@keyframes epic-pulse{from{filter:drop-shadow(0 0 8px #9333EA);}to{filter:drop-shadow(0 0 24px #C084FC) drop-shadow(0 0 40px #9333EA);}}
+
+/* LEGENDARY */
+.rarity-art.art-legendary .art-bg{
+  background:radial-gradient(circle,#7A4A00,#2A1500);
+  animation:legendary-art-glow 1.5s ease-in-out infinite alternate;
+}
+.rarity-art.art-legendary .art-ring{width:90%;height:90%;border-color:rgba(212,160,23,0.7);animation-duration:4s;}
+.rarity-art.art-legendary .art-ring2{width:70%;height:70%;border-color:rgba(240,192,64,0.4);animation-direction:reverse;animation-duration:2.5s;}
+.rarity-art.art-legendary .art-symbol{color:#FFE080;animation:legendary-symbol 1s ease-in-out infinite alternate;}
+@keyframes legendary-art-glow{from{background:radial-gradient(circle,#5A3000,#2A1500);}to{background:radial-gradient(circle,#9A6000,#3A2000);}}
+@keyframes legendary-symbol{from{filter:drop-shadow(0 0 10px #D4A017);}to{filter:drop-shadow(0 0 30px #FFE080) drop-shadow(0 0 50px #D4A017);}}
+
+/* SECRET */
+.rarity-art.art-secret .art-bg{
+  background:radial-gradient(circle,#200030,#050010);
+  animation:secret-bg 3s linear infinite;
+}
+.rarity-art.art-secret .art-ring{width:90%;height:90%;border-color:transparent;border-top-color:#FF1B8D;border-bottom-color:#3D1A5E;animation-duration:1.5s;}
+.rarity-art.art-secret .art-ring2{width:70%;height:70%;border-color:transparent;border-left-color:#F0C040;border-right-color:#9333EA;animation-direction:reverse;animation-duration:1s;}
+.rarity-art.art-secret .art-symbol{color:transparent;background:linear-gradient(135deg,#FF1B8D,#F0C040,#9333EA,#3B82F6);-webkit-background-clip:text;background-clip:text;animation:secret-hue 3s linear infinite;}
+@keyframes secret-bg{0%{filter:hue-rotate(0deg);}100%{filter:hue-rotate(360deg);}}
+@keyframes secret-hue{0%{filter:hue-rotate(0deg) brightness(1.5);}100%{filter:hue-rotate(360deg) brightness(1.5);}}
+
+@keyframes art-ring-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes flameRise{
+  0%  {transform:translateY(0) scaleX(1);opacity:.8;}
+  50% {transform:translateY(-40px) scaleX(.8) rotate(5deg);opacity:.5;}
+  100%{transform:translateY(-90px) scaleX(.3) rotate(-5deg);opacity:0;}
+}
+
+/* Fondos mejorados del reveal card */
+.cro-card.common{
+  background:linear-gradient(160deg,#1A1A2E,#0D0D1A);
+  border-color:#6B6B8A;
+  box-shadow:0 0 20px rgba(107,107,138,0.4);
+}
+.cro-card.rare{
+  background:linear-gradient(160deg,#0A1A3A,#051020);
+  border-color:#3B82F6;
+  box-shadow:0 0 30px rgba(59,130,246,0.5),0 0 60px rgba(59,130,246,0.2);
+}
+
+/* ═══════════════════════════════════════════
+   DISEÑOS PEQUEÑOS EN GRID (resultados)
+═══════════════════════════════════════════ */
+.tcg-card.common  .card-art-wrap{background:radial-gradient(circle at center,#2A2A3E,#10101E);border-radius:6px;}
+.tcg-card.rare    .card-art-wrap{background:radial-gradient(circle at center,#0A1535,#050B18);border-radius:6px;}
+.tcg-card.epic    .card-art-wrap{background:radial-gradient(circle at center,#200840,#100420);border-radius:6px;}
+.tcg-card.legendary .card-art-wrap{background:radial-gradient(circle at center,#281200,#140800);border-radius:6px;}
+.tcg-card.secret  .card-art-wrap{background:radial-gradient(circle at center,#180028,#080010);border-radius:6px;animation:secret-bg 3s linear infinite;}
+
+/* Brillo en hover de cartas */
+.tcg-card.rare:hover    {box-shadow:0 8px 24px rgba(59,130,246,0.4)!important;}
+.tcg-card.epic:hover    {box-shadow:0 8px 24px rgba(147,51,234,0.5)!important;}
+.tcg-card.legendary:hover{box-shadow:0 8px 24px rgba(212,160,23,0.5)!important;}
+.tcg-card.secret:hover  {box-shadow:0 8px 24px rgba(255,27,141,0.6)!important;}
 
 /* ── Card Logo ── */
 .card-logo{
@@ -2658,6 +2857,18 @@ body::after{
     <div class="cro-name" id="cro-name"></div>
   </div>
   <div class="cro-tap">Toca para continuar</div>
+</div>
+
+<!-- Suspense overlay (aparece ANTES del reveal épica/legendaria) -->
+<div class="suspense-overlay" id="suspense-overlay">
+  <div class="suspense-bg-glow" id="suspense-bg-glow"></div>
+  <div class="suspense-title" id="suspense-title">✦ INVOCANDO ✦</div>
+  <div class="suspense-card" id="suspense-card">
+    <div class="suspense-back-pattern"></div>
+    <div class="suspense-question" id="suspense-q">?</div>
+    <div class="suspense-brand">RESCUE TCG</div>
+  </div>
+  <div class="suspense-hint">Algo poderoso se acerca...</div>
 </div>
 
 
@@ -4633,7 +4844,95 @@ function showSummary(cards){
   document.getElementById('results-overlay').classList.add('visible');
 }
 
+// Arte abstracto por rareza para el reveal grande
+function rarityArtHTML(rarity){
+  const symbols = {common:'⬡',rare:'◆',epic:'◈',legendary:'♛',secret:'✦'};
+  const s = symbols[rarity] || '◇';
+  const rings = rarity==='epic'
+    ? '<div class="art-ring"></div><div class="art-ring art-ring2"></div><div class="art-ring art-ring3"></div>'
+    : rarity==='secret'
+    ? '<div class="art-ring"></div><div class="art-ring art-ring2"></div>'
+    : rarity==='legendary'
+    ? '<div class="art-ring"></div><div class="art-ring art-ring2"></div>'
+    : '<div class="art-ring"></div><div class="art-ring art-ring2"></div>';
+  return `<div class="rarity-art art-${rarity}"><div class="art-bg"></div>${rings}<div class="art-symbol">${s}</div></div>`;
+}
+
+// Sonido de suspenso
+function sndSuspense(){
+  try{
+    const a=new(window.AudioContext||window.webkitAudioContext)();
+    // Nota grave pulsante
+    const osc=a.createOscillator();
+    const gain=a.createGain();
+    osc.connect(gain);gain.connect(a.destination);
+    osc.type='sine';osc.frequency.setValueAtTime(55,a.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(40,a.currentTime+2.5);
+    gain.gain.setValueAtTime(0,a.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18,a.currentTime+0.3);
+    gain.gain.setValueAtTime(0.18,a.currentTime+2);
+    gain.gain.linearRampToValueAtTime(0,a.currentTime+2.5);
+    osc.start(a.currentTime);osc.stop(a.currentTime+2.5);
+    // Acorde tenso
+    [110,165,220].forEach((freq,i)=>{
+      const o=a.createOscillator();const g=a.createGain();
+      o.connect(g);g.connect(a.destination);
+      o.type='triangle';o.frequency.value=freq;
+      g.gain.setValueAtTime(0,a.currentTime+0.5+i*0.1);
+      g.gain.linearRampToValueAtTime(0.06,a.currentTime+0.9+i*0.1);
+      g.gain.linearRampToValueAtTime(0,a.currentTime+2.5);
+      o.start(a.currentTime+0.5+i*0.1);o.stop(a.currentTime+2.5);
+    });
+  }catch(e){}
+}
+
+// Animación de suspenso antes del reveal épica/legendaria
+function showSuspense(rarity, onReveal){
+  const overlay = document.getElementById('suspense-overlay');
+  if(!overlay){ onReveal(); return; }
+
+  const card   = document.getElementById('suspense-card');
+  const bgGlow = document.getElementById('suspense-bg-glow');
+
+  // Resetear estado
+  overlay.className = 'suspense-overlay visible';
+  card.className    = 'suspense-card';
+  bgGlow.style.opacity = '0';
+
+  sndSuspense();
+
+  // Fase 1: carta aparece (0.3s delay en CSS)
+  // Fase 2: empieza a temblar (1.3s)
+  setTimeout(()=>{
+    card.classList.add('shaking');
+  }, 1300);
+
+  // Fase 3: color de rareza revela (2s)
+  setTimeout(()=>{
+    card.classList.add('glow-'+rarity);
+    overlay.classList.add('glow-'+rarity);
+  }, 2000);
+
+  // Fase 4: salida y reveal (2.8s)
+  setTimeout(()=>{
+    overlay.classList.add('exiting');
+    setTimeout(()=>{
+      overlay.className = 'suspense-overlay'; // ocultar
+      onReveal();
+    }, 300);
+  }, 2800);
+}
+
 function showCardReveal(card,onDone){
+  // Para épica y legendaria, mostrar suspenso primero
+  if(card.rarity==='epic' || card.rarity==='legendary'){
+    showSuspense(card.rarity, ()=>_doCardReveal(card, onDone));
+  } else {
+    _doCardReveal(card, onDone);
+  }
+}
+
+function _doCardReveal(card,onDone){
   const overlay  =document.getElementById('cro');
   const cardEl   =document.getElementById('cro-card');
   const titleEl  =document.getElementById('cro-title');
@@ -4648,7 +4947,7 @@ function showCardReveal(card,onDone){
 
   titleEl.textContent =card.rarity==='legendary'?'♛ LEGENDARIA ♛':'◈ ÉPICA ◈';
   rarityEl.textContent=rarityLabel(card.rarity).toUpperCase();
-  artEl.innerHTML   =cardLogo(card.rarity);
+  artEl.innerHTML     =rarityArtHTML(card.rarity);
   nameEl.textContent  =rarityLabel(card.rarity);
 
   particles.innerHTML='';
@@ -4666,9 +4965,15 @@ function showCardReveal(card,onDone){
   }
 
   overlay.classList.add('visible');
-  if(card.rarity==='legendary'){sndLegendary();sndJackpot();}
-  else{sndEpic();}
-  spawnConfetti();
+  if(card.rarity==='legendary'){
+    sndLegendary();sndJackpot();
+    spawnConfetti();
+    startLegendaryFireworks(overlay);
+    startLegendaryFire(overlay);
+  } else {
+    sndEpic();
+    spawnConfetti();
+  }
   setTimeout(()=>cardEl.classList.add('shown'),100);
   overlay._onDone=onDone;
 }
@@ -4677,7 +4982,100 @@ function croDismiss(){
   const overlay=document.getElementById('cro');
   const onDone=overlay._onDone;
   overlay.classList.remove('visible');
+  // Limpiar fuego y fuegos artificiales
+  const fireEl=overlay.querySelector('.legendary-fire');
+  if(fireEl) fireEl.remove();
+  const fwCanvas=overlay.querySelector('.legendary-fw-canvas');
+  if(fwCanvas){ fwCanvas._stopFW=true; fwCanvas.remove(); }
   if(onDone)onDone();
+}
+
+// ── Fuego legendario ──────────────────────────────────────────
+function startLegendaryFire(container){
+  // Crear el contenedor de llamas en la parte inferior
+  let fire=document.createElement('div');
+  fire.className='legendary-fire';
+  fire.style.cssText='position:absolute;bottom:0;left:0;right:0;height:90px;pointer-events:none;overflow:hidden;z-index:1;';
+  container.appendChild(fire);
+
+  // Generar partículas de fuego continuamente
+  const COLORS=['#FF4500','#FF6B00','#FFA500','#FFD700','#FF2200','#FFAA00'];
+  function spawnFlame(){
+    if(!fire.isConnected) return;
+    for(let i=0;i<3;i++){
+      const f=document.createElement('div');
+      const x=Math.random()*100;
+      const size=12+Math.random()*20;
+      const dur=0.6+Math.random()*0.8;
+      const color=COLORS[Math.floor(Math.random()*COLORS.length)];
+      f.style.cssText=`position:absolute;bottom:0;left:${x}%;width:${size}px;height:${size*1.5}px;background:radial-gradient(ellipse at bottom,${color},transparent);border-radius:50% 50% 30% 30%;opacity:${0.6+Math.random()*0.4};animation:flameRise ${dur}s ease-out forwards;`;
+      fire.appendChild(f);
+      setTimeout(()=>f.remove(), dur*1000+100);
+    }
+    if(fire.isConnected) setTimeout(spawnFlame, 80);
+  }
+  spawnFlame();
+}
+
+// ── Fuegos artificiales legendarios ──────────────────────────
+function startLegendaryFireworks(container){
+  const canvas=document.createElement('canvas');
+  canvas.className='legendary-fw-canvas';
+  canvas.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:2;';
+  canvas.width=container.offsetWidth||400;
+  canvas.height=container.offsetHeight||600;
+  container.appendChild(canvas);
+  const ctx=canvas.getContext('2d');
+
+  const FW_COLORS=['#FFD700','#FF4500','#FF1B8D','#F0C040','#FFFFFF','#FFA500','#FFE080'];
+  const particles=[];
+
+  function explode(x,y){
+    const color=FW_COLORS[Math.floor(Math.random()*FW_COLORS.length)];
+    for(let i=0;i<40;i++){
+      const angle=Math.random()*Math.PI*2;
+      const speed=2+Math.random()*4;
+      particles.push({
+        x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+        alpha:1,color,size:2+Math.random()*3,life:0,maxLife:40+Math.random()*30
+      });
+    }
+  }
+
+  // Lanzar fuegos cada cierto tiempo
+  function launchFW(){
+    if(canvas._stopFW) return;
+    const x=canvas.width*(.2+Math.random()*.6);
+    const y=canvas.height*(.1+Math.random()*.5);
+    explode(x,y);
+    const next=600+Math.random()*800;
+    if(!canvas._stopFW) setTimeout(launchFW, next);
+  }
+  setTimeout(launchFW,300);
+  setTimeout(()=>{explode(canvas.width*.3,canvas.height*.2);},400);
+  setTimeout(()=>{explode(canvas.width*.7,canvas.height*.3);},700);
+  setTimeout(()=>{explode(canvas.width*.5,canvas.height*.15);},1000);
+
+  function loop(){
+    if(canvas._stopFW) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.08;
+      p.vx*=0.97; p.vy*=0.97;
+      p.life++;
+      p.alpha=1-(p.life/p.maxLife);
+      if(p.alpha<=0){particles.splice(i,1);continue;}
+      ctx.globalAlpha=p.alpha;
+      ctx.fillStyle=p.color;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    requestAnimationFrame(loop);
+  }
+  loop();
 }
 
 function closeResults(){

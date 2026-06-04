@@ -3435,14 +3435,30 @@ function sndRare(){
 // Epic card reveal — dramatic power chord
 function sndEpic(){
   resumeAC();
-  // Low rumble
-  playNoise(0.08,0.3);
-  // Power chord
-  [196,294,392,494].forEach((f,i)=>{
-    playTone(f,'sawtooth',0.08,0.5,i*0.02);
+  // Rumble profundo
+  playNoise(0.12, 0.8);
+  // Bajo pesado
+  [65, 98, 131].forEach((f,i) => playTone(f,'sawtooth',0.10,0.8,i*0.02));
+  // Power chord épico ascendente
+  [196,247,294,370,494].forEach((f,i) => {
+    playTone(f,'sawtooth',0.09,0.7,0.05+i*0.04);
   });
-  // Rising sparkle
-  [1047,1319,1568,2093].forEach((f,i)=>playTone(f,'sine',0.06,0.2,0.15+i*0.07));
+  // Segundo hit más fuerte
+  setTimeout(()=>{
+    playNoise(0.10, 0.5);
+    [261,330,392,523].forEach((f,i) => playTone(f,'square',0.10,0.5,i*0.03));
+  }, 200);
+  // Chispa ascendente rápida
+  [784,988,1175,1397,1568,1976,2349].forEach((f,i) =>
+    playTone(f,'sine',0.07,0.15,0.3+i*0.05)
+  );
+  // Hit final impactante
+  setTimeout(()=>{
+    playNoise(0.15, 0.3);
+    [196,294,392,523,784].forEach((f,i) => playTone(f,'sawtooth',0.12,0.4,i*0.01));
+    // Shimmer de brillo
+    [2093,2637,3136].forEach((f,i) => playTone(f,'sine',0.06,0.3,0.1+i*0.05));
+  }, 500);
 }
 
 // Legendary reveal — fanfare
@@ -4780,13 +4796,11 @@ function csgoRevealCard(card){
     else if(card.rarity === 'rare')     sndRare();
     else                                sndCommon();
 
-    // Para épica y legendaria: suspenso → reveal → luego mostrar botón siguiente
+    // Para épica y legendaria: reveal directo (sin suspenso, ya se vio en el reel)
     if(card.rarity === 'epic' || card.rarity === 'legendary'){
       setTimeout(() => {
-        showSuspense(card.rarity, () => {
-          _doCardReveal(card, () => {
-            showNextButton();
-          });
+        _doCardReveal(card, () => {
+          showNextButton();
         });
       }, 600);
       return;

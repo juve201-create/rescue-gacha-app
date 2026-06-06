@@ -2756,6 +2756,8 @@ body::after{
         <button class="view-prizes-btn" onclick="sndClick();openPrizesModal()">
           ★ Premios <span class="prize-count-badge" id="prize-count-badge">0</span>
         </button>
+        <button class="view-collection-btn" style="border-color:rgba(129,140,248,0.5);color:#818CF8;background:rgba(129,140,248,0.08);" onclick="sndClick();openHistorialModal()">📜 Historial</button>
+        <button class="view-collection-btn" style="border-color:rgba(212,160,23,0.5);color:#D4A017;background:rgba(212,160,23,0.08);" onclick="sndClick();openRankingModal()">🏆 Ranking</button>
       </div>
     </div>
     <span id="stat-common" style="display:none">0</span>
@@ -2855,6 +2857,30 @@ body::after{
     <p class="prizes-modal-sub">Muestra el código en tienda para canjear</p>
     <div id="prizes-wallet-list">
       <div class="prizes-empty">Aún no tienes premios.<br>¡Sigue robando cartas!</div>
+    </div>
+  </div>
+</div>
+
+<!-- Historial Modal -->
+<div class="prizes-modal-overlay" id="historial-modal-overlay" onclick="if(event.target===this)closeHistorialModal()" style="z-index:180;">
+  <div class="prizes-modal" style="max-height:85vh;">
+    <button class="prizes-modal-close" onclick="closeHistorialModal()">✕</button>
+    <h2>📜 Historial de Tiradas</h2>
+    <p class="prizes-modal-sub">Tus últimas 60 cartas obtenidas</p>
+    <div id="historial-list" style="overflow-y:auto;max-height:60vh;margin-top:12px;">
+      <div class="prizes-empty">Cargando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Ranking Modal -->
+<div class="prizes-modal-overlay" id="ranking-modal-overlay" onclick="if(event.target===this)closeRankingModal()" style="z-index:180;">
+  <div class="prizes-modal" style="max-height:85vh;">
+    <button class="prizes-modal-close" onclick="closeRankingModal()">✕</button>
+    <h2>🏆 Tabla de Líderes</h2>
+    <p class="prizes-modal-sub">Top 20 invocadores de Rescue TCG</p>
+    <div id="ranking-list" style="overflow-y:auto;max-height:60vh;margin-top:12px;">
+      <div class="prizes-empty">Cargando...</div>
     </div>
   </div>
 </div>
@@ -3970,6 +3996,101 @@ function cardLogo(rarity){
 
 
 
+
+// ── Historial de tiradas ──────────────────────────────────────
+async function openHistorialModal(){
+  document.getElementById('historial-modal-overlay').classList.add('visible');
+  document.getElementById('historial-list').innerHTML = '<div class="prizes-empty">Cargando...</div>';
+  try{
+    const res = await fetch(BACKEND+'/api/gems',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+      body:JSON.stringify({action:'pull_history'})
+    });
+    const d = await res.json();
+    const el = document.getElementById('historial-list');
+    if(!d.ok||!d.pulls||d.pulls.length===0){
+      el.innerHTML='<div class="prizes-empty">Aún no tienes tiradas registradas</div>';
+      return;
+    }
+    const LABELS  = {common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria',secret:'Secreta'};
+    const SYMBOLS = {common:'⬡',rare:'◆',epic:'◈',legendary:'♛',secret:'✦'};
+    const COLORS  = {common:'#AAAACC',rare:'#93C5FD',epic:'#D8B4FE',legendary:'#FFE080',secret:'#FF6EB4'};
+    const BORDERS = {common:'#5A5A8A',rare:'#3B82F6',epic:'#9333EA',legendary:'#D4A017',secret:'#FF1B8D'};
+    let html='';
+    d.pulls.forEach((p,i)=>{
+      const c=COLORS[p.rarity]||'#AAAACC';
+      const b=BORDERS[p.rarity]||'#5A5A8A';
+      const s=SYMBOLS[p.rarity]||'◇';
+      const l=LABELS[p.rarity]||p.rarity;
+      const dt=p.obtained_at?new Date(p.obtained_at).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+      html+=`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.04);border:2px solid ${b};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-size:16px;color:${c};">${s}</span>
+        </div>
+        <div style="flex:1;">
+          <div style="font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:${c};">${l}</div>
+          <div style="font-size:10px;color:rgba(240,230,200,0.4);margin-top:2px;">${dt}</div>
+        </div>
+        <div style="font-size:10px;color:rgba(240,230,200,0.3);">#${d.pulls.length-i}</div>
+      </div>`;
+    });
+    el.innerHTML=html;
+  }catch(e){
+    document.getElementById('historial-list').innerHTML='<div class="prizes-empty">Error al cargar</div>';
+  }
+}
+function closeHistorialModal(){
+  document.getElementById('historial-modal-overlay').classList.remove('visible');
+}
+
+// ── Tabla de líderes ──────────────────────────────────────────
+async function openRankingModal(){
+  document.getElementById('ranking-modal-overlay').classList.add('visible');
+  document.getElementById('ranking-list').innerHTML = '<div class="prizes-empty">Cargando...</div>';
+  try{
+    const res = await fetch(BACKEND+'/api/gems',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+      body:JSON.stringify({action:'leaderboard'})
+    });
+    const d = await res.json();
+    const el = document.getElementById('ranking-list');
+    if(!d.ok||!d.leaderboard||d.leaderboard.length===0){
+      el.innerHTML='<div class="prizes-empty">Aún no hay datos suficientes</div>';
+      return;
+    }
+    const MEDALS=['🥇','🥈','🥉'];
+    let html='';
+    d.leaderboard.forEach((u,i)=>{
+      const medal=MEDALS[i]||`<span style="font-size:11px;color:rgba(240,230,200,0.4);">${i+1}</span>`;
+      const isTop=i<3;
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px;margin-bottom:6px;background:${isTop?'rgba(212,160,23,0.06)':'rgba(255,255,255,0.02)'};border:1px solid ${isTop?'rgba(212,160,23,0.2)':'rgba(255,255,255,0.05)'};">
+        <div style="width:28px;text-align:center;font-size:${isTop?'18':'12'}px;flex-shrink:0;">${medal}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:#F0E6C8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.username}</div>
+          <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">
+            ${u.secret>0?`<span style="font-size:10px;color:#FF6EB4;">✦${u.secret}</span>`:''}
+            ${u.legendary>0?`<span style="font-size:10px;color:#FFE080;">♛${u.legendary}</span>`:''}
+            ${u.epic>0?`<span style="font-size:10px;color:#D8B4FE;">◈${u.epic}</span>`:''}
+            ${u.rare>0?`<span style="font-size:10px;color:#93C5FD;">◆${u.rare}</span>`:''}
+            <span style="font-size:10px;color:rgba(240,230,200,0.4);">⬡${u.common||0}</span>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:900;color:#E8187A;">${u.total}</div>
+          <div style="font-size:9px;color:rgba(240,230,200,0.4);letter-spacing:1px;">CARTAS</div>
+        </div>
+      </div>`;
+    });
+    el.innerHTML=html;
+  }catch(e){
+    document.getElementById('ranking-list').innerHTML='<div class="prizes-empty">Error al cargar</div>';
+  }
+}
+function closeRankingModal(){
+  document.getElementById('ranking-modal-overlay').classList.remove('visible');
+}
 
 // ── Redeem Collection Modal ──
 function openRedeemModal(){

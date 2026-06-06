@@ -3998,6 +3998,16 @@ function cardLogo(rarity){
 
 
 
+// ── Modal de Ayuda ────────────────────────────────────────────
+function openHelpModal(){
+  const ov = document.getElementById('help-modal-overlay');
+  if(ov){ ov.style.display='flex'; sndClick(); }
+}
+function closeHelpModal(){
+  const ov = document.getElementById('help-modal-overlay');
+  if(ov){ ov.style.display='none'; }
+}
+
 // ── Historial de tiradas ──────────────────────────────────────
 async function openHistorialModal(){
   document.getElementById('historial-modal-overlay').classList.add('visible');

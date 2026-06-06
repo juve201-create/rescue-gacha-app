@@ -296,10 +296,11 @@ function renderUsers(users){
   if(!users.length){ html+='<div class="empty">Sin resultados</div></div>'; document.getElementById('tab-content').innerHTML=html; return; }
   users.forEach(function(u){
     var name = u.username || u.email;
-    html += '<div class="user-card" onclick="openDetail(\''+u.id+'\')">';
+    var isTest = !!u.is_test;
+    html += '<div class="user-card" style="'+(isTest?'opacity:0.5;':'')+'" onclick="openDetail(\''+u.id+'\')">';
     html += '<div class="user-avatar">🐰</div>';
     html += '<div class="user-info">';
-    html += '<div class="user-name">'+name+'</div>';
+    html += '<div class="user-name">'+name+(isTest?' <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3);font-family:monospace;">TEST</span>':'')+'</div>';
     html += '<div class="user-email">'+u.email+'</div>';
     html += '<div class="user-badges">';
     html += '<span class="pill pill-gold">✦ '+(u.gems||0).toLocaleString()+' Maná</span>';
@@ -307,7 +308,10 @@ function renderUsers(users){
     if(u.prizes>0) html += '<span class="pill pill-green">🎁 '+u.prizes+' premios</span>';
     if(u.spent>0)  html += '<span class="pill pill-pink">💵 $'+u.spent+'</span>';
     html += '</div></div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:center;" onclick="event.stopPropagation()">';
     html += '<span class="user-arrow">›</span>';
+    html += '<button style="font-size:8px;padding:3px 7px;border-radius:5px;cursor:pointer;border:1px solid rgba('+(isTest?'239,68,68':'157,125,184')+',0.4);background:rgba('+(isTest?'239,68,68':'157,125,184')+',0.08);color:'+(isTest?'#F87171':'var(--muted)')+';font-family:Inter,sans-serif;" onclick="toggleTest(\''+u.id+'\','+isTest+')">'+(isTest?'✓ Test':'+ Test')+'</button>';
+    html += '</div>';
     html += '</div>';
   });
   html += '</div>';
@@ -430,6 +434,21 @@ async function openDetail(userId){
 function closeDetail(){
   document.getElementById('detail-panel').classList.remove('open');
   currentDetailUser = null;
+}
+
+async function toggleTest(userId, currentIsTest){
+  var newVal = !currentIsTest;
+  var label  = newVal ? 'marcar como TEST' : 'quitar de TEST';
+  if(!confirm('¿Seguro que quieres '+label+' esta cuenta?')) return;
+  var d = await adminFetch('toggle_test', {user_id: userId, is_test: newVal});
+  if(d.ok){
+    // Actualizar en allUsers
+    var u = allUsers.find(function(u){ return u.id===userId; });
+    if(u) u.is_test = newVal;
+    loadTab('users');
+  } else {
+    alert(d.error||'Error al actualizar');
+  }
 }
 
 // ── Modal Maná ────────────────────────────────────────────────

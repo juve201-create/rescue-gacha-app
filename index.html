@@ -2775,6 +2775,7 @@ body::after{
         </button>
         <button class="view-collection-btn" style="border-color:rgba(129,140,248,0.5);color:#818CF8;background:rgba(129,140,248,0.08);" onclick="sndClick();openHistorialModal()">📜 Historial</button>
         <button class="view-collection-btn" style="border-color:rgba(212,160,23,0.5);color:#D4A017;background:rgba(212,160,23,0.08);" onclick="sndClick();openRankingModal()">🏆 Ranking</button>
+        <button id="daily-btn" style="display:none;padding:8px 14px;border-radius:20px;border:2px solid rgba(240,192,64,0.7);background:rgba(240,192,64,0.12);color:#FFE080;font-family:'Cinzel',serif;font-size:11px;font-weight:700;cursor:pointer;letter-spacing:1px;animation:orbPulse 1.2s ease-in-out infinite alternate;box-shadow:0 0 14px rgba(240,192,64,0.3);" onclick="sndClick();openDailyModal()">🎁 Sobre Diario</button>
       </div>
     </div>
     <span id="stat-common" style="display:none">0</span>
@@ -2838,6 +2839,35 @@ body::after{
     <p class="prizes-modal-sub">Muestra el código en tienda para canjear</p>
     <div id="prizes-wallet-list">
       <div class="prizes-empty">Aún no tienes premios.<br>¡Sigue robando cartas!</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sobre Diario -->
+<div id="daily-modal-overlay" onclick="if(event.target===this)closeDailyModal()" style="display:none;position:fixed;inset:0;background:rgba(5,2,15,0.92);backdrop-filter:blur(8px);z-index:250;align-items:center;justify-content:center;">
+  <div style="width:100%;max-width:320px;padding:32px 24px;background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid rgba(240,192,64,0.3);border-radius:20px;display:flex;flex-direction:column;align-items:center;gap:16px;position:relative;overflow:hidden;">
+    <canvas id="daily-canvas" style="position:absolute;inset:0;pointer-events:none;border-radius:inherit;"></canvas>
+    <!-- Estado: disponible -->
+    <div id="daily-available" style="display:flex;flex-direction:column;align-items:center;gap:14px;position:relative;z-index:2;width:100%;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;color:rgba(240,230,200,0.5);text-transform:uppercase;">Sobre Diario</div>
+      <div id="daily-envelope" style="font-size:72px;cursor:pointer;animation:pso-float 2s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(240,192,64,0.6));" onclick="claimDaily()">🎁</div>
+      <div style="font-size:12px;color:rgba(240,230,200,0.6);text-align:center;line-height:1.6;">¡Tu sobre diario está listo!<br><span style="font-size:10px;color:rgba(240,230,200,0.4);">Toca para abrir</span></div>
+      <div style="font-size:10px;color:rgba(240,230,200,0.3);letter-spacing:1px;">Se renueva a las 00:00 hora Reynosa</div>
+    </div>
+    <!-- Estado: resultado -->
+    <div id="daily-result" style="display:none;flex-direction:column;align-items:center;gap:14px;position:relative;z-index:2;width:100%;">
+      <div id="daily-result-title" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:3px;color:rgba(240,230,200,0.6);text-transform:uppercase;"></div>
+      <div id="daily-result-icon" style="font-size:56px;line-height:1;"></div>
+      <div id="daily-result-name" style="font-family:'Cinzel',serif;font-size:18px;font-weight:900;letter-spacing:2px;"></div>
+      <div id="daily-result-sub" style="font-size:11px;color:rgba(240,230,200,0.4);text-align:center;line-height:1.6;"></div>
+      <button onclick="closeDailyModal()" style="padding:12px 32px;border-radius:10px;border:none;background:linear-gradient(135deg,#E8187A,#9D0050);color:white;font-family:'Cinzel',serif;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:4px;">CONTINUAR</button>
+    </div>
+    <!-- Estado: ya reclamado -->
+    <div id="daily-claimed" style="display:none;flex-direction:column;align-items:center;gap:14px;position:relative;z-index:2;width:100%;">
+      <div style="font-size:48px;">📭</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:rgba(240,230,200,0.6);text-align:center;">Ya reclamaste tu sobre de hoy</div>
+      <div style="font-size:11px;color:rgba(240,230,200,0.35);text-align:center;">Vuelve mañana a las 00:00<br>hora Reynosa</div>
+      <button onclick="closeDailyModal()" style="padding:11px 28px;border-radius:10px;border:1px solid #4A1575;background:transparent;color:#9D7DB8;font-family:'Cinzel',serif;font-size:12px;cursor:pointer;">Cerrar</button>
     </div>
   </div>
 </div>
@@ -3303,6 +3333,9 @@ function loginSuccess(user, col, prizes){
       setTimeout(() => verifyPayment(true), 1200);
     }
   }
+
+  // Verificar si el sobre diario está disponible
+  setTimeout(() => checkDailyBonus(), 800);
 }
 
 async function initAuth(){
@@ -4074,6 +4107,167 @@ function closePaymentSuccess(){
   if(ov){ ov.style.display='none'; }
   // Cerrar también el modal de créditos si está abierto
   closeCreditsModal();
+}
+
+// ── Sobre Diario ──────────────────────────────────────────────
+// IMPORTANTE: No afecta el pity global. La carta obtenida se
+// agrega a collections directamente en el servidor sin pasar
+// por update_pity ni ningún contador de rareza.
+
+var _dailyAvailable = false;
+
+async function checkDailyBonus(){
+  if(!currentUser) return;
+  try{
+    const res = await fetch(BACKEND+'/api/gems',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+      body:JSON.stringify({action:'check_daily'})
+    });
+    const d = await res.json();
+    _dailyAvailable = d.ok && d.available;
+    const btn = document.getElementById('daily-btn');
+    if(btn) btn.style.display = _dailyAvailable ? 'inline-flex' : 'none';
+  }catch(e){ console.error('check_daily error:', e); }
+}
+
+function openDailyModal(){
+  const ov = document.getElementById('daily-modal-overlay');
+  if(!ov) return;
+  document.getElementById('daily-available').style.display = _dailyAvailable ? 'flex' : 'none';
+  document.getElementById('daily-claimed').style.display   = _dailyAvailable ? 'none' : 'flex';
+  document.getElementById('daily-result').style.display    = 'none';
+  ov.style.display = 'flex';
+}
+
+function closeDailyModal(){
+  document.getElementById('daily-modal-overlay').style.display = 'none';
+  // Limpiar canvas
+  const canvas = document.getElementById('daily-canvas');
+  if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+}
+
+async function claimDaily(){
+  if(!_dailyAvailable) return;
+  // Deshabilitar para evitar doble clic
+  const env = document.getElementById('daily-envelope');
+  if(env){ env.style.pointerEvents='none'; env.style.filter='grayscale(0.5)'; }
+
+  try{
+    const res = await fetch(BACKEND+'/api/gems',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+      body:JSON.stringify({action:'claim_daily'})
+    });
+    const d = await res.json();
+
+    if(!d.ok || d.reason==='already_claimed'){
+      _dailyAvailable = false;
+      document.getElementById('daily-available').style.display='none';
+      document.getElementById('daily-claimed').style.display='flex';
+      const btn=document.getElementById('daily-btn');
+      if(btn) btn.style.display='none';
+      return;
+    }
+
+    // Éxito — mostrar resultado
+    _dailyAvailable = false;
+    const btn = document.getElementById('daily-btn');
+    if(btn) btn.style.display='none';
+
+    showDailyResult(d.result);
+
+    // Si obtuvo carta, actualizar colección local
+    if(d.result){
+      collection.push({ rarity: d.result, obtained_at: new Date().toISOString() });
+      renderCollection();
+    }
+
+  }catch(e){
+    console.error('claim_daily error:', e);
+    if(env){ env.style.pointerEvents=''; env.style.filter=''; }
+  }
+}
+
+function showDailyResult(result){
+  const LABELS  = {common:'¡Carta Común!', rare:'¡Carta Rara!', epic:'¡CARTA ÉPICA!'};
+  const SYMBOLS = {common:'⬡', rare:'◆', epic:'◈'};
+  const COLORS  = {common:'#AAAACC', rare:'#93C5FD', epic:'#D8B4FE'};
+  const SUBS    = {
+    common: 'Una carta común se ha añadido\na tu colección.',
+    rare:   '¡Una carta rara! Se ha añadido\na tu colección.',
+    epic:   '¡INCREÍBLE! Una carta épica\nse ha añadido a tu colección.'
+  };
+
+  document.getElementById('daily-available').style.display='none';
+
+  const resultEl = document.getElementById('daily-result');
+  const titleEl  = document.getElementById('daily-result-title');
+  const iconEl   = document.getElementById('daily-result-icon');
+  const nameEl   = document.getElementById('daily-result-name');
+  const subEl    = document.getElementById('daily-result-sub');
+
+  if(!result){
+    // Nada
+    titleEl.textContent = 'Hoy no fue el día...';
+    iconEl.textContent  = '📭';
+    iconEl.style.filter = '';
+    nameEl.textContent  = 'Sin carta hoy';
+    nameEl.style.color  = 'rgba(240,230,200,0.4)';
+    subEl.textContent   = 'Vuelve mañana a las 00:00\nhora Reynosa para intentar de nuevo.';
+    resultEl.style.display='flex';
+    return;
+  }
+
+  const color = COLORS[result]||'#AAAACC';
+  titleEl.textContent = '¡Sobre abierto!';
+  titleEl.style.color = color;
+  iconEl.innerHTML    = smallArtHTML(result);
+  nameEl.textContent  = LABELS[result]||result;
+  nameEl.style.color  = color;
+  subEl.textContent   = SUBS[result]||'';
+  resultEl.style.display='flex';
+
+  // Fuegos artificiales en el canvas
+  const canvas = document.getElementById('daily-canvas');
+  canvas.width  = canvas.parentElement.offsetWidth  || 320;
+  canvas.height = canvas.parentElement.offsetHeight || 400;
+  const ctx = canvas.getContext('2d');
+  const FW = result==='epic'
+    ? ['#D8B4FE','#9333EA','#C084FC','#E9D5FF']
+    : result==='rare'
+    ? ['#93C5FD','#3B82F6','#BFDBFE']
+    : ['#AAAACC','#6B6B8A','#CCC'];
+  const particles=[];
+
+  function explode(x,y){
+    FW.forEach(c=>{ for(let i=0;i<10;i++){const angle=Math.random()*Math.PI*2,speed=2+Math.random()*4;particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,alpha:1,color:c,size:2+Math.random()*3,life:0,maxLife:35+Math.random()*25});} });
+  }
+
+  [200,400,600,800].forEach((t,i)=>setTimeout(()=>explode(canvas.width*(.2+i*.2),canvas.height*(.15+i*.05)),t));
+
+  let stopFW=false;
+  setTimeout(()=>stopFW=true, 2500);
+
+  function loop(){
+    if(stopFW&&particles.length===0){ ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.vx*=.97;p.life++;
+      p.alpha=1-(p.life/p.maxLife);if(p.alpha<=0){particles.splice(i,1);continue;}
+      ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;requestAnimationFrame(loop);
+  }
+  loop();
+
+  // Sonido según resultado
+  try{
+    const a=new(window.AudioContext||window.webkitAudioContext)();
+    const freqs=result==='epic'?[330,415,494,659]:result==='rare'?[440,554,659]:[523,659];
+    freqs.forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0,a.currentTime+i*.1);g.gain.linearRampToValueAtTime(.1,a.currentTime+i*.1+.05);g.gain.linearRampToValueAtTime(0,a.currentTime+i*.1+.4);o.start(a.currentTime+i*.1);o.stop(a.currentTime+.8);});
+    if(result==='epic') spawnConfetti();
+  }catch(e){}
 }
 
 // ── Modal de Ayuda ────────────────────────────────────────────

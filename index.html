@@ -2620,6 +2620,7 @@ body::after{
 
   <!-- HEADER -->
   <div class="header">
+    <button onclick="openHelpModal()" style="position:absolute;top:12px;right:12px;padding:7px 14px;border-radius:20px;border:2px solid rgba(232,24,122,0.6);background:rgba(232,24,122,0.15);color:#F472B6;font-size:11px;font-weight:700;cursor:pointer;z-index:10;display:flex;align-items:center;gap:5px;font-family:'Cinzel',serif;letter-spacing:1px;box-shadow:0 0 12px rgba(232,24,122,0.2);" title="¿Cómo funciona?">❓ Ayuda</button>
     <div class="logo-wrap">
       <div class="logo-glow"></div>
       <div class="logo-runes"></div>
@@ -5406,5 +5407,104 @@ if(checkTermsGate()){
   initAuth();
 }
 </script>
-</body>
+<!-- Modal de Ayuda -->
+<div id="help-modal-overlay" onclick="if(event.target===this)closeHelpModal()" style="display:none;position:fixed;inset:0;background:rgba(5,2,15,0.92);backdrop-filter:blur(6px);z-index:300;align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 16px;">
+  <div style="width:100%;max-width:480px;background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid rgba(232,24,122,0.25);border-radius:18px;padding:24px 20px;margin:auto;position:relative;">
+    <button onclick="closeHelpModal()" style="position:absolute;top:14px;right:14px;background:rgba(61,20,102,0.4);border:1px solid #4A1575;color:#9D7DB8;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+
+    <div style="font-family:'Cinzel',serif;font-size:18px;font-weight:900;letter-spacing:3px;background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;">RESCUE GACHA</div>
+    <div style="font-size:10px;color:#9D7DB8;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Guía completa</div>
+
+    <!-- Sección: Cómo funciona -->
+    <div style="margin-bottom:18px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">⚡ ¿Cómo funciona?</div>
+      <div style="font-size:12px;color:#C8B89A;line-height:1.7;">
+        Compra <strong style="color:#F0E6C8;">Maná</strong> con tu tarjeta o Apple Pay y úsalo para invocar cartas. Cada tirada consume Maná y te da una carta aleatoria de distinta rareza. Acumula cartas, canjéalas por físicas en la tienda o fabrica rarezas mejores.
+      </div>
+    </div>
+
+    <!-- Sección: Costo de tiradas -->
+    <div style="margin-bottom:18px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">💎 Paquetes de Maná</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div style="background:rgba(61,20,102,0.3);border:1px solid #4A1575;border-radius:8px;padding:8px 10px;font-size:11px;color:#F0E6C8;">$20 MXN → <strong style="color:#D4A017;">400 Maná</strong></div>
+        <div style="background:rgba(61,20,102,0.3);border:1px solid #4A1575;border-radius:8px;padding:8px 10px;font-size:11px;color:#F0E6C8;">$50 MXN → <strong style="color:#D4A017;">1,100 Maná</strong></div>
+        <div style="background:rgba(61,20,102,0.3);border:1px solid #4A1575;border-radius:8px;padding:8px 10px;font-size:11px;color:#F0E6C8;">$100 MXN → <strong style="color:#D4A017;">2,300 Maná</strong></div>
+        <div style="background:rgba(61,20,102,0.3);border:1px solid #4A1575;border-radius:8px;padding:8px 10px;font-size:11px;color:#F0E6C8;">$250 MXN → <strong style="color:#D4A017;">6,500 Maná</strong></div>
+      </div>
+      <div style="font-size:11px;color:#9D7DB8;margin-top:8px;">Tiradas: 1 carta=100 · 6 cartas=600 · 14 cartas=1,400 · 30 cartas=3,000</div>
+    </div>
+
+    <!-- Sección: Rarezas -->
+    <div style="margin-bottom:18px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">✨ Rarezas</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(170,170,200,0.06);border-left:3px solid #6B6B8A;"><span style="color:#AAAACC;">⬡ Común</span><span style="color:#9D7DB8;">1 de cada 1.3</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(59,130,246,0.06);border-left:3px solid #3B82F6;"><span style="color:#93C5FD;">◆ Rara</span><span style="color:#9D7DB8;">1 de cada 6</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(147,51,234,0.08);border-left:3px solid #9333EA;"><span style="color:#D8B4FE;">◈ Épica</span><span style="color:#9D7DB8;">1 de cada 29</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(212,160,23,0.08);border-left:3px solid #D4A017;"><span style="color:#FFE080;">♛ Legendaria</span><span style="color:#9D7DB8;">1 de cada 200</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(255,27,141,0.08);border-left:3px solid #FF1B8D;"><span style="color:#FF6EB4;">✦ Secreta</span><span style="color:#9D7DB8;">1 de cada 25,000</span></div>
+      </div>
+    </div>
+
+    <!-- Sección: Canjear cartas físicas -->
+    <div style="margin-bottom:18px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">🎴 Cómo Canjear tu Carta Física</div>
+      <div style="font-size:12px;color:#C8B89A;line-height:1.8;">
+        <div style="display:flex;gap:10px;margin-bottom:8px;"><span style="color:#E8187A;font-weight:700;flex-shrink:0;font-size:14px;">1.</span><span>Ve a <strong style="color:#F0E6C8;">Colección → 🎴 Canjear</strong> y selecciona la carta que quieres canjear por su rareza.</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:8px;"><span style="color:#E8187A;font-weight:700;flex-shrink:0;font-size:14px;">2.</span><span>Confirma el canje en la app — el sistema lo registrará automáticamente.</span></div>
+        <div style="display:flex;gap:10px;margin-bottom:8px;"><span style="color:#E8187A;font-weight:700;flex-shrink:0;font-size:14px;">3.</span><span>Visita la tienda <strong style="color:#F0E6C8;">Rescue TCG</strong> y muéstrale a un administrador tu registro de canje.</span></div>
+        <div style="display:flex;gap:10px;"><span style="color:#E8187A;font-weight:700;flex-shrink:0;font-size:14px;">4.</span><span>Escoge la carta física que más te guste de la carpeta de la rareza que canjeaste.</span></div>
+      </div>
+      <div style="margin-top:10px;padding:10px 12px;background:rgba(212,160,23,0.08);border:1px solid rgba(212,160,23,0.25);border-radius:8px;font-size:11px;color:#D4A017;line-height:1.6;">
+        💡 <strong>Recomendado:</strong> hacer el canje frente a un administrador. Si no es posible, cualquier admin puede buscar y verificar tu canje en el sistema de administración.
+      </div>
+    </div>
+
+    <!-- Sección: Premios de comida -->
+    <div style="margin-bottom:18px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">🎁 Cómo Reclamar Premios de Comida</div>
+      <div style="font-size:12px;color:#C8B89A;line-height:1.7;margin-bottom:10px;">
+        Al invocar cartas puedes ganar premios de comida de forma aleatoria. Si ganas uno aparecerá en <strong style="color:#F0E6C8;">★ Premios</strong> con un código único. Para reclamarlo:
+      </div>
+      <div style="font-size:12px;color:#C8B89A;line-height:1.8;">
+        <div style="display:flex;gap:10px;margin-bottom:6px;"><span style="color:#4ADE80;font-weight:700;flex-shrink:0;font-size:14px;">1.</span><span>Abre <strong style="color:#F0E6C8;">★ Premios</strong> y muestra el código en pantalla al administrador.</span></div>
+        <div style="display:flex;gap:10px;"><span style="color:#4ADE80;font-weight:700;flex-shrink:0;font-size:14px;">2.</span><span>El administrador marcará el premio como canjeado en el sistema.</span></div>
+      </div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🥤 Refresco</span><span>1 de cada 60</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍟 Papas</span><span>1 de cada 120</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍔 ½ Orden</span><span>1 de cada 350</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🎉 Orden completa</span><span>1 de cada 750</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍔 ½ Orden + Papas</span><span>1 de cada 550</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🏆 Orden + Papas</span><span>1 de cada 1,050</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;"><span>👑 Combo completo</span><span>1 de cada 1,500</span></div>
+      </div>
+    </div>
+
+    <!-- Sección: Fabricación -->
+    <div style="margin-bottom:18px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">◈ Fabricación de Cartas</div>
+      <div style="font-size:12px;color:#C8B89A;line-height:1.7;">
+        Puedes combinar <strong style="color:#F0E6C8;">10 cartas</strong> de una rareza para fabricar <strong style="color:#F0E6C8;">1 carta</strong> de la rareza siguiente. Accede desde el botón <strong style="color:#F0E6C8;">◈ Colección</strong>.
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:#9D7DB8;">
+        <span style="color:#AAAACC;">10 Comunes</span><span>→</span>
+        <span style="color:#93C5FD;">1 Rara</span><span>→</span>
+        <span style="color:#D8B4FE;">1 Épica</span><span>→</span>
+        <span style="color:#FFE080;">1 Legendaria</span>
+      </div>
+    </div>
+
+    <!-- Sección: Sistema Pity -->
+    <div style="margin-bottom:20px;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">✦ Sistema Pity (Carta Secreta)</div>
+      <div style="font-size:12px;color:#C8B89A;line-height:1.7;">
+        La barra de Pity en la izquierda muestra el progreso global hacia la carta secreta. Normalmente tiene una probabilidad de 1 en 25,000, pero al llegar a <strong style="color:#F0E6C8;">1,250 tiradas globales</strong> entre todos los jugadores, la probabilidad sube a <strong style="color:#F0E6C8;">1 en 500</strong> hasta que alguien la obtenga.
+      </div>
+    </div>
+
+    <button onclick="closeHelpModal()" style="width:100%;background:linear-gradient(135deg,#E8187A,#9D0050);border:none;border-radius:10px;padding:13px;color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;">ENTENDIDO</button>
+  </div>
+</div>
 </html>

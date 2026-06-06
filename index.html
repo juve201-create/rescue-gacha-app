@@ -1926,12 +1926,12 @@ body::after{
   overflow: hidden;
 }
 
-.csgo-item.common   { background: linear-gradient(160deg,#1A1A2E,#0D0D1A); border-color: #4A4A6A; }
-.csgo-item.rare     { background: linear-gradient(160deg,#0A1A38,#050D20); border-color: #3B6AE0; box-shadow: 0 0 10px rgba(59,106,224,0.2); }
-.csgo-item.epic     { background: linear-gradient(160deg,#1E0A38,#0D0520); border-color: var(--purple-bright); box-shadow: 0 0 12px rgba(147,51,234,0.3); }
-.csgo-item.legendary{ background: linear-gradient(160deg,#2A1A00,#150D00); border-color: var(--gold); box-shadow: 0 0 16px rgba(212,160,23,0.35); }
-.csgo-item.secret   { background: linear-gradient(160deg,#0F0520,#0a1a40); border-color: #E879F9; box-shadow: 0 0 20px rgba(232,121,249,0.5); }
-.csgo-item.prize    { background: linear-gradient(160deg,#041A08,#031008); border-color: #4ADE80; box-shadow: 0 0 14px rgba(74,222,128,0.4); }
+.csgo-item.common   { background: linear-gradient(160deg,#1A1A2E,#0D0D1A); border-color: #5A5A8A; }
+.csgo-item.rare     { background: linear-gradient(160deg,#0A1A38,#050D20); border-color: #3B82F6; box-shadow: 0 0 14px rgba(59,130,246,0.35); }
+.csgo-item.epic     { background: linear-gradient(160deg,#1E0A38,#0D0520); border-color: var(--purple-bright); box-shadow: 0 0 18px rgba(147,51,234,0.45); }
+.csgo-item.legendary{ background: linear-gradient(160deg,#2A1A00,#150D00); border-color: var(--gold); box-shadow: 0 0 22px rgba(212,160,23,0.5); }
+.csgo-item.secret   { background: linear-gradient(160deg,#0F0520,#0a1a40); border-color: #E879F9; box-shadow: 0 0 24px rgba(232,121,249,0.6); }
+.csgo-item.prize    { background: linear-gradient(160deg,#041A08,#031008); border-color: #4ADE80; box-shadow: 0 0 16px rgba(74,222,128,0.45); }
 
 .csgo-item .ci-rarity {
   font-family: 'Cinzel', serif; font-size: 7px; font-weight: 700;
@@ -1960,14 +1960,81 @@ body::after{
 .csgo-item.secret   .ci-name { color: #F5D0FE; }
 .csgo-item.prize    .ci-name { color: #86EFAC; }
 
+/* Arte abstracto en las cartas del reel */
+.reel-art {
+  width: 64px; height: 64px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; flex-shrink: 0; overflow: hidden;
+}
+.reel-art .ra-bg  { position: absolute; inset: 0; border-radius: 50%; }
+.reel-art .ra-r   { position: absolute; border-radius: 50%; border: 2px solid; }
+.reel-art .ra-r2  { position: absolute; border-radius: 50%; border: 1.5px solid; }
+.reel-art .ra-sym { font-size: 30px; position: relative; z-index: 2; line-height: 1; }
+
+.reel-art.ra-common  .ra-bg { background: radial-gradient(circle,#3A3A5A,#12121E); }
+.reel-art.ra-common  .ra-r  { width:85%;height:85%;border-color:rgba(170,170,200,.3);animation:art-ring-spin 6s linear infinite reverse; }
+.reel-art.ra-common  .ra-sym{ color:#AAAACC; }
+
+.reel-art.ra-rare    .ra-bg { background: radial-gradient(circle,#1A3A7A,#060E20); }
+.reel-art.ra-rare    .ra-r  { width:85%;height:85%;border-color:rgba(59,130,246,.6);animation:art-ring-spin 4s linear infinite; }
+.reel-art.ra-rare    .ra-r2 { width:65%;height:65%;border-color:rgba(147,197,253,.3);animation:art-ring-spin 2.5s linear infinite reverse; }
+.reel-art.ra-rare    .ra-sym{ color:#93C5FD; filter:drop-shadow(0 0 5px rgba(59,130,246,.8)); }
+
+.reel-art.ra-epic    .ra-bg { background: radial-gradient(circle,#4A0E8E,#1E0A38); }
+.reel-art.ra-epic    .ra-r  { width:90%;height:90%;border-color:rgba(147,51,234,.8);animation:art-ring-spin 2.5s linear infinite; }
+.reel-art.ra-epic    .ra-r2 { width:68%;height:68%;border-color:rgba(192,132,252,.5);animation:art-ring-spin 1.8s linear infinite reverse; }
+.reel-art.ra-epic    .ra-sym{ color:#D8B4FE;animation:epicPulse 1.5s ease-in-out infinite alternate; }
+
+.reel-art.ra-legendary .ra-bg { background: radial-gradient(circle,#7A4A00,#2A1500); }
+.reel-art.ra-legendary .ra-r  { width:90%;height:90%;border-color:rgba(212,160,23,.9);animation:art-ring-spin 3s linear infinite; }
+.reel-art.ra-legendary .ra-r2 { width:68%;height:68%;border-color:rgba(240,192,64,.5);animation:art-ring-spin 2s linear infinite reverse; }
+.reel-art.ra-legendary .ra-sym{ color:#FFE080;animation:legPulse 1s ease-in-out infinite alternate; }
+
+.reel-art.ra-secret  .ra-bg { background: radial-gradient(circle,#1A0028,#050008); animation:secret-bg 3s linear infinite; }
+.reel-art.ra-secret  .ra-r  { width:90%;height:90%;border-color:transparent;border-top-color:#FF1B8D;border-bottom-color:#9333EA;animation:art-ring-spin 1.2s linear infinite; }
+.reel-art.ra-secret  .ra-r2 { width:68%;height:68%;border-color:transparent;border-left-color:#F0C040;border-right-color:#3B82F6;animation:art-ring-spin 0.9s linear infinite reverse; }
+.reel-art.ra-secret  .ra-sym{ animation:secHue 3s linear infinite;background:linear-gradient(135deg,#FF1B8D,#F0C040,#9333EA);-webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+
+.reel-art.ra-prize   .ra-bg { background: radial-gradient(circle,#0A3018,#020E08); }
+.reel-art.ra-prize   .ra-r  { width:85%;height:85%;border-color:rgba(74,222,128,.5);animation:art-ring-spin 3s linear infinite; }
+.reel-art.ra-prize   .ra-sym{ color:#4ADE80; }
+
+/* Patrón de fondo sutil en cada carta del reel */
+.csgo-item::before {
+  content:'';position:absolute;inset:0;opacity:.04;
+  background:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);
+  background-size:12px 12px;pointer-events:none;border-radius:inherit;
+}
+/* Shimmer diagonal en raras+ */
+.csgo-item.rare::after,
+.csgo-item.epic::after,
+.csgo-item.legendary::after,
+.csgo-item.secret::after {
+  content:'';position:absolute;top:-100%;left:-60%;
+  width:35%;height:300%;pointer-events:none;
+  animation:reel-shine 3s ease-in-out infinite;
+}
+.csgo-item.rare::after     { background:linear-gradient(to bottom,transparent,rgba(147,197,253,.08),transparent); }
+.csgo-item.epic::after     { background:linear-gradient(to bottom,transparent,rgba(192,132,252,.10),transparent);animation-delay:.5s; }
+.csgo-item.legendary::after{ background:linear-gradient(to bottom,transparent,rgba(212,160,23,.12),transparent);animation-delay:1s; }
+.csgo-item.secret::after   { background:linear-gradient(to bottom,transparent,rgba(255,27,141,.10),transparent);animation-delay:.2s;animation-duration:1.5s; }
+@keyframes reel-shine{
+  0%,100%{transform:translateX(-100px) rotate(5deg);opacity:0;}
+  50%    {transform:translateX(200px) rotate(5deg);opacity:1;}
+}
+
 /* Winner card highlight */
 .csgo-item.winner {
-  transform: scale(1.08);
+  transform: scale(1.12);
   z-index: 2;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.csgo-item.winner.legendary { animation: legendary-pulse 1.5s ease-in-out infinite alternate; }
-.csgo-item.winner.secret    { animation: secret-pulse 1.5s ease-in-out infinite alternate; }
-.csgo-item.winner.prize     { animation: prize-pulse 1.5s ease-in-out infinite alternate; }
+.csgo-item.winner.common    { box-shadow: 0 0 20px rgba(170,170,200,.5); }
+.csgo-item.winner.rare      { box-shadow: 0 0 28px rgba(59,130,246,.8); border-color: #3B82F6; }
+.csgo-item.winner.epic      { box-shadow: 0 0 35px rgba(147,51,234,.9), 0 0 60px rgba(147,51,234,.4); border-color: #9333EA; }
+.csgo-item.winner.legendary { box-shadow: 0 0 40px rgba(212,160,23,1), 0 0 80px rgba(212,160,23,.5); border-color: #D4A017; animation: legendary-pulse 1.5s ease-in-out infinite alternate; }
+.csgo-item.winner.secret    { box-shadow: 0 0 40px rgba(255,27,141,.8), 0 0 80px rgba(147,51,234,.5); animation: secret-pulse 1.5s ease-in-out infinite alternate; }
+.csgo-item.winner.prize     { box-shadow: 0 0 28px rgba(74,222,128,.7); animation: prize-pulse 1.5s ease-in-out infinite alternate; }
 
 /* Result panel below rail */
 .csgo-result {
@@ -4716,6 +4783,14 @@ function csgoNext(){
   setTimeout(csgoRevealNext, 300);
 }
 
+function reelArt(r){
+  const symbols = {common:'⬡',rare:'◆',epic:'◈',legendary:'♛',secret:'✦',prize:'🎁'};
+  const s = symbols[r] || '◇';
+  const hasRing2 = r==='epic'||r==='legendary'||r==='secret';
+  const ring2 = hasRing2 ? '<div class="ra-r ra-r2"></div>' : '';
+  return '<div class="reel-art ra-'+r+'"><div class="ra-bg"></div><div class="ra-r"></div>'+ring2+'<div class="ra-sym">'+s+'</div></div>';
+}
+
 function cardArtForRarity(r){
   const map = {
     common:    ['⚡','≋','◉','∿','♪','⌗','◌','✾','⟁','≈'],
@@ -4764,7 +4839,7 @@ function csgoRevealCard(card){
   rail.innerHTML = items.map((c, i) =>
     '<div class="csgo-item ' + c.rarity + '" id="csi-' + i + '">' +
     '<div class="ci-rarity">' + rarityLabel(c.rarity).toUpperCase() + '</div>' +
-    cardLogo(c.rarity) +
+    reelArt(c.rarity) +
     '<div class="ci-name">' + rarityLabel(c.rarity) + '</div>' +
     '</div>'
   ).join('');

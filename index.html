@@ -4353,8 +4353,15 @@ async function openRankingModal(){
     const d = await res.json();
     const el = document.getElementById('ranking-list');
     if(!d.ok||!d.leaderboard||d.leaderboard.length===0){
-      el.innerHTML='<div class="prizes-empty">Aún no hay datos suficientes</div>';
+      el.innerHTML='<div class="prizes-empty">Aún no hay datos este mes</div>';
       return;
+    }
+    // Mostrar el mes en el subtítulo
+    if(d.month){
+      const [y,m] = d.month.split('-');
+      const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const sub = document.querySelector('#ranking-modal-overlay .prizes-modal-sub');
+      if(sub) sub.textContent = `Top 20 invocadores — ${meses[parseInt(m)-1]} ${y}`;
     }
     const MEDALS=['🥇','🥈','🥉'];
     let html='';

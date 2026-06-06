@@ -418,7 +418,7 @@ body::after{
 ════════════════════════════ */
 .machine-area{
   display:flex;flex-direction:column;align-items:center;
-  gap:0;margin-bottom:20px;
+  gap:0;margin-bottom:20px;position:relative;
 }
 
 .machine{
@@ -2726,6 +2726,13 @@ body::after{
         <div class="machine-stars">— ✦ —</div>
       </div>
     </div>
+    <!-- Botón sobre diario junto a la máquina -->
+    <div id="daily-machine-btn-wrap" style="display:none;position:absolute;right:-8px;top:50%;transform:translateY(-50%);z-index:10;">
+      <button onclick="sndClick();openDailyModal()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px;border-radius:14px;border:2px solid rgba(240,192,64,0.7);background:rgba(13,5,24,0.9);cursor:pointer;animation:orbPulse 1.2s ease-in-out infinite alternate;box-shadow:0 0 16px rgba(240,192,64,0.4);">
+        <span style="font-size:26px;filter:drop-shadow(0 0 8px rgba(240,192,64,0.8));">🎁</span>
+        <span style="font-family:'Cinzel',serif;font-size:8px;font-weight:700;color:#FFE080;letter-spacing:1px;line-height:1.2;text-align:center;">SOBRE<br>DIARIO</span>
+      </button>
+    </div>
   </div>
 
   <!-- PROBABILIDADES -->
@@ -4126,8 +4133,12 @@ async function checkDailyBonus(){
     });
     const d = await res.json();
     _dailyAvailable = d.ok && d.available;
+    // Botón en la biblioteca
     const btn = document.getElementById('daily-btn');
     if(btn) btn.style.display = _dailyAvailable ? 'inline-flex' : 'none';
+    // Botón junto a la máquina
+    const machBtn = document.getElementById('daily-machine-btn-wrap');
+    if(machBtn) machBtn.style.display = _dailyAvailable ? 'block' : 'none';
   }catch(e){ console.error('check_daily error:', e); }
 }
 
@@ -4174,6 +4185,8 @@ async function claimDaily(){
     _dailyAvailable = false;
     const btn = document.getElementById('daily-btn');
     if(btn) btn.style.display='none';
+    const machBtn = document.getElementById('daily-machine-btn-wrap');
+    if(machBtn) machBtn.style.display='none';
 
     showDailyResult(d.result);
 

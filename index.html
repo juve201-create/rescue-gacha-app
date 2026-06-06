@@ -4560,7 +4560,7 @@ function showSecretReveal(card){
   const rings   = document.querySelectorAll('.secret-portal-ring');
 
   // Resetear estado
-  big.innerHTML = `<div class="s-badge">✦ SECRETA ✦</div>${cardLogo('secret')}<div class="s-name">Secreta</div>`;
+  big.innerHTML = `<div class="s-badge">✦ SECRETA ✦</div>${rarityArtHTML('secret')}<div class="s-name">Secreta</div>`;
   content.style.opacity   = '0';
   content.style.transform = 'scale(0.5) translateY(40px)';
   rings.forEach(r=>{ r.style.animation='none'; r.style.opacity='0'; r.style.transform='translate(-50%,-50%) scale(0)'; });
@@ -4947,11 +4947,31 @@ function showSummary(cards){
   cards.forEach((card, i) => {
     const el = document.createElement('div');
     el.className = 'tcg-card ' + card.rarity;
-    el.innerHTML = '<div class="card-rarity-badge">' + (card.rarity==='secret'?'✦ SECRETA':rarityLabel(card.rarity).toUpperCase()) + '</div>' + cardLogo(card.rarity) + '<div class="card-name">' + rarityLabel(card.rarity) + '</div>';
+    el.innerHTML = '<div class="card-rarity-badge">' + (card.rarity==='secret'?'✦ SECRETA':rarityLabel(card.rarity).toUpperCase()) + '</div>' + smallArtHTML(card.rarity) + '<div class="card-name">' + rarityLabel(card.rarity) + '</div>';
     grid.appendChild(el);
     setTimeout(() => el.classList.add('revealed'), 60 + i * 100);
   });
   document.getElementById('results-overlay').classList.add('visible');
+}
+
+// Arte abstracto compacto para cuadrícula de resultados
+function smallArtHTML(rarity){
+  const symbols = {common:'⬡',rare:'◆',epic:'◈',legendary:'♛',secret:'✦'};
+  const colors  = {common:'#AAAACC',rare:'#93C5FD',epic:'#D8B4FE',legendary:'#FFE080',secret:'#FF6EB4'};
+  const bgs     = {common:'radial-gradient(circle,#3A3A5A,#12121E)',rare:'radial-gradient(circle,#1A3A7A,#060E20)',epic:'radial-gradient(circle,#4A0E8E,#1E0A38)',legendary:'radial-gradient(circle,#7A4A00,#2A1500)',secret:'radial-gradient(circle,#1A0028,#050008)'};
+  const borders = {common:'rgba(170,170,200,.4)',rare:'rgba(59,130,246,.7)',epic:'rgba(147,51,234,.8)',legendary:'rgba(212,160,23,.9)',secret:'#FF1B8D'};
+  const s  = symbols[rarity]||'◇';
+  const c  = colors[rarity]||'#AAAACC';
+  const bg = bgs[rarity]||bgs.common;
+  const b  = borders[rarity]||borders.common;
+  const spd = rarity==='epic'?'2s':rarity==='secret'?'1.2s':'4s';
+  const symStyle = rarity==='secret'
+    ? 'animation:secHue 3s linear infinite;background:linear-gradient(135deg,#FF1B8D,#F0C040,#9333EA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;'
+    : 'color:'+c+';';
+  return `<div style="width:54px;height:54px;border-radius:50%;background:${bg};border:2px solid ${b};display:flex;align-items:center;justify-content:center;margin:4px auto;position:relative;overflow:hidden;flex-shrink:0;">
+    <div style="position:absolute;width:88%;height:88%;border-radius:50%;border:1.5px solid ${b};opacity:.5;animation:art-ring-spin ${spd} linear infinite;"></div>
+    <span style="font-size:22px;position:relative;z-index:2;line-height:1;${symStyle}">${s}</span>
+  </div>`;
 }
 
 // Arte abstracto por rareza para el reveal grande

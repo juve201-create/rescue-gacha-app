@@ -175,6 +175,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="tab"        id="tab-payments"    onclick="loadTab('payments')">💳 Pagos</div>
     <div class="tab"        id="tab-prizes"      onclick="loadTab('prizes')">🎁 Premios</div>
     <div class="tab"        id="tab-redemptions" onclick="loadTab('redemptions')">🎴 Canjes</div>
+    <div class="tab"        id="tab-sim"         onclick="loadTab('sim')">🎰 Simulador</div>
   </div>
   <div class="main" id="tab-content"><div class="loading">Cargando...</div></div>
 </div>
@@ -257,6 +258,7 @@ function loadTab(tab){
   if(tab==='payments')    loadPayments();
   if(tab==='prizes')      loadPrizes();
   if(tab==='redemptions') loadRedemptions();
+  if(tab==='sim')         loadSim();
 }
 
 function fmt(d){ if(!d) return '—'; return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
@@ -565,7 +567,300 @@ async function loadRedemptions(){
   document.getElementById('tab-content').innerHTML=html;
 }
 
-// ── Restore session ───────────────────────────────────────────
+// ── Simulador de tiradas (solo visual, no afecta BD ni pity) ──
+function loadSim(){
+  document.getElementById('tab-content').innerHTML = `
+  <div class="section">
+    <div class="sec-title" style="margin-bottom:4px;">Simulador de Tiradas</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Solo visual — no afecta pity global ni base de datos</div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+      <button onclick="simPull('common')"    style="padding:10px;border-radius:8px;border:1px solid #6B6B8A;background:rgba(107,107,138,.1);color:#AAAACC;font-size:11px;cursor:pointer;">⬡ Común</button>
+      <button onclick="simPull('rare')"      style="padding:10px;border-radius:8px;border:1px solid #3B82F6;background:rgba(59,130,246,.1);color:#93C5FD;font-size:11px;cursor:pointer;">◆ Rara</button>
+      <button onclick="simPull('epic')"      style="padding:10px;border-radius:8px;border:1px solid #9333EA;background:rgba(147,51,234,.1);color:#D8B4FE;font-size:11px;cursor:pointer;">◈ Épica</button>
+      <button onclick="simPull('legendary')" style="padding:10px;border-radius:8px;border:1px solid #D4A017;background:rgba(212,160,23,.1);color:#FFE080;font-size:11px;cursor:pointer;">♛ Legendaria</button>
+      <button onclick="simPull('secret')"    style="padding:10px;border-radius:8px;border:1px solid #FF1B8D;background:rgba(255,27,141,.1);color:#FF6EB4;font-size:11px;cursor:pointer;">✦ Secreta</button>
+      <button onclick="simPull('random')"    style="padding:10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--muted);font-size:11px;cursor:pointer;">🎲 Aleatoria</button>
+    </div>
+
+    <div id="sim-stage" style="position:relative;background:#0D0518;border-radius:12px;overflow:hidden;min-height:420px;border:1px solid var(--border);">
+      <div id="sim-idle" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;font-style:italic;">Selecciona una rareza para simular</div>
+
+      <!-- Reel CS:GO -->
+      <div id="sim-csgo" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px 0;height:100%;">
+        <div id="sim-title" style="font-size:11px;letter-spacing:3px;color:rgba(240,230,200,.5);text-transform:uppercase;">Invocando...</div>
+        <div style="position:relative;width:100%;overflow:hidden;height:170px;">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:70px;background:linear-gradient(to right,#0D0518,transparent);z-index:3;pointer-events:none;"></div>
+          <div style="position:absolute;right:0;top:0;bottom:0;width:70px;background:linear-gradient(to left,#0D0518,transparent);z-index:3;pointer-events:none;"></div>
+          <div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(232,24,122,.8);transform:translateX(-50%);z-index:4;"></div>
+          <div id="sim-rail" style="display:flex;align-items:center;gap:6px;position:absolute;top:50%;transform:translateY(-50%);will-change:transform;padding:0 50%;"></div>
+        </div>
+        <div id="sim-result-wrap" style="opacity:0;text-align:center;transition:opacity .4s;">
+          <div id="sim-result-label" style="font-size:18px;font-weight:900;letter-spacing:3px;"></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Toca para continuar</div>
+        </div>
+      </div>
+
+      <!-- Reveal -->
+      <div id="sim-reveal" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:16px;cursor:pointer;z-index:10;" onclick="simCloseReveal()">
+        <div id="sim-rev-pts" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+        <canvas id="sim-fw" style="position:absolute;inset:0;pointer-events:none;z-index:2;"></canvas>
+        <div id="sim-rev-title" style="font-size:18px;font-weight:900;letter-spacing:3px;position:relative;z-index:5;"></div>
+        <div id="sim-rev-card" style="width:160px;min-height:210px;border-radius:14px;border:3px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;opacity:0;transform:scale(.3) rotateY(180deg);transition:opacity .7s,transform .7s;position:relative;z-index:5;overflow:hidden;">
+          <div id="sim-rev-rarity" style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:3px;position:relative;z-index:2;"></div>
+          <div id="sim-rev-art" style="position:relative;z-index:2;"></div>
+          <div id="sim-rev-name" style="font-size:14px;font-weight:700;text-align:center;position:relative;z-index:2;"></div>
+        </div>
+        <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35);position:relative;z-index:5;">toca para cerrar</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+var SIM_FW_STOP=false, SIM_FIRE_STOP=false;
+var SIM_RD={
+  common:    {symbol:'⬡',color:'#AAAACC',border:'#6B6B8A',bg:'linear-gradient(160deg,#1A1A2E,#0D0D1A)',glow:'rgba(107,107,138,.5)',label:'Común'},
+  rare:      {symbol:'◆',color:'#93C5FD',border:'#3B82F6',bg:'linear-gradient(160deg,#0A1A3A,#051020)',glow:'rgba(59,130,246,.6)',label:'Rara'},
+  epic:      {symbol:'◈',color:'#D8B4FE',border:'#9333EA',bg:'linear-gradient(160deg,#1E0A38,#0D0520)',glow:'rgba(147,51,234,.7)',label:'Épica'},
+  legendary: {symbol:'♛',color:'#FFE080',border:'#D4A017',bg:'linear-gradient(160deg,#2A1A00,#150D00)',glow:'rgba(212,160,23,.8)',label:'Legendaria'},
+  secret:    {symbol:'✦',color:'#FF6EB4',border:'#FF1B8D',bg:'linear-gradient(160deg,#100020,#05000F)',glow:'rgba(255,27,141,.7)',label:'Secreta'},
+};
+var SIM_POOL=['common','common','common','rare','common','rare','common','epic','common','rare'];
+var simCurrentRarity=null;
+
+function simRandRarity(){return SIM_POOL[Math.floor(Math.random()*SIM_POOL.length)];}
+
+function simSmallCard(r){
+  var d=SIM_RD[r]||SIM_RD.common;
+  return '<div style="width:110px;height:145px;border-radius:9px;border:2px solid '+d.border+';background:'+d.bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex-shrink:0;box-shadow:0 0 12px '+d.glow+';position:relative;overflow:hidden;">'+
+    '<div style="position:absolute;inset:0;opacity:.04;background:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:12px 12px;border-radius:inherit;"></div>'+
+    simMiniArt(r)+
+    '<span style="font-size:9px;letter-spacing:1px;color:'+d.color+';text-transform:uppercase;font-weight:700;position:relative;z-index:2;">'+d.label+'</span>'+
+    '</div>';
+}
+
+function simMiniArt(r){
+  var d=SIM_RD[r]||SIM_RD.common;
+  var rings='<div style="position:absolute;width:85%;height:85%;border-radius:50%;border:2px solid rgba(255,255,255,.2);animation:art-ring-spin 4s linear infinite;"></div>';
+  if(r==='epic'||r==='legendary'||r==='secret') rings+='<div style="position:absolute;width:65%;height:65%;border-radius:50%;border:1.5px solid rgba(255,255,255,.1);animation:art-ring-spin 2.5s linear infinite reverse;"></div>';
+  return '<div style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(circle,rgba(255,255,255,.08),transparent);flex-shrink:0;">'+
+    rings+
+    '<span style="font-size:26px;position:relative;z-index:2;color:'+d.color+';">'+d.symbol+'</span>'+
+    '</div>';
+}
+
+function simRevealArt(r){
+  var d=SIM_RD[r]||SIM_RD.common;
+  var rings='<div style="position:absolute;width:90%;height:90%;border-radius:50%;border:2px solid '+d.border+';opacity:.8;animation:art-ring-spin 4s linear infinite;"></div>'+
+    '<div style="position:absolute;width:70%;height:70%;border-radius:50%;border:1.5px solid '+d.border+';opacity:.5;animation:art-ring-spin 2.5s linear infinite reverse;"></div>';
+  if(r==='epic'||r==='legendary'||r==='secret')
+    rings+='<div style="position:absolute;width:50%;height:50%;border-radius:50%;border:1px solid '+d.border+';opacity:.3;animation:art-ring-spin 1.5s linear infinite;"></div>';
+  return '<div style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(circle,rgba(255,255,255,.06),transparent);">'+
+    rings+
+    '<span style="font-size:42px;position:relative;z-index:2;color:'+d.color+';">'+d.symbol+'</span>'+
+    '</div>';
+}
+
+function simSnd(r){
+  try{
+    var a=new(window.AudioContext||window.webkitAudioContext)();
+    var freqs=r==='legendary'?[261,329,392,523]:r==='epic'?[196,247,294,370,494]:r==='secret'?[440,554,659,880]:r==='rare'?[330,415]:[440];
+    freqs.forEach(function(f,i){
+      var o=a.createOscillator(),g=a.createGain();
+      o.connect(g);g.connect(a.destination);o.type='triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(0,a.currentTime+i*.08);g.gain.linearRampToValueAtTime(.1,a.currentTime+i*.08+.05);
+      g.gain.linearRampToValueAtTime(0,a.currentTime+i*.08+.4);o.start(a.currentTime+i*.08);o.stop(a.currentTime+i*.08+.5);
+    });
+    if(r==='legendary'){
+      [784,988,1175].forEach(function(f,i){
+        var o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(a.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,a.currentTime+.4+i*.06);g.gain.linearRampToValueAtTime(.06,a.currentTime+.4+i*.06+.05);
+        g.gain.linearRampToValueAtTime(0,a.currentTime+.4+i*.06+.3);o.start(a.currentTime+.4+i*.06);o.stop(a.currentTime+.9);
+      });
+    }
+  }catch(e){}
+}
+
+function simPull(r){
+  if(r==='random') r=['common','common','common','rare','rare','epic','legendary'][Math.floor(Math.random()*7)];
+  simCurrentRarity=r;
+  var d=SIM_RD[r]||SIM_RD.common;
+  SIM_FW_STOP=true; SIM_FIRE_STOP=true;
+  var idle=document.getElementById('sim-idle');
+  var csgo=document.getElementById('sim-csgo');
+  var rev=document.getElementById('sim-reveal');
+  if(idle) idle.style.display='none';
+  if(rev)  rev.style.display='none';
+  if(!csgo) return;
+  csgo.style.display='flex';
+
+  var isSpecial=r==='epic'||r==='legendary';
+  document.getElementById('sim-title').textContent=isSpecial?'✦ Algo poderoso se acerca...':'Invocando...';
+  document.getElementById('sim-result-wrap').style.opacity='0';
+
+  var rail=document.getElementById('sim-rail');
+  var TOTAL=40,WIN=30;
+  var items=[];
+  for(var i=0;i<TOTAL;i++){
+    items.push(i===WIN?r:simRandRarity());
+  }
+  rail.innerHTML=items.map(function(ir){return simSmallCard(ir);}).join('');
+
+  var CARD_W=116,GAP=6;
+  var centerOffset=(CARD_W+GAP)*WIN+(CARD_W/2);
+  var startX=300,endX=-(centerOffset-300);
+  rail.style.transform='translateX('+startX+'px)';
+  rail.style.transition='none';
+
+  var duration=3200,start=performance.now();
+  var lastTick=-1;
+  function easeOut(t){return 1-Math.pow(1-t,4);}
+  function animateSim(now){
+    var elapsed=Math.min(now-start,duration);
+    var progress=easeOut(elapsed/duration);
+    var x=startX+(endX-startX)*progress;
+    rail.style.transform='translateX('+x+'px)';
+    var tick=Math.floor(elapsed/55);
+    if(tick!==lastTick&&elapsed<duration*.85){
+      try{var a=new(window.AudioContext||window.webkitAudioContext)();var o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type='square';o.frequency.value=600+Math.random()*200;g.gain.setValueAtTime(.06,a.currentTime);g.gain.linearRampToValueAtTime(0,a.currentTime+.04);o.start();o.stop(a.currentTime+.04);}catch(e){}
+      lastTick=tick;
+    }
+    if(elapsed<duration) requestAnimationFrame(animateSim);
+    else{rail.style.transform='translateX('+endX+'px)';simOnStop(r,d);}
+  }
+  requestAnimationFrame(animateSim);
+}
+
+function simOnStop(r,d){
+  var wrap=document.getElementById('sim-result-wrap');
+  var label=document.getElementById('sim-result-label');
+  label.textContent=d.label.toUpperCase();
+  label.style.color=d.color;
+  label.style.textShadow='0 0 16px '+d.glow;
+  wrap.style.opacity='1';
+
+  var isSpecial=r==='epic'||r==='legendary';
+  setTimeout(function(){
+    document.getElementById('sim-csgo').style.display='none';
+    simShowReveal(r,d);
+  }, isSpecial?700:500);
+}
+
+function simShowReveal(r,d){
+  SIM_FW_STOP=false; SIM_FIRE_STOP=false;
+  var rev=document.getElementById('sim-reveal');
+  var card=document.getElementById('sim-rev-card');
+  var title=document.getElementById('sim-rev-title');
+  var rarityEl=document.getElementById('sim-rev-rarity');
+  var art=document.getElementById('sim-rev-art');
+  var name=document.getElementById('sim-rev-name');
+  var pts=document.getElementById('sim-rev-pts');
+
+  title.textContent=(r==='legendary'?'♛ LEGENDARIA ♛':r==='epic'?'◈ ÉPICA ◈':r==='secret'?'✦ SECRETA ✦':r==='rare'?'◆ RARA ◆':'⬡ COMÚN ⬡');
+  title.style.color=d.color;
+  title.style.textShadow='0 0 20px '+d.glow;
+  rarityEl.textContent=d.label.toUpperCase();
+  rarityEl.style.background=r==='legendary'?'#2A1A00':r==='epic'?'#1E0A3E':r==='secret'?'#180028':r==='rare'?'#0a1535':'#1a1a2e';
+  rarityEl.style.color=d.color;
+  art.innerHTML=simRevealArt(r);
+  name.textContent='Carta '+d.label;
+  name.style.color=d.color;
+  card.style.background=d.bg;
+  card.style.borderColor=d.border;
+  card.style.boxShadow='0 0 40px '+d.glow+',0 0 80px '+d.glow;
+  card.style.animation=r==='legendary'?'legendary-pulse 1.5s ease-in-out infinite alternate':'';
+
+  var ovBg=r==='legendary'?'radial-gradient(ellipse at center,#2A1500 0%,#0D0700 60%,#000 100%)':
+           r==='epic'?'radial-gradient(ellipse at center,#2D0A50 0%,#0D0520 60%,#000 100%)':
+           r==='secret'?'radial-gradient(ellipse at center,#150020 0%,#050010 60%,#000 100%)':
+           r==='rare'?'radial-gradient(ellipse at center,#030A1A 0%,#000 70%,#000 100%)':
+           'radial-gradient(ellipse at center,#0A0A15 0%,#000 70%,#000 100%)';
+  rev.style.background=ovBg;
+
+  // Partículas
+  pts.innerHTML='';
+  var colors=r==='legendary'?['#D4A017','#F0C040','#FFE080']:r==='epic'?['#9333EA','#C084FC']:r==='secret'?['#FF1B8D','#F0C040','#9333EA']:r==='rare'?['#3B82F6','#93C5FD']:['#888'];
+  for(var i=0;i<24;i++){
+    var p=document.createElement('div');
+    var angle=Math.random()*360,dist=50+Math.random()*140;
+    p.style.cssText='position:absolute;top:50%;left:50%;width:'+(4+Math.random()*5)+'px;height:'+(4+Math.random()*5)+'px;background:'+colors[Math.floor(Math.random()*colors.length)]+';border-radius:50%;--tx:'+Math.cos(angle*Math.PI/180)*dist+'px;--ty:'+Math.sin(angle*Math.PI/180)*dist+'px;animation:pfly '+(0.5+Math.random()*.8)+'s '+(Math.random()*.3)+'s ease-out forwards;';
+    pts.appendChild(p);
+  }
+
+  card.style.opacity='0'; card.style.transform='scale(.3) rotateY(180deg)';
+  rev.style.display='flex';
+  simSnd(r);
+
+  if(r==='legendary'){
+    simStartFire(rev);
+    simStartFW(rev);
+  }
+  setTimeout(function(){card.style.opacity='1';card.style.transform='scale(1) rotateY(0)';},80);
+}
+
+function simStartFire(container){
+  SIM_FIRE_STOP=false;
+  var fire=document.createElement('div');
+  fire.id='sim-fire';
+  fire.style.cssText='position:absolute;bottom:0;left:0;right:0;height:80px;pointer-events:none;overflow:hidden;z-index:3;';
+  container.appendChild(fire);
+  var COLORS=['#FF4500','#FF6B00','#FFA500','#FFD700','#FF2200','#FFAA00'];
+  function spawnFlame(){
+    if(SIM_FIRE_STOP||!fire.isConnected)return;
+    for(var i=0;i<3;i++){
+      var f=document.createElement('div');
+      var x=Math.random()*100,size=10+Math.random()*20,dur=.5+Math.random()*.9;
+      f.style.cssText='position:absolute;bottom:0;left:'+x+'%;width:'+size+'px;height:'+(size*1.6)+'px;background:radial-gradient(ellipse at bottom,'+COLORS[Math.floor(Math.random()*COLORS.length)]+',transparent);border-radius:50% 50% 30% 30%;opacity:'+(0.5+Math.random()*.5)+';animation:flameRise '+dur+'s ease-out forwards;';
+      fire.appendChild(f);
+      setTimeout(function(){f.remove();},dur*1000+100);
+    }
+    if(!SIM_FIRE_STOP&&fire.isConnected)setTimeout(spawnFlame,75);
+  }
+  spawnFlame();
+}
+
+function simStartFW(container){
+  SIM_FW_STOP=false;
+  var canvas=document.getElementById('sim-fw');
+  canvas.width=container.offsetWidth||400;
+  canvas.height=container.offsetHeight||420;
+  var ctx=canvas.getContext('2d');
+  var FW=['#FFD700','#FF4500','#FF1B8D','#F0C040','#FFFFFF','#FFA500'];
+  var particles=[];
+  function explode(x,y){
+    var color=FW[Math.floor(Math.random()*FW.length)];
+    for(var i=0;i<40;i++){var angle=Math.random()*Math.PI*2,speed=2+Math.random()*5;particles.push({x:x,y:y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,alpha:1,color:color,size:2+Math.random()*3,life:0,maxLife:40+Math.random()*30});}
+  }
+  function launchFW(){
+    if(SIM_FW_STOP)return;
+    explode(canvas.width*(.15+Math.random()*.7),canvas.height*(.08+Math.random()*.55));
+    setTimeout(function(){if(!SIM_FW_STOP)launchFW();},600+Math.random()*700);
+  }
+  setTimeout(launchFW,200);
+  [400,700,1100].forEach(function(t,i){setTimeout(function(){if(!SIM_FW_STOP)explode(canvas.width*(.2+i*.25),canvas.height*(.15+i*.1));},t);});
+  function loop(){
+    if(SIM_FW_STOP){ctx.clearRect(0,0,canvas.width,canvas.height);return;}
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(var i=particles.length-1;i>=0;i--){
+      var p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.09;p.vx*=.97;p.vy*=.97;p.life++;
+      p.alpha=1-(p.life/p.maxLife);
+      if(p.alpha<=0){particles.splice(i,1);continue;}
+      ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function simCloseReveal(){
+  SIM_FW_STOP=true; SIM_FIRE_STOP=true;
+  var f=document.getElementById('sim-fire');if(f)f.remove();
+  var canvas=document.getElementById('sim-fw');
+  if(canvas){var ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);}
+  document.getElementById('sim-reveal').style.display='none';
+  document.getElementById('sim-idle').style.display='flex';
+}
 if(sessionStorage.getItem('rg_admin_token')){
   adminToken=sessionStorage.getItem('rg_admin_token');
   document.getElementById('login-screen').style.display='none';

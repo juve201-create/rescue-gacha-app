@@ -1218,6 +1218,10 @@ body::after{
   0%,100%{transform:translateY(0);}
   50%    {transform:translateY(-10px);}
 }
+@keyframes orbPulse{
+  from{filter:brightness(1);}
+  to  {filter:brightness(1.3);}
+}
 @keyframes flameRise{
   0%  {transform:translateY(0) scaleX(1);opacity:.8;}
   50% {transform:translateY(-40px) scaleX(.8) rotate(5deg);opacity:.5;}
@@ -2805,60 +2809,24 @@ body::after{
 
 <!-- Craft / Collection Modal -->
 <div class="craft-modal-overlay" id="craft-modal-overlay" onclick="handleCraftOverlay(event)">
-  <div class="craft-modal">
+  <div class="craft-modal" style="max-width:400px;position:relative;overflow:hidden;">
     <button class="craft-modal-close" onclick="closeCraftModal()">✕</button>
     <h2>Colección</h2>
-    <p class="craft-modal-sub">Tus cartas · Craftea nuevas rarezas</p>
+    <p class="craft-modal-sub">Tus tokens · Toca un orbe para fabricar</p>
 
-    <div class="rarity-counts">
-      <div class="rarity-count-card common">
-        <div class="rarity-count-label">Común</div>
-        <span class="rarity-count-number" id="craft-common">0</span>
-      </div>
-      <div class="rarity-count-card rare">
-        <div class="rarity-count-label">Rara</div>
-        <span class="rarity-count-number" id="craft-rare">0</span>
-      </div>
-      <div class="rarity-count-card epic">
-        <div class="rarity-count-label">Épica</div>
-        <span class="rarity-count-number" id="craft-epic">0</span>
-      </div>
-      <div class="rarity-count-card legendary">
-        <div class="rarity-count-label">Legendaria</div>
-        <span class="rarity-count-number" id="craft-legendary">0</span>
-      </div>
-      <div class="rarity-count-card secret" style="grid-column:span 2;">
-        <div class="rarity-count-label">✦ Secreta</div>
-        <span class="rarity-count-number" id="craft-secret">0</span>
-      </div>
+    <!-- Orbes de rareza -->
+    <div id="craft-orbs-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;"></div>
+
+    <!-- Nota de fabricación -->
+    <p style="font-size:10px;color:rgba(240,230,200,0.35);text-align:center;margin-top:14px;letter-spacing:1px;">10 tokens de una rareza = 1 token de la siguiente</p>
+
+    <!-- Overlay de animación de fusión (dentro del modal) -->
+    <div id="craft-anim-overlay" style="display:none;position:absolute;inset:0;background:rgba(13,5,24,0.95);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:16px;border-radius:inherit;">
+      <canvas id="craft-anim-canvas" style="position:absolute;inset:0;border-radius:inherit;"></canvas>
+      <div id="craft-anim-label" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;color:rgba(240,230,200,.5);text-transform:uppercase;position:relative;z-index:2;"></div>
+      <div id="craft-anim-orb" style="position:relative;z-index:2;"></div>
+      <div id="craft-anim-result" style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;position:relative;z-index:2;opacity:0;"></div>
     </div>
-
-    <p class="craft-title">Craftear cartas</p>
-
-    <div class="craft-recipe" id="craft-r2c">
-      <div class="craft-recipe-info">
-        <div class="craft-recipe-title">◇ → ★ Rara</div>
-        <div class="craft-recipe-cost">Cuesta <span>10 Comunes</span></div>
-      </div>
-      <button class="craft-btn" id="craft-btn-rare" onclick="doCraft('rare')">Craftear</button>
-    </div>
-
-    <div class="craft-recipe" id="craft-r3c">
-      <div class="craft-recipe-info">
-        <div class="craft-recipe-title">★ → ◈ Épica</div>
-        <div class="craft-recipe-cost">Cuesta <span>10 Raras</span></div>
-      </div>
-      <button class="craft-btn" id="craft-btn-epic" onclick="doCraft('epic')">Craftear</button>
-    </div>
-
-    <div class="craft-recipe" id="craft-r4c">
-      <div class="craft-recipe-info">
-        <div class="craft-recipe-title">◈ → ♛ Legendaria</div>
-        <div class="craft-recipe-cost">Cuesta <span>10 Épicas</span></div>
-      </div>
-      <button class="craft-btn" id="craft-btn-legendary" onclick="doCraft('legendary')">Craftear</button>
-    </div>
-
   </div>
 </div>
 
@@ -4334,16 +4302,44 @@ function handleCraftOverlay(e){
 
 function updateCraftModal(){
   const counts = getCardCounts();
-  document.getElementById('craft-common').textContent    = counts.common;
-  document.getElementById('craft-rare').textContent      = counts.rare;
-  document.getElementById('craft-epic').textContent      = counts.epic;
-  document.getElementById('craft-legendary').textContent = counts.legendary;
-  document.getElementById('craft-secret').textContent    = counts.secret;
+  const grid = document.getElementById('craft-orbs-grid');
+  if(!grid) return;
 
-  // Update craft buttons
-  updateCraftBtn('craft-btn-rare',      counts.common    >= 10);
-  updateCraftBtn('craft-btn-epic',      counts.rare      >= 10);
-  updateCraftBtn('craft-btn-legendary', counts.epic      >= 10);
+  const RARITIES = [
+    { id:'common',    label:'Común',      symbol:'⬡', color:'#AAAACC', border:'#6B6B8A',  bg:'radial-gradient(circle,#3A3A5A,#12121E)', next:'rare',      nextLabel:'Rara'      },
+    { id:'rare',      label:'Rara',       symbol:'◆', color:'#93C5FD', border:'#3B82F6',  bg:'radial-gradient(circle,#1A3A7A,#060E20)', next:'epic',      nextLabel:'Épica'     },
+    { id:'epic',      label:'Épica',      symbol:'◈', color:'#D8B4FE', border:'#9333EA',  bg:'radial-gradient(circle,#4A0E8E,#1E0A38)', next:'legendary', nextLabel:'Legendaria'},
+    { id:'legendary', label:'Legendaria', symbol:'♛', color:'#FFE080', border:'#D4A017',  bg:'radial-gradient(circle,#7A4A00,#2A1500)', next:null,        nextLabel:null        },
+    { id:'secret',    label:'Secreta',    symbol:'✦', color:'#FF6EB4', border:'#FF1B8D',  bg:'radial-gradient(circle,#1A0028,#050008)', next:null,        nextLabel:null        },
+  ];
+
+  let html = '';
+  RARITIES.forEach(r => {
+    const count = counts[r.id] || 0;
+    const canCraft = r.next && count >= 10;
+    const isEmpty  = count === 0;
+    const isSecret = r.id === 'secret';
+    const spanAll  = isSecret ? 'grid-column:span 2;' : '';
+    const opacity  = isEmpty ? '0.35' : '1';
+    const glowStyle = canCraft ? `box-shadow:0 0 20px ${r.border},0 0 40px ${r.border}40;animation:orbPulse 1.5s ease-in-out infinite alternate;` : '';
+
+    html += `<div style="${spanAll}display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 8px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);opacity:${opacity};transition:opacity .3s;">
+      <!-- Orbe -->
+      <div style="width:80px;height:80px;border-radius:50%;background:${r.bg};border:2px solid ${r.border};display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;${glowStyle}">
+        <div style="position:absolute;width:88%;height:88%;border-radius:50%;border:1.5px solid ${r.border};opacity:.5;animation:art-ring-spin ${isSecret?'1.2':'4'}s linear infinite;"></div>
+        ${r.id==='epic'||r.id==='legendary'?`<div style="position:absolute;width:68%;height:68%;border-radius:50%;border:1px solid ${r.border};opacity:.3;animation:art-ring-spin 2.5s linear infinite reverse;"></div>`:''}
+        <span style="font-size:32px;position:relative;z-index:2;${isSecret?`background:linear-gradient(135deg,#FF1B8D,#F0C040,#9333EA);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:secHue 3s linear infinite;`:`color:${r.color};`}">${r.symbol}</span>
+      </div>
+      <!-- Conteo -->
+      <div style="font-family:'Cinzel',serif;font-size:24px;font-weight:900;color:${r.color};line-height:1;">${count}</div>
+      <!-- Label -->
+      <div style="font-size:10px;letter-spacing:2px;color:rgba(240,230,200,0.5);text-transform:uppercase;">${r.label}</div>
+      <!-- Botón craftear -->
+      ${canCraft ? `<button onclick="doCraft('${r.next}')" style="padding:6px 14px;border-radius:20px;border:1px solid ${r.border};background:${r.border}22;color:${r.color};font-family:'Cinzel',serif;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:1px;">▲ → ${r.nextLabel}</button>` : ''}
+    </div>`;
+  });
+
+  grid.innerHTML = html;
 }
 
 function updateCraftBtn(id, canCraft){
@@ -4511,33 +4507,185 @@ async function doCraft(targetRarity){
   const counts = getCardCounts();
   if(counts[sourceRarity] < 10){ sndClick(); return; }
 
-  // Craft de forma segura en el servidor
-  if(currentUser){
-    try{
-      const res = await fetch(BACKEND + '/api/gems', {
-        method:'POST',
-        headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
-        body: JSON.stringify({ action:'craft', user_id: currentUser.id, rarity: targetRarity })
-      });
-      const data = await res.json();
-      if(!data.ok){ alert(data.error || 'No se pudo craftear'); return; }
-    } catch(e){ console.error('craft error:', e); alert('Error de conexión al craftear'); return; }
+  // Mostrar animación de fusión
+  showCraftAnimation(sourceRarity, targetRarity, async () => {
+    // Craft en el servidor
+    if(currentUser){
+      try{
+        const res = await fetch(BACKEND + '/api/gems', {
+          method:'POST',
+          headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+          body: JSON.stringify({ action:'craft', user_id: currentUser.id, rarity: targetRarity })
+        });
+        const data = await res.json();
+        if(!data.ok){ alert(data.error || 'No se pudo craftear'); return; }
+      } catch(e){ console.error('craft error:', e); alert('Error de conexión al craftear'); return; }
+    }
+
+    // Actualizar colección local
+    let removed = 0;
+    collection = collection.filter(c => {
+      if(c.rarity === sourceRarity && removed < 10){ removed++; return false; }
+      return true;
+    });
+    collection.push({ rarity: targetRarity });
+
+    if(targetRarity === 'rare')      { sndCraftCoin();     spawnConfetti(); }
+    else if(targetRarity === 'epic') { sndCraftTreasure(); spawnConfetti(); }
+    else                             { sndCraftVault();    spawnConfetti(); }
+
+    renderCollection();
+    updateCraftModal();
+  });
+}
+
+function showCraftAnimation(sourceRarity, targetRarity, onComplete){
+  const COLORS  = {common:'#AAAACC',rare:'#93C5FD',epic:'#D8B4FE',legendary:'#FFE080',secret:'#FF6EB4'};
+  const SYMBOLS = {common:'⬡',rare:'◆',epic:'◈',legendary:'♛',secret:'✦'};
+  const LABELS  = {common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria',secret:'Secreta'};
+  const BORDERS = {common:'#6B6B8A',rare:'#3B82F6',epic:'#9333EA',legendary:'#D4A017',secret:'#FF1B8D'};
+  const BG      = {common:'radial-gradient(circle,#3A3A5A,#12121E)',rare:'radial-gradient(circle,#1A3A7A,#060E20)',epic:'radial-gradient(circle,#4A0E8E,#1E0A38)',legendary:'radial-gradient(circle,#7A4A00,#2A1500)',secret:'radial-gradient(circle,#1A0028,#050008)'};
+
+  const ov = document.getElementById('craft-anim-overlay');
+  const canvas = document.getElementById('craft-anim-canvas');
+  const label  = document.getElementById('craft-anim-label');
+  const orbEl  = document.getElementById('craft-anim-orb');
+  const result = document.getElementById('craft-anim-result');
+
+  ov.style.display='flex';
+  label.textContent = 'Fusionando 10 ' + LABELS[sourceRarity] + 's...';
+  result.style.opacity='0';
+  orbEl.innerHTML='';
+
+  canvas.width  = ov.offsetWidth  || 360;
+  canvas.height = ov.offsetHeight || 480;
+  const ctx = canvas.getContext('2d');
+
+  const sc = COLORS[sourceRarity];
+  const tc = COLORS[targetRarity];
+  const sb = BORDERS[sourceRarity];
+
+  // Partículas orbitando desde afuera → centro
+  const cx = canvas.width/2, cy = canvas.height/2 - 30;
+  const particles = [];
+  for(let i=0;i<10;i++){
+    const angle = (i/10)*Math.PI*2;
+    const r = 110 + Math.random()*20;
+    particles.push({
+      x: cx + Math.cos(angle)*r,
+      y: cy + Math.sin(angle)*r,
+      tx: cx, ty: cy,
+      angle: angle,
+      radius: r,
+      speed: 0.04 + Math.random()*0.02,
+      progress: 0,
+      color: sc,
+      size: 8+Math.random()*6,
+    });
   }
 
-  // Actualizar colección local (espejo del servidor)
-  let removed = 0;
-  collection = collection.filter(c => {
-    if(c.rarity === sourceRarity && removed < 10){ removed++; return false; }
-    return true;
-  });
-  collection.push({ rarity: targetRarity });
+  let phase = 'gather'; // gather → flash → reveal
+  let flashAlpha = 0;
+  let revealScale = 0;
+  let frame = 0;
 
-  // Play sound based on what was crafted
-  if(targetRarity === 'rare')      { sndCraftCoin();     spawnConfetti(); }
-  else if(targetRarity === 'epic') { sndCraftTreasure(); spawnConfetti(); }
-  else                             { sndCraftVault();    spawnConfetti(); }
-  renderCollection();
-  updateCraftModal();
+  function animLoop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    frame++;
+
+    if(phase === 'gather'){
+      // Hacer que las partículas espiralen hacia el centro
+      let allArrived = true;
+      particles.forEach(p => {
+        p.progress += p.speed;
+        if(p.progress < 1){
+          allArrived = false;
+          const ease = 1-Math.pow(1-p.progress,3);
+          p.x = cx + Math.cos(p.angle + p.progress*Math.PI*4) * (p.radius*(1-ease));
+          p.y = cy + Math.sin(p.angle + p.progress*Math.PI*4) * (p.radius*(1-ease));
+          p.angle += 0.08;
+        } else {
+          p.x = cx; p.y = cy;
+        }
+        ctx.globalAlpha = Math.max(0, 1-p.progress*0.8);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size*(1-p.progress*0.5), 0, Math.PI*2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      if(allArrived && frame > 40){
+        phase = 'flash';
+        label.textContent = '¡Fusión completa!';
+        // Sonido de fusión
+        try{
+          const a = new(window.AudioContext||window.webkitAudioContext)();
+          [220,330,440,660].forEach((f,i)=>{
+            const o=a.createOscillator(),g=a.createGain();
+            o.connect(g);g.connect(a.destination);o.type='sawtooth';o.frequency.value=f;
+            g.gain.setValueAtTime(0,a.currentTime+i*.06);g.gain.linearRampToValueAtTime(.1,a.currentTime+i*.06+.04);
+            g.gain.linearRampToValueAtTime(0,a.currentTime+i*.06+.3);o.start(a.currentTime+i*.06);o.stop(a.currentTime+.5);
+          });
+        }catch(e){}
+      }
+    }
+
+    if(phase === 'flash'){
+      flashAlpha += 0.08;
+      ctx.globalAlpha = Math.min(flashAlpha, 1);
+      const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,120);
+      grad.addColorStop(0, tc);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx,cy,120,0,Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if(flashAlpha >= 1){
+        phase = 'reveal';
+        // Mostrar el orbe resultante
+        orbEl.innerHTML = `<div style="width:90px;height:90px;border-radius:50%;background:${BG[targetRarity]};border:3px solid ${BORDERS[targetRarity]};display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 0 40px ${BORDERS[targetRarity]},0 0 80px ${BORDERS[targetRarity]}60;animation:pso-pop .5s cubic-bezier(.34,1.56,.64,1) forwards;opacity:0;">
+          <div style="position:absolute;width:88%;height:88%;border-radius:50%;border:2px solid ${BORDERS[targetRarity]};opacity:.6;animation:art-ring-spin 2s linear infinite;"></div>
+          <span style="font-size:36px;position:relative;z-index:2;color:${tc};">${SYMBOLS[targetRarity]}</span>
+        </div>`;
+        result.textContent = '+ 1 ' + LABELS[targetRarity];
+        result.style.color = tc;
+        setTimeout(()=>{ result.style.transition='opacity .4s'; result.style.opacity='1'; }, 400);
+      }
+    }
+
+    if(phase === 'reveal'){
+      // Desvanecer el flash
+      flashAlpha = Math.max(0, flashAlpha - 0.05);
+      if(flashAlpha > 0){
+        ctx.globalAlpha = flashAlpha * 0.6;
+        const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,100);
+        grad.addColorStop(0, tc);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx,cy,100,0,Math.PI*2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      // Cerrar automáticamente después de 1.5s
+      if(!ov._closing){
+        ov._closing = true;
+        setTimeout(()=>{
+          ov.style.display='none';
+          ov._closing = false;
+          onComplete();
+        }, 1500);
+      }
+      return; // detener el loop
+    }
+
+    requestAnimationFrame(animLoop);
+  }
+  requestAnimationFrame(animLoop);
 }
 
 // ── Prizes Wallet Modal ──

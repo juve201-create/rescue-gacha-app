@@ -1206,7 +1206,14 @@ body::after{
 @keyframes secret-hue{0%{filter:hue-rotate(0deg) brightness(1.5);}100%{filter:hue-rotate(360deg) brightness(1.5);}}
 
 @keyframes art-ring-spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-@keyframes pso-pop{
+@keyframes splashFloat{
+  0%,100%{transform:translateY(0);}
+  50%    {transform:translateY(-12px);}
+}
+@keyframes splashFadeOut{
+  from{opacity:1;}
+  to  {opacity:0;}
+}
   0%  {opacity:0;transform:scale(0.3);}
   100%{opacity:1;transform:scale(1);}
 }
@@ -2351,6 +2358,19 @@ body::after{
 </head>
 <body>
 
+<!-- PANTALLA DE CARGA -->
+<div id="splash-screen" style="position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 60%,#2D0A50 0%,#1A0A2E 40%,#0D0518 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .5s ease;">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+    <div style="font-size:64px;line-height:1;animation:splashFloat 2s ease-in-out infinite;filter:drop-shadow(0 0 24px rgba(232,24,122,0.6));">🐰</div>
+    <div style="font-family:'Cinzel',serif;font-size:24px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">RESCUE TCG</div>
+    <div style="font-size:10px;letter-spacing:4px;color:rgba(240,230,200,0.4);text-transform:uppercase;">Gacha</div>
+  </div>
+  <div style="width:160px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden;margin-top:8px;">
+    <div id="splash-bar" style="height:100%;width:10%;background:linear-gradient(90deg,#E8187A,#F0C040);border-radius:2px;transition:width .4s ease;"></div>
+  </div>
+  <div id="splash-msg" style="font-size:10px;letter-spacing:2px;color:rgba(240,230,200,0.3);text-transform:uppercase;">Iniciando...</div>
+</div>
+
 
 <!-- LOGIN SCREEN -->
 <div class="login-screen" id="login-screen">
@@ -3346,10 +3366,13 @@ function loginSuccess(user, col, prizes){
 }
 
 async function initAuth(){
+  splashProgress(20, 'Verificando sesión...');
+
   // Detectar enlace de recuperación de contraseña
   const urlParams = new URLSearchParams(window.location.search);
   const resetToken = urlParams.get('reset');
   if(resetToken){
+    hideSplash();
     showResetScreen(resetToken);
     return;
   }
@@ -3357,14 +3380,14 @@ async function initAuth(){
   // Detectar regreso de un pago de Mercado Pago
   const paymentStatus = urlParams.get('payment');
   if(paymentStatus){
-    window._justPaid = paymentStatus; // 'success', 'pending' o 'failure'
-    // Limpiar la URL
+    window._justPaid = paymentStatus;
     window.history.replaceState({}, '', window.location.pathname);
   }
 
   const sess = getSession();
   if(sess){
     try{
+      splashProgress(50, 'Restaurando sesión...');
       const s = typeof sess==='string' ? JSON.parse(sess) : sess;
       const res = await fetch(BACKEND + '/api/auth', {
         method:'POST',
@@ -3374,18 +3397,24 @@ async function initAuth(){
       if(res.ok){
         const data = await res.json();
         if(data.ok){
+          splashProgress(90, 'Cargando colección...');
           if(data.needs_username){
             window._tempLoginData = data;
+            hideSplash();
             showUsernameLink();
             return;
           }
-          loginSuccess(data.user, data.collection||[], data.prizes||[]); return;
+          splashProgress(100, '¡Listo!');
+          setTimeout(()=>{ hideSplash(); loginSuccess(data.user, data.collection||[], data.prizes||[]); }, 300);
+          return;
         }
       }
     } catch(e){ console.error('session restore failed', e); }
     clearSession();
   }
-  // Solo mostrar login si no hay usuario activo
+
+  // Sin sesión — mostrar login
+  hideSplash();
   if(!currentUser) showLoginScreen();
 }
 
@@ -4281,6 +4310,23 @@ function showDailyResult(result){
     freqs.forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(0,a.currentTime+i*.1);g.gain.linearRampToValueAtTime(.1,a.currentTime+i*.1+.05);g.gain.linearRampToValueAtTime(0,a.currentTime+i*.1+.4);o.start(a.currentTime+i*.1);o.stop(a.currentTime+.8);});
     if(result==='epic') spawnConfetti();
   }catch(e){}
+}
+
+// ── Splash Screen ─────────────────────────────────────────────
+function splashProgress(pct, msg){
+  const bar = document.getElementById('splash-bar');
+  const txt = document.getElementById('splash-msg');
+  if(bar) bar.style.width = pct + '%';
+  if(txt && msg) txt.textContent = msg;
+}
+
+function hideSplash(){
+  const splash = document.getElementById('splash-screen');
+  if(!splash) return;
+  splash.style.opacity = '0';
+  setTimeout(() => {
+    splash.style.display = 'none';
+  }, 520);
 }
 
 // ── Modal de Ayuda ────────────────────────────────────────────

@@ -1,277 +1,969 @@
-const { createClient } = require('@supabase/supabase-js');
-const jwt = require('jsonwebtoken');
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D0518">
+<title>Rescue TCG — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0D0518;--bg2:#130824;--bg3:#1E0A38;--bg4:#2A1050;
+  --border:#3D1A5E;--border2:rgba(232,24,122,0.2);
+  --pink:#E8187A;--pink2:#F472B6;--gold:#D4A017;
+  --text:#F0E6C8;--muted:#9D7DB8;--muted2:#6B4E8A;
+  --green:#4ADE80;--blue:#818CF8;--red:#F87171;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+/* LOGIN */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 50% 100%,#2D0A50,#1A0A2E 40%,var(--bg));}
+.login-box{width:100%;max-width:320px;background:linear-gradient(175deg,var(--bg3),var(--bg2));border:1px solid var(--border2);border-radius:20px;padding:36px 24px;box-shadow:0 0 80px rgba(232,24,122,0.12);}
+.login-logo{font-family:'Cinzel',serif;font-size:22px;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#fff,#F0C040,#FF2D9A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:4px;}
+.login-sub{font-size:10px;color:var(--muted);letter-spacing:3px;text-align:center;margin-bottom:28px;text-transform:uppercase;}
+.login-err{color:var(--red);font-size:11px;text-align:center;margin-bottom:10px;min-height:16px;}
+.login-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border-color .15s;}
+.login-input:focus{border-color:var(--pink);}
+.login-btn{width:100%;background:linear-gradient(135deg,var(--pink),#9D0050);border:none;border-radius:10px;padding:14px;color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #500025;transition:opacity .15s;}
+.login-btn:disabled{opacity:.6;}
 
-const ADMIN_SECRET = process.env.JWT_SECRET + '_admin';
+/* LAYOUT */
+.dashboard{display:none;height:100vh;display:none;flex-direction:column;}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-title{font-family:'Cinzel',serif;font-size:14px;font-weight:900;color:var(--pink);letter-spacing:3px;}
+.topbar-right{display:flex;gap:8px;}
+.top-btn{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;cursor:pointer;border:1px solid;transition:all .15s;}
+.top-btn-gold{border-color:rgba(212,160,23,0.4);background:rgba(212,160,23,0.08);color:var(--gold);}
+.top-btn-red{border-color:rgba(232,24,122,0.3);background:rgba(232,24,122,0.06);color:var(--pink2);}
 
-const ADMIN_PASSWORDS = [
-  process.env.ADMIN_PASSWORD,
-  process.env.ADMIN_PASSWORD_2,
-  process.env.ADMIN_PASSWORD_3,
-].filter(Boolean);
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;padding:10px 18px;font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted2);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s;}
+.tab:hover{color:var(--muted);}
+.tab.active{color:var(--pink);border-bottom-color:var(--pink);}
 
-function signAdminToken() {
-  return jwt.sign({ admin: true }, ADMIN_SECRET, { expiresIn: '8h' });
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;padding:0;}
+.section{padding:16px;}
+
+/* STATS GRID */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 10px;text-align:center;}
+.stat-num{font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:var(--pink);display:block;line-height:1.1;}
+.stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;display:block;}
+
+/* SEARCH */
+.search-wrap{position:relative;margin-bottom:12px;}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted2);font-size:14px;pointer-events:none;}
+.search-box{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px 10px 36px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .15s;}
+.search-box:focus{border-color:var(--pink);}
+
+/* USER LIST */
+.user-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.user-card:hover{border-color:var(--border2);background:var(--bg4);}
+.user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--bg4),#3D1A5E);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.user-info{flex:1;min-width:0;}
+.user-name{font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-badges{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.pill-gold{background:rgba(212,160,23,0.1);color:var(--gold);border:1px solid rgba(212,160,23,0.3);}
+.pill-blue{background:rgba(129,140,248,0.1);color:var(--blue);border:1px solid rgba(129,140,248,0.3);}
+.pill-green{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.3);}
+.pill-pink{background:rgba(232,24,122,0.1);color:var(--pink2);border:1px solid rgba(232,24,122,0.3);}
+.user-arrow{color:var(--muted2);font-size:16px;flex-shrink:0;}
+
+/* DETAIL PANEL */
+.detail-panel{position:fixed;inset:0;background:var(--bg);z-index:100;display:none;flex-direction:column;}
+.detail-panel.open{display:flex;}
+.detail-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.detail-back{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;}
+.detail-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--text);flex:1;}
+.detail-add-btn{background:linear-gradient(135deg,var(--pink),#9D0050);border:none;color:white;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:1px;}
+.detail-body{flex:1;overflow-y:auto;padding:16px;}
+
+/* DETAIL STATS */
+.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.detail-stat{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;}
+.detail-stat-num{font-family:'Cinzel',serif;font-size:18px;font-weight:900;display:block;}
+.detail-stat-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px;display:block;}
+
+/* RARITY BAR */
+.rarity-section{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.rarity-title{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.rarity-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.rarity-label{font-size:11px;color:var(--muted);width:70px;flex-shrink:0;}
+.rarity-bar-wrap{flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:6px;overflow:hidden;}
+.rarity-bar{height:100%;border-radius:4px;transition:width .5s;}
+.rarity-count{font-size:11px;font-weight:600;width:24px;text-align:right;flex-shrink:0;}
+
+/* LISTS */
+.sub-section{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+.sub-title{font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.sub-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.sub-row:last-child{border-bottom:none;padding-bottom:0;}
+.sub-row-left{flex:1;min-width:0;}
+.sub-row-name{font-size:12px;font-weight:500;color:var(--text);}
+.sub-row-date{font-size:10px;color:var(--muted);margin-top:2px;}
+.code-chip{font-size:10px;font-family:monospace;background:rgba(74,222,128,0.08);padding:2px 8px;border-radius:4px;color:var(--green);border:1px dashed rgba(74,222,128,0.3);}
+
+/* PAYMENT LIST */
+.pay-list{display:flex;flex-direction:column;gap:6px;}
+.pay-row{display:flex;align-items:center;justify-content:space-between;}
+.pay-amount{font-size:12px;font-weight:600;color:var(--green);}
+.pay-gems{font-size:11px;color:var(--gold);}
+.pay-date{font-size:10px;color:var(--muted);}
+
+/* GENERIC LIST (pagos, premios, canjes) */
+.g-list{display:flex;flex-direction:column;gap:8px;}
+.g-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+.g-item-icon{font-size:20px;flex-shrink:0;}
+.g-item-info{flex:1;min-width:0;}
+.g-item-title{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.g-item-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:700;letter-spacing:1px;}
+.badge-green{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.3);}
+.badge-gold{background:rgba(212,160,23,0.1);color:var(--gold);border:1px solid rgba(212,160,23,0.3);}
+.badge-blue{background:rgba(129,140,248,0.1);color:var(--blue);border:1px solid rgba(129,140,248,0.3);}
+.badge-muted{background:rgba(157,125,184,0.1);color:var(--muted);border:1px solid rgba(157,125,184,0.3);}
+.action-btn{font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;border:1px solid rgba(232,24,122,0.4);background:rgba(232,24,122,0.08);color:var(--pink2);white-space:nowrap;flex-shrink:0;font-family:'Inter',sans-serif;}
+
+.empty{text-align:center;padding:32px;color:var(--muted2);font-size:13px;font-style:italic;}
+.loading{text-align:center;padding:30px;color:var(--muted2);font-style:italic;font-size:13px;}
+.sec-count{font-size:11px;color:var(--muted);margin-bottom:12px;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,2,15,0.92);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;padding:24px 20px;width:100%;max-width:300px;}
+.modal-title{font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;color:var(--text);text-align:center;margin-bottom:4px;}
+.modal-sub{font-size:11px;color:var(--muted);text-align:center;margin-bottom:18px;}
+.modal-input{width:100%;background:rgba(61,20,102,0.4);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:'Inter',sans-serif;font-size:18px;outline:none;margin-bottom:14px;text-align:center;}
+.modal-input:focus{border-color:var(--pink);}
+.modal-btns{display:flex;gap:8px;}
+.modal-confirm{flex:1;background:linear-gradient(135deg,var(--pink),#9D0050);border:none;border-radius:10px;padding:12px;color:white;font-family:'Cinzel',serif;font-size:12px;font-weight:700;cursor:pointer;}
+.modal-cancel{flex:1;background:transparent;border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">RESCUE TCG</div>
+    <div class="login-sub">Panel Administrativo</div>
+    <div class="login-err" id="login-error"></div>
+    <input class="login-input" type="password" id="admin-pass" placeholder="Contraseña" autocomplete="current-password">
+    <button class="login-btn" id="login-btn" onclick="doLogin()">ENTRAR</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <div class="topbar-title">⚡ ADMIN</div>
+    <div class="topbar-right">
+      <button class="top-btn top-btn-gold" onclick="loadTab(activeTab)">↻ Actualizar</button>
+      <button class="top-btn top-btn-red" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tab-stats"       onclick="loadTab('stats')">📊 Stats</div>
+    <div class="tab"        id="tab-users"       onclick="loadTab('users')">👥 Usuarios</div>
+    <div class="tab"        id="tab-payments"    onclick="loadTab('payments')">💳 Pagos</div>
+    <div class="tab"        id="tab-prizes"      onclick="loadTab('prizes')">🎁 Premios</div>
+    <div class="tab"        id="tab-redemptions" onclick="loadTab('redemptions')">🎴 Canjes</div>
+    <div class="tab"        id="tab-sim"         onclick="loadTab('sim')">🎰 Simulador</div>
+    <div class="tab"        id="tab-announcements" onclick="loadTab('announcements')">📢 Anuncios</div>
+  </div>
+  <div class="main" id="tab-content"><div class="loading">Cargando...</div></div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-header">
+    <button class="detail-back" onclick="closeDetail()">← Volver</button>
+    <div class="detail-title" id="detail-title">Usuario</div>
+    <button class="detail-add-btn" id="detail-add-btn" onclick="openModal()">+ Maná</button>
+  </div>
+  <div class="detail-body" id="detail-body"><div class="loading">Cargando...</div></div>
+</div>
+
+<!-- MODAL MANÁ -->
+<div class="modal-overlay" id="gems-modal">
+  <div class="modal-box">
+    <div class="modal-title">Agregar Maná</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <input class="modal-input" type="number" id="modal-amount" placeholder="0" min="1">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="modal-confirm" id="modal-confirm-btn" onclick="confirmGems()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var BACKEND    = 'https://rescue-gacha-backend.vercel.app';
+var activeTab  = 'stats';
+var adminToken = null;
+var currentDetailUser = null;
+
+function getToken(){ return adminToken || sessionStorage.getItem('rg_admin_token'); }
+function setToken(t){ adminToken=t; sessionStorage.setItem('rg_admin_token',t); }
+function clearToken(){ adminToken=null; sessionStorage.removeItem('rg_admin_token'); }
+
+async function adminFetch(action, body, auth){
+  auth = auth!==false;
+  var h = {'Content-Type':'application/json'};
+  if(auth) h['Authorization']='Bearer '+getToken();
+  var r = await fetch(BACKEND+'/api/admin',{method:'POST',headers:h,body:JSON.stringify(Object.assign({action},body||{}))});
+  return r.json();
 }
 
-function verifyAdminToken(req) {
-  const auth = req.headers.authorization || '';
-  const token = auth.replace('Bearer ', '');
-  if (!token) return false;
-  try { const d = jwt.verify(token, ADMIN_SECRET); return d.admin === true; }
-  catch(e) { return false; }
-}
-
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const { action } = req.body;
-
-  // ── Login ─────────────────────────────────────────────────────
-  if (action === 'login') {
-    const { password } = req.body;
-    if (!password || !ADMIN_PASSWORDS.includes(password)) {
-      return res.status(401).json({ error: 'Contraseña incorrecta' });
+// ── Auth ──────────────────────────────────────────────────────
+async function doLogin(){
+  var pass = document.getElementById('admin-pass').value;
+  var btn  = document.getElementById('login-btn');
+  var err  = document.getElementById('login-error');
+  if(!pass){ err.textContent='Ingresa la contraseña'; return; }
+  btn.disabled=true; btn.textContent='Verificando...';
+  try{
+    var d = await adminFetch('login',{password:pass},false);
+    if(d.ok){
+      setToken(d.token);
+      document.getElementById('login-screen').style.display='none';
+      var dash=document.getElementById('dashboard');
+      dash.style.display='flex'; dash.style.flexDirection='column'; dash.style.height='100vh';
+      loadTab('stats');
+    } else {
+      err.textContent = d.error || 'Contraseña incorrecta';
     }
-    return res.json({ ok: true, token: signAdminToken() });
-  }
+  } catch(e){ err.textContent='Sin conexión al servidor'; }
+  btn.disabled=false; btn.textContent='ENTRAR';
+}
+document.getElementById('admin-pass').addEventListener('keydown',function(e){ if(e.key==='Enter') doLogin(); });
 
-  if (!verifyAdminToken(req)) {
-    return res.status(401).json({ error: 'No autorizado' });
-  }
+function doLogout(){ clearToken(); location.reload(); }
 
-  // ── Stats generales ───────────────────────────────────────────
-  if (action === 'stats') {
-    const [users, payments, prizes, pity] = await Promise.all([
-      supabase.from('users').select('id, gems', { count: 'exact' }),
-      supabase.from('payments').select('amount_mxn, gems_granted, status'),
-      supabase.from('prizes').select('redeemed'),
-      supabase.from('global_pity').select('pull_count').maybeSingle(),
-    ]);
-    const approvedPayments = (payments.data || []).filter(p => p.status === 'approved' || p.status === 'manual');
-    const revenue  = approvedPayments.reduce((s, p) => s + (p.amount_mxn || 0), 0);
-    const gemsTotal = approvedPayments.reduce((s, p) => s + (p.gems_granted || 0), 0);
-    const activePrizes = (prizes.data || []).filter(p => !p.redeemed).length;
-    const totalGems = (users.data || []).reduce((s, u) => s + (u.gems || 0), 0);
-    return res.json({
-      ok: true,
-      users: users.count || 0,
-      payments: approvedPayments.length,
-      revenue,
-      gemsTotal,
-      activePrizes,
-      totalGems,
-      globalPulls: pity.data?.pull_count || 0,
+// ── Tabs ──────────────────────────────────────────────────────
+function loadTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  var el=document.getElementById('tab-'+tab);
+  if(el) el.classList.add('active');
+  document.getElementById('tab-content').innerHTML='<div class="loading">Cargando...</div>';
+  if(tab==='stats')       loadStats();
+  if(tab==='users')       loadUsers();
+  if(tab==='payments')    loadPayments();
+  if(tab==='prizes')      loadPrizes();
+  if(tab==='redemptions') loadRedemptions();
+  if(tab==='sim')         loadSim();
+  if(tab==='announcements') loadAnnouncements();
+}
+
+function fmt(d){ if(!d) return '—'; return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+function fmtT(d){ if(!d) return ''; return new Date(d).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}); }
+
+// ── Stats ─────────────────────────────────────────────────────
+async function loadStats(){
+  var d = await adminFetch('stats');
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Error al cargar</div>'; return; }
+  document.getElementById('tab-content').innerHTML =
+    '<div class="section">'+
+    '<div class="stats-grid">'+
+    '<div class="stat-card"><span class="stat-num">'+d.users+'</span><span class="stat-lbl">Usuarios</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.payments+'</span><span class="stat-lbl">Compras</span></div>'+
+    '<div class="stat-card"><span class="stat-num">$'+d.revenue+'</span><span class="stat-lbl">Ingresos MXN</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.gemsTotal.toLocaleString()+'</span><span class="stat-lbl">Maná vendido</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.activePrizes+'</span><span class="stat-lbl">Premios activos</span></div>'+
+    '<div class="stat-card"><span class="stat-num">'+d.globalPulls.toLocaleString()+'</span><span class="stat-lbl">Tiradas globales</span></div>'+
+    '</div></div>';
+}
+
+// ── Usuarios ──────────────────────────────────────────────────
+var allUsers = [];
+async function loadUsers(){
+  var d = await adminFetch('users');
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin usuarios</div>'; return; }
+  allUsers = d.users || [];
+  renderUsers(allUsers);
+}
+
+function renderUsers(users){
+  var html = '<div class="section">';
+  html += '<div class="search-wrap"><span class="search-icon">🔍</span><input class="search-box" id="user-search" placeholder="Buscar por usuario o correo..." oninput="filterUsers()" autocomplete="off"></div>';
+  html += '<div class="sec-count">'+users.length+' usuario'+(users.length!==1?'s':'')+'</div>';
+  if(!users.length){ html+='<div class="empty">Sin resultados</div></div>'; document.getElementById('tab-content').innerHTML=html; return; }
+  users.forEach(function(u){
+    var name = u.username || u.email;
+    var isTest = !!u.is_test;
+    html += '<div class="user-card" style="'+(isTest?'opacity:0.5;':'')+'" onclick="openDetail(\''+u.id+'\')">';
+    html += '<div class="user-avatar">🐰</div>';
+    html += '<div class="user-info">';
+    html += '<div class="user-name">'+name+(isTest?' <span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:#F87171;border:1px solid rgba(239,68,68,.3);font-family:monospace;">TEST</span>':'')+'</div>';
+    html += '<div class="user-email">'+u.email+'</div>';
+    html += '<div class="user-badges">';
+    html += '<span class="pill pill-gold">✦ '+(u.gems||0).toLocaleString()+' Maná</span>';
+    html += '<span class="pill pill-blue">🃏 '+u.cards+' cartas</span>';
+    if(u.prizes>0) html += '<span class="pill pill-green">🎁 '+u.prizes+' premios</span>';
+    if(u.spent>0)  html += '<span class="pill pill-pink">💵 $'+u.spent+'</span>';
+    html += '</div></div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px;align-items:center;" onclick="event.stopPropagation()">';
+    html += '<span class="user-arrow">›</span>';
+    html += '<button style="font-size:8px;padding:3px 7px;border-radius:5px;cursor:pointer;border:1px solid rgba('+(isTest?'239,68,68':'157,125,184')+',0.4);background:rgba('+(isTest?'239,68,68':'157,125,184')+',0.08);color:'+(isTest?'#F87171':'var(--muted)')+';font-family:Inter,sans-serif;" onclick="toggleTest(\''+u.id+'\','+isTest+')">'+(isTest?'✓ Test':'+ Test')+'</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  document.getElementById('tab-content').innerHTML = html;
+}
+
+function filterUsers(){
+  var q = document.getElementById('user-search').value.toLowerCase();
+  var filtered = allUsers.filter(function(u){
+    return (u.username||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
+  });
+  var currentSearch = q;
+  renderUsers(filtered);
+  // Restaurar el valor del search
+  var searchEl = document.getElementById('user-search');
+  if(searchEl){ searchEl.value=currentSearch; searchEl.focus(); }
+}
+
+// ── Detail ────────────────────────────────────────────────────
+async function openDetail(userId){
+  currentDetailUser = userId;
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('detail-title').textContent = 'Cargando...';
+  document.getElementById('detail-body').innerHTML = '<div class="loading">Cargando ficha...</div>';
+
+  var d = await adminFetch('user_detail',{user_id: userId});
+  if(!d.ok){ document.getElementById('detail-body').innerHTML='<div class="empty">Error al cargar</div>'; return; }
+
+  var u  = d.user;
+  var st = d.stats;
+  var name = u.username || u.email;
+  document.getElementById('detail-title').textContent = name;
+
+  var RARITY_COLOR = {common:'#AAAACC',rare:'#7AA4F0',epic:'#C084FC',legendary:'#D4A017',secret:'#E879F9'};
+  var RARITY_LABEL = {common:'Comunes',rare:'Raras',epic:'Épicas',legendary:'Legendarias',secret:'Secretas'};
+  var totalCards = st.totalCards || 1;
+
+  var html = '';
+
+  // Stats principales
+  html += '<div class="detail-stats">';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--gold)">'+st.totalCards+'</span><span class="detail-stat-lbl">Cartas</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--pink2)">'+st.totalRedeemed+'</span><span class="detail-stat-lbl">Canjeadas</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--green)">'+st.totalPrizes+'</span><span class="detail-stat-lbl">Premios</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--blue)">'+st.totalPurchases+'</span><span class="detail-stat-lbl">Compras</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--green)">'+(u.gems||0).toLocaleString()+'</span><span class="detail-stat-lbl">Maná actual</span></div>';
+  html += '<div class="detail-stat"><span class="detail-stat-num" style="color:var(--gold)">$'+st.totalSpent+'</span><span class="detail-stat-lbl">Total gastado</span></div>';
+  html += '</div>';
+
+  // Cartas por rareza
+  html += '<div class="rarity-section">';
+  html += '<div class="rarity-title">Colección por rareza</div>';
+  ['common','rare','epic','legendary','secret'].forEach(function(r){
+    var count = st.byRarity[r] || 0;
+    var pct   = totalCards > 0 ? Math.round(count/totalCards*100) : 0;
+    html += '<div class="rarity-row">';
+    html += '<span class="rarity-label" style="color:'+RARITY_COLOR[r]+'">'+RARITY_LABEL[r]+'</span>';
+    html += '<div class="rarity-bar-wrap"><div class="rarity-bar" style="width:'+pct+'%;background:'+RARITY_COLOR[r]+'"></div></div>';
+    html += '<span class="rarity-count" style="color:'+RARITY_COLOR[r]+'">'+count+'</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Premios ganados
+  if(d.prizes && d.prizes.length){
+    html += '<div class="sub-section">';
+    html += '<div class="sub-title">Premios de comida ('+d.prizes.length+')</div>';
+    d.prizes.forEach(function(p){
+      html += '<div class="sub-row">';
+      html += '<div class="sub-row-left">';
+      html += '<div class="sub-row-name">'+p.name+'</div>';
+      html += '<div class="sub-row-date">'+fmt(p.obtained_at)+'</div>';
+      html += '</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px">';
+      html += '<span class="code-chip">'+p.code+'</span>';
+      html += '<span class="badge '+(p.redeemed?'badge-muted':'badge-green')+'">'+(p.redeemed?'Canjeado':'Activo')+'</span>';
+      html += '</div>';
+      html += '</div>';
     });
+    html += '</div>';
   }
 
-  // ── Lista de usuarios ─────────────────────────────────────────
-  if (action === 'users') {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, username, gems, created_at, is_test')
-      .order('created_at', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-
-    // Conteos rápidos por usuario — limit alto para no truncar
-    const [collections, redemptions, prizes, payments] = await Promise.all([
-      supabase.from('collections').select('user_id, rarity').limit(100000),
-      supabase.from('card_redemptions').select('user_id').limit(100000),
-      supabase.from('prizes').select('user_id, redeemed').limit(100000),
-      supabase.from('payments').select('user_id, amount_mxn, status').limit(100000),
-    ]);
-
-    const colMap  = {};
-    (collections.data || []).forEach(c => { colMap[c.user_id]  = (colMap[c.user_id]  || 0) + 1; });
-    const redMap  = {};
-    (redemptions.data || []).forEach(r => { redMap[r.user_id]  = (redMap[r.user_id]  || 0) + 1; });
-    const prizeMap = {};
-    (prizes.data || []).forEach(p => { prizeMap[p.user_id] = (prizeMap[p.user_id] || 0) + 1; });
-    const spendMap = {};
-    (payments.data || []).filter(p => p.status === 'approved' || p.status === 'manual').forEach(p => {
-      spendMap[p.user_id] = (spendMap[p.user_id] || 0) + (p.amount_mxn || 0);
+  // Canjes de cartas físicas
+  if(d.redemptions && d.redemptions.length){
+    html += '<div class="sub-section">';
+    html += '<div class="sub-title">Canjes físicos ('+d.redemptions.length+')</div>';
+    d.redemptions.forEach(function(r){
+      var c = RARITY_COLOR[r.rarity]||'#F0E6C8';
+      var l = {common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria',secret:'Secreta'}[r.rarity]||r.rarity;
+      html += '<div class="sub-row">';
+      html += '<div class="sub-row-left">';
+      html += '<div class="sub-row-name" style="color:'+c+'">'+l+'</div>';
+      html += '<div class="sub-row-date">'+fmt(r.redeemed_at)+' '+fmtT(r.redeemed_at)+'</div>';
+      html += '</div>';
+      html += '<span class="badge badge-green">🎴 Canjeado</span>';
+      html += '</div>';
     });
-
-    const users = (data || []).map(u => ({
-      ...u,
-      cards:    colMap[u.id]   || 0,
-      redeemed: redMap[u.id]   || 0,
-      prizes:   prizeMap[u.id] || 0,
-      spent:    spendMap[u.id] || 0,
-    }));
-
-    return res.json({ ok: true, users });
+    html += '</div>';
   }
 
-  // ── Detalle de un usuario ─────────────────────────────────────
-  if (action === 'user_detail') {
-    const { user_id } = req.body;
-    if (!user_id) return res.status(400).json({ error: 'user_id requerido' });
-
-    const [user, allCollections, redemptions, allPrizes, payments] = await Promise.all([
-      supabase.from('users').select('*').eq('id', user_id).maybeSingle(),
-      supabase.from('collections').select('user_id, rarity').limit(100000),
-      supabase.from('card_redemptions').select('rarity, redeemed_at, email').eq('user_id', user_id).order('redeemed_at', { ascending: false }),
-      supabase.from('prizes').select('user_id, name, code, redeemed, obtained_at').limit(100000),
-      supabase.from('payments').select('amount_mxn, gems_granted, status, created_at').eq('user_id', user_id).order('created_at', { ascending: false }),
-    ]);
-
-    if (!user.data) return res.status(404).json({ error: 'Usuario no encontrado' });
-
-    // Construir colMap y prizeMap primero
-    const colMap = {};
-    (allCollections.data || []).forEach(c => {
-      if (!colMap[c.user_id]) colMap[c.user_id] = [];
-      colMap[c.user_id].push(c);
+  // Historial de compras
+  if(d.payments && d.payments.length){
+    html += '<div class="sub-section">';
+    html += '<div class="sub-title">Compras ('+d.payments.length+')</div>';
+    d.payments.forEach(function(p){
+      html += '<div class="sub-row">';
+      html += '<div class="sub-row-left">';
+      html += '<div class="pay-amount">'+(p.amount_mxn>0?'$'+p.amount_mxn+' MXN':'Crédito manual')+'</div>';
+      html += '<div class="sub-row-date">'+fmt(p.created_at)+'</div>';
+      html += '</div>';
+      html += '<span class="badge badge-gold">✦ '+p.gems_granted+' Maná</span>';
+      html += '</div>';
     });
-    const prizeMap = {};
-    (allPrizes.data || []).forEach(p => {
-      if (!prizeMap[p.user_id]) prizeMap[p.user_id] = [];
-      prizeMap[p.user_id].push(p);
+    html += '</div>';
+  }
+
+  document.getElementById('detail-body').innerHTML = html;
+}
+
+function closeDetail(){
+  document.getElementById('detail-panel').classList.remove('open');
+  currentDetailUser = null;
+}
+
+async function toggleTest(userId, currentIsTest){
+  var newVal = !currentIsTest;
+  var label  = newVal ? 'marcar como TEST' : 'quitar de TEST';
+  if(!confirm('¿Seguro que quieres '+label+' esta cuenta?')) return;
+  var d = await adminFetch('toggle_test', {user_id: userId, is_test: newVal});
+  if(d.ok){
+    // Actualizar en allUsers
+    var u = allUsers.find(function(u){ return u.id===userId; });
+    if(u) u.is_test = newVal;
+    loadTab('users');
+  } else {
+    alert(d.error||'Error al actualizar');
+  }
+}
+
+// ── Modal Maná ────────────────────────────────────────────────
+var modalUserId=null, modalCurrentGems=0;
+
+function openModal(){
+  if(!currentDetailUser){ alert('Selecciona un usuario primero'); return; }
+  var u = allUsers.find(function(u){ return u.id===currentDetailUser; });
+  modalUserId = currentDetailUser;
+  modalCurrentGems = u ? u.gems : 0;
+  document.getElementById('modal-sub').textContent = (u ? (u.username||u.email) : '') + ' — Maná actual: '+(modalCurrentGems||0);
+  document.getElementById('modal-amount').value='';
+  document.getElementById('gems-modal').classList.add('open');
+  setTimeout(function(){ document.getElementById('modal-amount').focus(); },150);
+}
+
+function closeModal(){ document.getElementById('gems-modal').classList.remove('open'); }
+
+async function confirmGems(){
+  var amount = parseInt(document.getElementById('modal-amount').value);
+  if(!amount||amount<=0){ alert('Ingresa una cantidad válida'); return; }
+  var btn=document.getElementById('modal-confirm-btn');
+  btn.disabled=true; btn.textContent='Agregando...';
+  var d = await adminFetch('add_gems',{user_id:modalUserId,amount});
+  btn.disabled=false; btn.textContent='Agregar';
+  if(d.ok){
+    closeModal();
+    alert('✅ '+amount.toLocaleString()+' Maná agregados correctamente');
+    // Recargar detalle
+    openDetail(modalUserId);
+    // Actualizar lista
+    var u=allUsers.find(function(u){ return u.id===modalUserId; });
+    if(u) u.gems=d.gems;
+  } else {
+    alert(d.error||'Error al agregar Maná');
+  }
+}
+
+document.getElementById('modal-amount').addEventListener('keydown',function(e){ if(e.key==='Enter') confirmGems(); });
+
+// ── Pagos ─────────────────────────────────────────────────────
+async function loadPayments(){
+  var d = await adminFetch('payments');
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin pagos</div>'; return; }
+  var payments=d.payments||[];
+  if(!payments.length){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin pagos registrados</div>'; return; }
+  var html='<div class="section"><div class="sec-count">'+payments.length+' pagos</div><div class="g-list">';
+  payments.forEach(function(p){
+    var name=(p.users&&(p.users.username||p.users.email))||'—';
+    var isManual=p.status==='manual';
+    html+='<div class="g-item">';
+    html+='<div class="g-item-icon">💳</div>';
+    html+='<div class="g-item-info">';
+    html+='<div class="g-item-title">'+name+'</div>';
+    html+='<div class="g-item-sub">$'+p.amount_mxn+' MXN · <span style="color:var(--gold)">✦ '+p.gems_granted+'</span> · '+fmt(p.created_at)+'</div>';
+    html+='</div>';
+    html+='<span class="badge '+(isManual?'badge-blue':'badge-green')+'">'+(isManual?'Manual':'Aprobado')+'</span>';
+    html+='</div>';
+  });
+  html+='</div></div>';
+  document.getElementById('tab-content').innerHTML=html;
+}
+
+// ── Premios ───────────────────────────────────────────────────
+async function loadPrizes(){
+  var d = await adminFetch('prizes');
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Error</div>'; return; }
+  var prizes=d.prizes||[];
+  var active  =prizes.filter(function(p){ return !p.redeemed; });
+  var redeemed=prizes.filter(function(p){ return  p.redeemed; });
+  var html='<div class="section">';
+  if(active.length){
+    html+='<div class="sec-count">'+active.length+' pendiente'+(active.length!==1?'s':'')+'</div><div class="g-list">';
+    active.forEach(function(p){
+      var name=(p.users&&(p.users.username||p.users.email))||'—';
+      html+='<div class="g-item">';
+      html+='<div class="g-item-icon">🎁</div>';
+      html+='<div class="g-item-info">';
+      html+='<div class="g-item-title">'+p.name+'</div>';
+      html+='<div class="g-item-sub">'+name+'</div>';
+      html+='<span class="code-chip" style="margin-top:4px;display:inline-block">'+p.code+'</span>';
+      html+='</div>';
+      html+='<button class="action-btn" onclick="redeemPrize(\''+p.id+'\',this)">Canjear</button>';
+      html+='</div>';
     });
-
-    // Intentar con el user_id directo y con String() como fallback
-    const collection = colMap[user_id] || colMap[String(user_id)] || [];
-    const prizes     = prizeMap[user_id] || prizeMap[String(user_id)] || [];
-
-    // Cartas por rareza
-    const byRarity = { common:0, rare:0, epic:0, legendary:0, secret:0 };
-    collection.forEach(c => { byRarity[c.rarity] = (byRarity[c.rarity] || 0) + 1; });
-
-    const approvedPayments = (payments.data || []).filter(p => p.status === 'approved' || p.status === 'manual');
-    const totalSpent = approvedPayments.reduce((s, p) => s + (p.amount_mxn || 0), 0);
-    const totalGemsBought = approvedPayments.reduce((s, p) => s + (p.gems_granted || 0), 0);
-
-    return res.json({
-      ok: true,
-      user: user.data,
-      stats: {
-        totalCards:    collection.length,
-        byRarity,
-        totalRedeemed: (redemptions.data || []).length,
-        totalPrizes:   prizes.length,
-        activePrizes:  prizes.filter(p => !p.redeemed).length,
-        totalSpent,
-        totalGemsBought,
-        totalPurchases: approvedPayments.length,
-      },
-      prizes:      prizes,
-      redemptions: redemptions.data || [],
-      payments:    approvedPayments,
+    html+='</div>';
+  }
+  if(redeemed.length){
+    html+='<div class="sec-count" style="margin-top:20px">'+redeemed.length+' canjeado'+(redeemed.length!==1?'s':'')+'</div><div class="g-list">';
+    redeemed.forEach(function(p){
+      var name=(p.users&&(p.users.username||p.users.email))||'—';
+      html+='<div class="g-item" style="opacity:.4">';
+      html+='<div class="g-item-icon">✅</div>';
+      html+='<div class="g-item-info">';
+      html+='<div class="g-item-title">'+p.name+'</div>';
+      html+='<div class="g-item-sub">'+name+' · '+fmt(p.obtained_at)+'</div>';
+      html+='</div></div>';
     });
+    html+='</div>';
   }
+  if(!prizes.length) html+='<div class="empty">Sin premios registrados</div>';
+  html+='</div>';
+  document.getElementById('tab-content').innerHTML=html;
+}
 
-  // ── Toggle cuenta test ────────────────────────────────────────
-  if (action === 'toggle_test') {
-    const { user_id, is_test } = req.body;
-    if (!user_id) return res.status(400).json({ error: 'user_id requerido' });
-    const { error } = await supabase
-      .from('users').update({ is_test: !!is_test }).eq('id', user_id);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true });
-  }
+async function redeemPrize(id,btn){
+  btn.textContent='...'; btn.disabled=true;
+  var d=await adminFetch('redeem_prize',{prize_id:id});
+  if(d.ok) loadPrizes();
+  else{ btn.textContent='Canjear'; btn.disabled=false; alert(d.error||'Error'); }
+}
 
-  // ── Agregar Maná ──────────────────────────────────────────────
-  if (action === 'add_gems') {
-    const { user_id, amount } = req.body;
-    if (!user_id || !amount || amount <= 0) return res.status(400).json({ error: 'Datos inválidos' });
-    const { data: user } = await supabase.from('users').select('gems').eq('id', user_id).maybeSingle();
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
-    const newGems = user.gems + Math.floor(amount);
-    const { error } = await supabase.from('users').update({ gems: newGems }).eq('id', user_id);
-    if (error) return res.status(500).json({ error: error.message });
-    await supabase.from('payments').insert({
-      user_id, mp_payment_id: 'MANUAL_' + Date.now(),
-      amount_mxn: 0, gems_granted: Math.floor(amount), status: 'manual'
-    });
-    return res.json({ ok: true, gems: newGems });
-  }
+// ── Canjes de cartas ──────────────────────────────────────────
+async function loadRedemptions(){
+  var d=await adminFetch('redemptions');
+  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Error</div>'; return; }
+  var rows=d.redemptions||[];
+  if(!rows.length){ document.getElementById('tab-content').innerHTML='<div class="empty">Sin canjes aún</div>'; return; }
+  var RC={common:'#AAAACC',rare:'#7AA4F0',epic:'#C084FC',legendary:'#D4A017',secret:'#E879F9'};
+  var RL={common:'Común',rare:'Rara',epic:'Épica',legendary:'Legendaria',secret:'Secreta'};
+  var html='<div class="section"><div class="sec-count">'+rows.length+' canjes</div><div class="g-list">';
+  rows.forEach(function(r){
+    var c=RC[r.rarity]||'#F0E6C8';
+    var l=RL[r.rarity]||r.rarity;
+    html+='<div class="g-item">';
+    html+='<div class="g-item-icon">🎴</div>';
+    html+='<div class="g-item-info">';
+    html+='<div class="g-item-title">'+(r.email||'—')+'</div>';
+    html+='<div class="g-item-sub"><span style="color:'+c+';font-weight:600">'+l+'</span> · '+fmt(r.redeemed_at)+' '+fmtT(r.redeemed_at)+'</div>';
+    html+='</div>';
+    html+='<span class="badge badge-green">Canjeado</span>';
+    html+='</div>';
+  });
+  html+='</div></div>';
+  document.getElementById('tab-content').innerHTML=html;
+}
 
-  // ── Pagos ─────────────────────────────────────────────────────
-  if (action === 'payments') {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('*, users(email, username)')
-      .order('created_at', { ascending: false })
-      .limit(100);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true, payments: data });
-  }
+// ── Anuncios ──────────────────────────────────────────────────
+async function loadAnnouncements(){
+  var el = document.getElementById('tab-content');
+  el.innerHTML = '<div class="section">' +
+    '<div class="sec-title" style="margin-bottom:16px;">📢 Anuncios</div>' +
+    '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;">' +
+    '<div style="font-family:\'Cinzel\',serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;">Nuevo Anuncio</div>' +
+    '<input id="ann-title" type="text" placeholder="Título del anuncio" maxlength="80" style="width:100%;background:rgba(61,20,102,.4);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:Inter,sans-serif;font-size:13px;outline:none;margin-bottom:8px;box-sizing:border-box;">' +
+    '<textarea id="ann-message" placeholder="Mensaje para los jugadores..." maxlength="400" rows="3" style="width:100%;background:rgba(61,20,102,.4);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:Inter,sans-serif;font-size:13px;outline:none;resize:vertical;margin-bottom:8px;box-sizing:border-box;"></textarea>' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">' +
+    '<label style="font-size:11px;color:var(--muted);white-space:nowrap;">Expira (opcional):</label>' +
+    '<input id="ann-expires" type="datetime-local" style="flex:1;background:rgba(61,20,102,.4);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:Inter,sans-serif;font-size:12px;outline:none;">' +
+    '</div>' +
+    '<button onclick="createAnnouncement()" style="width:100%;background:linear-gradient(135deg,var(--pink),#9D0050);border:none;border-radius:8px;padding:12px;color:white;font-family:\'Cinzel\',serif;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;">📢 PUBLICAR ANUNCIO</button>' +
+    '</div>' +
+    '<div id="ann-list"><div class="loading">Cargando...</div></div>' +
+    '</div>';
+  await refreshAnnouncements();
+}
 
-  // ── Premios ───────────────────────────────────────────────────
-  if (action === 'prizes') {
-    const { data, error } = await supabase
-      .from('prizes')
-      .select('id, name, code, redeemed, obtained_at, user_id, users(email, username)')
-      .order('obtained_at', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true, prizes: data });
-  }
+async function refreshAnnouncements(){
+  var d = await adminFetch('get_announcements');
+  var el = document.getElementById('ann-list');
+  if(!el) return;
+  if(!d.ok||!d.announcements||!d.announcements.length){ el.innerHTML='<div class="empty">No hay anuncios creados</div>'; return; }
+  var html='<div class="g-list">';
+  d.announcements.forEach(function(a){
+    var isActive=a.active;
+    var exp=a.expires_at?'Expira: '+fmt(a.expires_at):'Sin expiración';
+    html+='<div class="g-item" style="flex-direction:column;align-items:stretch;gap:10px;opacity:'+(isActive?'1':'.5')+'">';
+    html+='<div style="display:flex;align-items:center;gap:10px;">';
+    html+='<span style="font-size:20px;">'+(isActive?'📢':'📭')+'</span>';
+    html+='<div style="flex:1;min-width:0;">';
+    html+='<div class="g-item-title">'+a.title+'</div>';
+    html+='<div class="g-item-sub">'+fmt(a.created_at)+' · '+exp+'</div>';
+    html+='</div>';
+    html+='<span class="badge '+(isActive?'badge-green':'badge-muted')+'">'+(isActive?'Activo':'Inactivo')+'</span>';
+    html+='</div>';
+    html+='<div style="font-size:12px;color:var(--muted);line-height:1.6;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px;white-space:pre-wrap;">'+a.message+'</div>';
+    html+='<div style="display:flex;gap:8px;">';
+    html+='<button class="action-btn" onclick="toggleAnnouncement(\''+a.id+'\','+isActive+')">'+(isActive?'⏸ Desactivar':'▶ Activar')+'</button>';
+    html+='<button class="action-btn" style="border-color:rgba(239,68,68,.4);color:#F87171;" onclick="deleteAnnouncement(\''+a.id+'\')">🗑 Eliminar</button>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
 
-  // ── Canjear premio ────────────────────────────────────────────
-  if (action === 'redeem_prize') {
-    const { prize_id } = req.body;
-    if (!prize_id) return res.status(400).json({ error: 'ID requerido' });
-    const { error } = await supabase.from('prizes').update({ redeemed: true }).eq('id', prize_id);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true });
-  }
+async function createAnnouncement(){
+  var title=document.getElementById('ann-title').value.trim();
+  var message=document.getElementById('ann-message').value.trim();
+  var expires=document.getElementById('ann-expires').value;
+  if(!title||!message){ alert('Título y mensaje son obligatorios'); return; }
+  var body={title:title,message:message};
+  if(expires) body.expires_at=new Date(expires).toISOString();
+  var d=await adminFetch('create_announcement',body);
+  if(d.ok){
+    document.getElementById('ann-title').value='';
+    document.getElementById('ann-message').value='';
+    document.getElementById('ann-expires').value='';
+    await refreshAnnouncements();
+  } else { alert(d.error||'Error al crear anuncio'); }
+}
 
-  // ── Canjes de cartas ──────────────────────────────────────────
-  if (action === 'redemptions') {
-    const { data, error } = await supabase
-      .from('card_redemptions')
-      .select('*')
-      .order('redeemed_at', { ascending: false })
-      .limit(200);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true, redemptions: data });
-  }
+async function toggleAnnouncement(id,currentActive){
+  var d=await adminFetch('toggle_announcement',{announcement_id:id,active:!currentActive});
+  if(d.ok) await refreshAnnouncements(); else alert(d.error||'Error');
+}
 
-  // ── Anuncios ──────────────────────────────────────────────────
-  if (action === 'get_announcements') {
-    const { data, error } = await supabase
-      .from('announcements')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true, announcements: data });
-  }
+async function deleteAnnouncement(id){
+  if(!confirm('¿Eliminar este anuncio permanentemente?')) return;
+  var d=await adminFetch('delete_announcement',{announcement_id:id});
+  if(d.ok) await refreshAnnouncements(); else alert(d.error||'Error');
+}
 
-  if (action === 'create_announcement') {
-    const { title, message, expires_at } = req.body;
-    if (!title || !message) return res.status(400).json({ error: 'Título y mensaje requeridos' });
-    const insert = { title, message, active: true };
-    if (expires_at) insert.expires_at = expires_at;
-    const { data, error } = await supabase.from('announcements').insert(insert).select().single();
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true, announcement: data });
-  }
+// ── Simulador de tiradas (solo visual, no afecta BD ni pity) ──
+function loadSim(){
+  document.getElementById('tab-content').innerHTML = `
+  <div class="section">
+    <div class="sec-title" style="margin-bottom:4px;">Simulador de Tiradas</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Solo visual — no afecta pity global ni base de datos</div>
 
-  if (action === 'toggle_announcement') {
-    const { announcement_id, active } = req.body;
-    if (!announcement_id) return res.status(400).json({ error: 'ID requerido' });
-    const { error } = await supabase
-      .from('announcements').update({ active: !!active }).eq('id', announcement_id);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true });
-  }
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+      <button onclick="simPull('common')"    style="padding:10px;border-radius:8px;border:1px solid #6B6B8A;background:rgba(107,107,138,.1);color:#AAAACC;font-size:11px;cursor:pointer;">⬡ Común</button>
+      <button onclick="simPull('rare')"      style="padding:10px;border-radius:8px;border:1px solid #3B82F6;background:rgba(59,130,246,.1);color:#93C5FD;font-size:11px;cursor:pointer;">◆ Rara</button>
+      <button onclick="simPull('epic')"      style="padding:10px;border-radius:8px;border:1px solid #9333EA;background:rgba(147,51,234,.1);color:#D8B4FE;font-size:11px;cursor:pointer;">◈ Épica</button>
+      <button onclick="simPull('legendary')" style="padding:10px;border-radius:8px;border:1px solid #D4A017;background:rgba(212,160,23,.1);color:#FFE080;font-size:11px;cursor:pointer;">♛ Legendaria</button>
+      <button onclick="simPull('secret')"    style="padding:10px;border-radius:8px;border:1px solid #FF1B8D;background:rgba(255,27,141,.1);color:#FF6EB4;font-size:11px;cursor:pointer;">✦ Secreta</button>
+      <button onclick="simPull('random')"    style="padding:10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--muted);font-size:11px;cursor:pointer;">🎲 Aleatoria</button>
+    </div>
 
-  if (action === 'delete_announcement') {
-    const { announcement_id } = req.body;
-    if (!announcement_id) return res.status(400).json({ error: 'ID requerido' });
-    const { error } = await supabase.from('announcements').delete().eq('id', announcement_id);
-    if (error) return res.status(500).json({ error: error.message });
-    return res.json({ ok: true });
-  }
+    <div id="sim-stage" style="position:relative;background:#0D0518;border-radius:12px;overflow:hidden;min-height:420px;border:1px solid var(--border);">
+      <div id="sim-idle" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;font-style:italic;">Selecciona una rareza para simular</div>
 
-  return res.status(400).json({ error: 'Acción inválida' });
+      <!-- Reel CS:GO -->
+      <div id="sim-csgo" style="display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px 0;height:100%;">
+        <div id="sim-title" style="font-size:11px;letter-spacing:3px;color:rgba(240,230,200,.5);text-transform:uppercase;">Invocando...</div>
+        <div style="position:relative;width:100%;overflow:hidden;height:170px;">
+          <div style="position:absolute;left:0;top:0;bottom:0;width:70px;background:linear-gradient(to right,#0D0518,transparent);z-index:3;pointer-events:none;"></div>
+          <div style="position:absolute;right:0;top:0;bottom:0;width:70px;background:linear-gradient(to left,#0D0518,transparent);z-index:3;pointer-events:none;"></div>
+          <div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:rgba(232,24,122,.8);transform:translateX(-50%);z-index:4;"></div>
+          <div id="sim-rail" style="display:flex;align-items:center;gap:6px;position:absolute;top:50%;transform:translateY(-50%);will-change:transform;padding:0 50%;"></div>
+        </div>
+        <div id="sim-result-wrap" style="opacity:0;text-align:center;transition:opacity .4s;">
+          <div id="sim-result-label" style="font-size:18px;font-weight:900;letter-spacing:3px;"></div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Toca para continuar</div>
+        </div>
+      </div>
+
+      <!-- Reveal -->
+      <div id="sim-reveal" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:16px;cursor:pointer;z-index:10;" onclick="simCloseReveal()">
+        <div id="sim-rev-pts" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+        <canvas id="sim-fw" style="position:absolute;inset:0;pointer-events:none;z-index:2;"></canvas>
+        <div id="sim-rev-title" style="font-size:18px;font-weight:900;letter-spacing:3px;position:relative;z-index:5;"></div>
+        <div id="sim-rev-card" style="width:160px;min-height:210px;border-radius:14px;border:3px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;opacity:0;transform:scale(.3) rotateY(180deg);transition:opacity .7s,transform .7s;position:relative;z-index:5;overflow:hidden;">
+          <div id="sim-rev-rarity" style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:3px;position:relative;z-index:2;"></div>
+          <div id="sim-rev-art" style="position:relative;z-index:2;"></div>
+          <div id="sim-rev-name" style="font-size:14px;font-weight:700;text-align:center;position:relative;z-index:2;"></div>
+        </div>
+        <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35);position:relative;z-index:5;">toca para cerrar</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+var SIM_FW_STOP=false, SIM_FIRE_STOP=false;
+var SIM_RD={
+  common:    {symbol:'⬡',color:'#AAAACC',border:'#6B6B8A',bg:'linear-gradient(160deg,#1A1A2E,#0D0D1A)',glow:'rgba(107,107,138,.5)',label:'Común'},
+  rare:      {symbol:'◆',color:'#93C5FD',border:'#3B82F6',bg:'linear-gradient(160deg,#0A1A3A,#051020)',glow:'rgba(59,130,246,.6)',label:'Rara'},
+  epic:      {symbol:'◈',color:'#D8B4FE',border:'#9333EA',bg:'linear-gradient(160deg,#1E0A38,#0D0520)',glow:'rgba(147,51,234,.7)',label:'Épica'},
+  legendary: {symbol:'♛',color:'#FFE080',border:'#D4A017',bg:'linear-gradient(160deg,#2A1A00,#150D00)',glow:'rgba(212,160,23,.8)',label:'Legendaria'},
+  secret:    {symbol:'✦',color:'#FF6EB4',border:'#FF1B8D',bg:'linear-gradient(160deg,#100020,#05000F)',glow:'rgba(255,27,141,.7)',label:'Secreta'},
 };
+var SIM_POOL=['common','common','common','rare','common','rare','common','epic','common','rare'];
+var simCurrentRarity=null;
+
+function simRandRarity(){return SIM_POOL[Math.floor(Math.random()*SIM_POOL.length)];}
+
+function simSmallCard(r){
+  var d=SIM_RD[r]||SIM_RD.common;
+  return '<div style="width:110px;height:145px;border-radius:9px;border:2px solid '+d.border+';background:'+d.bg+';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex-shrink:0;box-shadow:0 0 12px '+d.glow+';position:relative;overflow:hidden;">'+
+    '<div style="position:absolute;inset:0;opacity:.04;background:repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%);background-size:12px 12px;border-radius:inherit;"></div>'+
+    simMiniArt(r)+
+    '<span style="font-size:9px;letter-spacing:1px;color:'+d.color+';text-transform:uppercase;font-weight:700;position:relative;z-index:2;">'+d.label+'</span>'+
+    '</div>';
+}
+
+function simMiniArt(r){
+  var d=SIM_RD[r]||SIM_RD.common;
+  var rings='<div style="position:absolute;width:85%;height:85%;border-radius:50%;border:2px solid rgba(255,255,255,.2);animation:art-ring-spin 4s linear infinite;"></div>';
+  if(r==='epic'||r==='legendary'||r==='secret') rings+='<div style="position:absolute;width:65%;height:65%;border-radius:50%;border:1.5px solid rgba(255,255,255,.1);animation:art-ring-spin 2.5s linear infinite reverse;"></div>';
+  return '<div style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(circle,rgba(255,255,255,.08),transparent);flex-shrink:0;">'+
+    rings+
+    '<span style="font-size:26px;position:relative;z-index:2;color:'+d.color+';">'+d.symbol+'</span>'+
+    '</div>';
+}
+
+function simRevealArt(r){
+  var d=SIM_RD[r]||SIM_RD.common;
+  var rings='<div style="position:absolute;width:90%;height:90%;border-radius:50%;border:2px solid '+d.border+';opacity:.8;animation:art-ring-spin 4s linear infinite;"></div>'+
+    '<div style="position:absolute;width:70%;height:70%;border-radius:50%;border:1.5px solid '+d.border+';opacity:.5;animation:art-ring-spin 2.5s linear infinite reverse;"></div>';
+  if(r==='epic'||r==='legendary'||r==='secret')
+    rings+='<div style="position:absolute;width:50%;height:50%;border-radius:50%;border:1px solid '+d.border+';opacity:.3;animation:art-ring-spin 1.5s linear infinite;"></div>';
+  return '<div style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(circle,rgba(255,255,255,.06),transparent);">'+
+    rings+
+    '<span style="font-size:42px;position:relative;z-index:2;color:'+d.color+';">'+d.symbol+'</span>'+
+    '</div>';
+}
+
+function simSnd(r){
+  try{
+    var a=new(window.AudioContext||window.webkitAudioContext)();
+    var freqs=r==='legendary'?[261,329,392,523]:r==='epic'?[196,247,294,370,494]:r==='secret'?[440,554,659,880]:r==='rare'?[330,415]:[440];
+    freqs.forEach(function(f,i){
+      var o=a.createOscillator(),g=a.createGain();
+      o.connect(g);g.connect(a.destination);o.type='triangle';o.frequency.value=f;
+      g.gain.setValueAtTime(0,a.currentTime+i*.08);g.gain.linearRampToValueAtTime(.1,a.currentTime+i*.08+.05);
+      g.gain.linearRampToValueAtTime(0,a.currentTime+i*.08+.4);o.start(a.currentTime+i*.08);o.stop(a.currentTime+i*.08+.5);
+    });
+    if(r==='legendary'){
+      [784,988,1175].forEach(function(f,i){
+        var o=a.createOscillator(),g=a.createGain();
+        o.connect(g);g.connect(a.destination);o.type='sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,a.currentTime+.4+i*.06);g.gain.linearRampToValueAtTime(.06,a.currentTime+.4+i*.06+.05);
+        g.gain.linearRampToValueAtTime(0,a.currentTime+.4+i*.06+.3);o.start(a.currentTime+.4+i*.06);o.stop(a.currentTime+.9);
+      });
+    }
+  }catch(e){}
+}
+
+function simPull(r){
+  if(r==='random') r=['common','common','common','rare','rare','epic','legendary'][Math.floor(Math.random()*7)];
+  simCurrentRarity=r;
+  var d=SIM_RD[r]||SIM_RD.common;
+  SIM_FW_STOP=true; SIM_FIRE_STOP=true;
+  var idle=document.getElementById('sim-idle');
+  var csgo=document.getElementById('sim-csgo');
+  var rev=document.getElementById('sim-reveal');
+  if(idle) idle.style.display='none';
+  if(rev)  rev.style.display='none';
+  if(!csgo) return;
+  csgo.style.display='flex';
+
+  var isSpecial=r==='epic'||r==='legendary';
+  document.getElementById('sim-title').textContent=isSpecial?'✦ Algo poderoso se acerca...':'Invocando...';
+  document.getElementById('sim-result-wrap').style.opacity='0';
+
+  var rail=document.getElementById('sim-rail');
+  var TOTAL=40,WIN=30;
+  var items=[];
+  for(var i=0;i<TOTAL;i++){
+    items.push(i===WIN?r:simRandRarity());
+  }
+  rail.innerHTML=items.map(function(ir){return simSmallCard(ir);}).join('');
+
+  var CARD_W=116,GAP=6;
+  var centerOffset=(CARD_W+GAP)*WIN+(CARD_W/2);
+  var startX=300,endX=-(centerOffset-300);
+  rail.style.transform='translateX('+startX+'px)';
+  rail.style.transition='none';
+
+  var duration=3200,start=performance.now();
+  var lastTick=-1;
+  function easeOut(t){return 1-Math.pow(1-t,4);}
+  function animateSim(now){
+    var elapsed=Math.min(now-start,duration);
+    var progress=easeOut(elapsed/duration);
+    var x=startX+(endX-startX)*progress;
+    rail.style.transform='translateX('+x+'px)';
+    var tick=Math.floor(elapsed/55);
+    if(tick!==lastTick&&elapsed<duration*.85){
+      try{var a=new(window.AudioContext||window.webkitAudioContext)();var o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type='square';o.frequency.value=600+Math.random()*200;g.gain.setValueAtTime(.06,a.currentTime);g.gain.linearRampToValueAtTime(0,a.currentTime+.04);o.start();o.stop(a.currentTime+.04);}catch(e){}
+      lastTick=tick;
+    }
+    if(elapsed<duration) requestAnimationFrame(animateSim);
+    else{rail.style.transform='translateX('+endX+'px)';simOnStop(r,d);}
+  }
+  requestAnimationFrame(animateSim);
+}
+
+function simOnStop(r,d){
+  var wrap=document.getElementById('sim-result-wrap');
+  var label=document.getElementById('sim-result-label');
+  label.textContent=d.label.toUpperCase();
+  label.style.color=d.color;
+  label.style.textShadow='0 0 16px '+d.glow;
+  wrap.style.opacity='1';
+
+  var isSpecial=r==='epic'||r==='legendary';
+  setTimeout(function(){
+    document.getElementById('sim-csgo').style.display='none';
+    simShowReveal(r,d);
+  }, isSpecial?700:500);
+}
+
+function simShowReveal(r,d){
+  SIM_FW_STOP=false; SIM_FIRE_STOP=false;
+  var rev=document.getElementById('sim-reveal');
+  var card=document.getElementById('sim-rev-card');
+  var title=document.getElementById('sim-rev-title');
+  var rarityEl=document.getElementById('sim-rev-rarity');
+  var art=document.getElementById('sim-rev-art');
+  var name=document.getElementById('sim-rev-name');
+  var pts=document.getElementById('sim-rev-pts');
+
+  title.textContent=(r==='legendary'?'♛ LEGENDARIA ♛':r==='epic'?'◈ ÉPICA ◈':r==='secret'?'✦ SECRETA ✦':r==='rare'?'◆ RARA ◆':'⬡ COMÚN ⬡');
+  title.style.color=d.color;
+  title.style.textShadow='0 0 20px '+d.glow;
+  rarityEl.textContent=d.label.toUpperCase();
+  rarityEl.style.background=r==='legendary'?'#2A1A00':r==='epic'?'#1E0A3E':r==='secret'?'#180028':r==='rare'?'#0a1535':'#1a1a2e';
+  rarityEl.style.color=d.color;
+  art.innerHTML=simRevealArt(r);
+  name.textContent='Carta '+d.label;
+  name.style.color=d.color;
+  card.style.background=d.bg;
+  card.style.borderColor=d.border;
+  card.style.boxShadow='0 0 40px '+d.glow+',0 0 80px '+d.glow;
+  card.style.animation=r==='legendary'?'legendary-pulse 1.5s ease-in-out infinite alternate':'';
+
+  var ovBg=r==='legendary'?'radial-gradient(ellipse at center,#2A1500 0%,#0D0700 60%,#000 100%)':
+           r==='epic'?'radial-gradient(ellipse at center,#2D0A50 0%,#0D0520 60%,#000 100%)':
+           r==='secret'?'radial-gradient(ellipse at center,#150020 0%,#050010 60%,#000 100%)':
+           r==='rare'?'radial-gradient(ellipse at center,#030A1A 0%,#000 70%,#000 100%)':
+           'radial-gradient(ellipse at center,#0A0A15 0%,#000 70%,#000 100%)';
+  rev.style.background=ovBg;
+
+  // Partículas
+  pts.innerHTML='';
+  var colors=r==='legendary'?['#D4A017','#F0C040','#FFE080']:r==='epic'?['#9333EA','#C084FC']:r==='secret'?['#FF1B8D','#F0C040','#9333EA']:r==='rare'?['#3B82F6','#93C5FD']:['#888'];
+  for(var i=0;i<24;i++){
+    var p=document.createElement('div');
+    var angle=Math.random()*360,dist=50+Math.random()*140;
+    p.style.cssText='position:absolute;top:50%;left:50%;width:'+(4+Math.random()*5)+'px;height:'+(4+Math.random()*5)+'px;background:'+colors[Math.floor(Math.random()*colors.length)]+';border-radius:50%;--tx:'+Math.cos(angle*Math.PI/180)*dist+'px;--ty:'+Math.sin(angle*Math.PI/180)*dist+'px;animation:pfly '+(0.5+Math.random()*.8)+'s '+(Math.random()*.3)+'s ease-out forwards;';
+    pts.appendChild(p);
+  }
+
+  card.style.opacity='0'; card.style.transform='scale(.3) rotateY(180deg)';
+  rev.style.display='flex';
+  simSnd(r);
+
+  if(r==='legendary'){
+    simStartFire(rev);
+    simStartFW(rev);
+  }
+  setTimeout(function(){card.style.opacity='1';card.style.transform='scale(1) rotateY(0)';},80);
+}
+
+function simStartFire(container){
+  SIM_FIRE_STOP=false;
+  var fire=document.createElement('div');
+  fire.id='sim-fire';
+  fire.style.cssText='position:absolute;bottom:0;left:0;right:0;height:80px;pointer-events:none;overflow:hidden;z-index:3;';
+  container.appendChild(fire);
+  var COLORS=['#FF4500','#FF6B00','#FFA500','#FFD700','#FF2200','#FFAA00'];
+  function spawnFlame(){
+    if(SIM_FIRE_STOP||!fire.isConnected)return;
+    for(var i=0;i<3;i++){
+      var f=document.createElement('div');
+      var x=Math.random()*100,size=10+Math.random()*20,dur=.5+Math.random()*.9;
+      f.style.cssText='position:absolute;bottom:0;left:'+x+'%;width:'+size+'px;height:'+(size*1.6)+'px;background:radial-gradient(ellipse at bottom,'+COLORS[Math.floor(Math.random()*COLORS.length)]+',transparent);border-radius:50% 50% 30% 30%;opacity:'+(0.5+Math.random()*.5)+';animation:flameRise '+dur+'s ease-out forwards;';
+      fire.appendChild(f);
+      setTimeout(function(){f.remove();},dur*1000+100);
+    }
+    if(!SIM_FIRE_STOP&&fire.isConnected)setTimeout(spawnFlame,75);
+  }
+  spawnFlame();
+}
+
+function simStartFW(container){
+  SIM_FW_STOP=false;
+  var canvas=document.getElementById('sim-fw');
+  canvas.width=container.offsetWidth||400;
+  canvas.height=container.offsetHeight||420;
+  var ctx=canvas.getContext('2d');
+  var FW=['#FFD700','#FF4500','#FF1B8D','#F0C040','#FFFFFF','#FFA500'];
+  var particles=[];
+  function explode(x,y){
+    var color=FW[Math.floor(Math.random()*FW.length)];
+    for(var i=0;i<40;i++){var angle=Math.random()*Math.PI*2,speed=2+Math.random()*5;particles.push({x:x,y:y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,alpha:1,color:color,size:2+Math.random()*3,life:0,maxLife:40+Math.random()*30});}
+  }
+  function launchFW(){
+    if(SIM_FW_STOP)return;
+    explode(canvas.width*(.15+Math.random()*.7),canvas.height*(.08+Math.random()*.55));
+    setTimeout(function(){if(!SIM_FW_STOP)launchFW();},600+Math.random()*700);
+  }
+  setTimeout(launchFW,200);
+  [400,700,1100].forEach(function(t,i){setTimeout(function(){if(!SIM_FW_STOP)explode(canvas.width*(.2+i*.25),canvas.height*(.15+i*.1));},t);});
+  function loop(){
+    if(SIM_FW_STOP){ctx.clearRect(0,0,canvas.width,canvas.height);return;}
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(var i=particles.length-1;i>=0;i--){
+      var p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.09;p.vx*=.97;p.vy*=.97;p.life++;
+      p.alpha=1-(p.life/p.maxLife);
+      if(p.alpha<=0){particles.splice(i,1);continue;}
+      ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function simCloseReveal(){
+  SIM_FW_STOP=true; SIM_FIRE_STOP=true;
+  var f=document.getElementById('sim-fire');if(f)f.remove();
+  var canvas=document.getElementById('sim-fw');
+  if(canvas){var ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);}
+  document.getElementById('sim-reveal').style.display='none';
+  document.getElementById('sim-idle').style.display='flex';
+}
+if(sessionStorage.getItem('rg_admin_token')){
+  adminToken=sessionStorage.getItem('rg_admin_token');
+  document.getElementById('login-screen').style.display='none';
+  var dash=document.getElementById('dashboard');
+  dash.style.display='flex'; dash.style.flexDirection='column'; dash.style.height='100vh';
+  loadTab('stats');
+}
+</script>
+</body>
+</html>

@@ -268,18 +268,67 @@ function fmtT(d){ if(!d) return ''; return new Date(d).toLocaleTimeString('es-MX
 
 // ── Stats ─────────────────────────────────────────────────────
 async function loadStats(){
-  var d = await adminFetch('stats');
-  if(!d.ok){ document.getElementById('tab-content').innerHTML='<div class="empty">Error al cargar</div>'; return; }
-  document.getElementById('tab-content').innerHTML =
-    '<div class="section">'+
-    '<div class="stats-grid">'+
-    '<div class="stat-card"><span class="stat-num">'+d.users+'</span><span class="stat-lbl">Usuarios</span></div>'+
-    '<div class="stat-card"><span class="stat-num">'+d.payments+'</span><span class="stat-lbl">Compras</span></div>'+
-    '<div class="stat-card"><span class="stat-num">$'+d.revenue+'</span><span class="stat-lbl">Ingresos MXN</span></div>'+
-    '<div class="stat-card"><span class="stat-num">'+d.gemsTotal.toLocaleString()+'</span><span class="stat-lbl">Maná vendido</span></div>'+
-    '<div class="stat-card"><span class="stat-num">'+d.activePrizes+'</span><span class="stat-lbl">Premios activos</span></div>'+
-    '<div class="stat-card"><span class="stat-num">'+d.globalPulls.toLocaleString()+'</span><span class="stat-lbl">Tiradas globales</span></div>'+
-    '</div></div>';
+  var el = document.getElementById('tab-content');
+  el.innerHTML = '<div class="loading">Cargando métricas...</div>';
+
+  var [overview, metrics] = await Promise.all([
+    adminFetch('stats'),
+    adminFetch('metrics')
+  ]);
+
+  if(!overview.ok){ el.innerHTML='<div class="empty">Error al cargar</div>'; return; }
+
+  var DAYS_SHORT = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  function dayLabel(iso){ var d=new Date(iso+'T12:00:00'); return DAYS_SHORT[d.getDay()]; }
+
+  function barChart(data, color, prefix, suffix){
+    if(!data||!data.length) return '<div class="empty">Sin datos</div>';
+    var max = Math.max.apply(null,data)||1;
+    var html='<div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding:0 4px;">';
+    data.forEach(function(v,i){
+      var h=Math.round((v/max)*70);
+      var label=metrics.days?dayLabel(metrics.days[i]):'';
+      html+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">';
+      html+='<div style="font-size:8px;color:var(--muted);height:14px;display:flex;align-items:flex-end;">'+(v>0?(prefix||'')+v+(suffix||''):'')+'</div>';
+      html+='<div style="width:100%;height:'+h+'px;background:'+color+';border-radius:3px 3px 0 0;min-height:'+(v>0?3:0)+'px;transition:height .3s;"></div>';
+      html+='<div style="font-size:8px;color:var(--muted);">'+label+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+    return html;
+  }
+
+  function metricCard(title, value, chart, color){
+    return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">'+
+      '<div style="font-family:\'Cinzel\',serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;">'+title+'</div>'+
+      '<div style="font-family:\'Cinzel\',serif;font-size:20px;font-weight:900;color:'+color+';">'+value+'</div>'+
+      '</div>'+chart+'</div>';
+  }
+
+  var html = '<div class="section">';
+
+  // Cards resumen
+  html += '<div class="stats-grid" style="margin-bottom:10px;">';
+  html += '<div class="stat-card"><span class="stat-num">'+overview.users+'</span><span class="stat-lbl">Usuarios</span></div>';
+  html += '<div class="stat-card"><span class="stat-num">'+overview.payments+'</span><span class="stat-lbl">Compras</span></div>';
+  html += '<div class="stat-card"><span class="stat-num" style="font-size:18px;">$'+overview.revenue+'</span><span class="stat-lbl">Ingresos MXN</span></div>';
+  html += '<div class="stat-card"><span class="stat-num">'+overview.globalPulls.toLocaleString()+'</span><span class="stat-lbl">Tiradas globales</span></div>';
+  html += '<div class="stat-card"><span class="stat-num">'+overview.activePrizes+'</span><span class="stat-lbl">Premios activos</span></div>';
+  html += '<div class="stat-card"><span class="stat-num">'+overview.gemsTotal.toLocaleString()+'</span><span class="stat-lbl">Maná vendido</span></div>';
+  html += '</div>';
+
+  if(metrics.ok){
+    html += '<div style="font-family:\'Cinzel\',serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin:16px 0 10px;">Últimos 7 días</div>';
+    html += metricCard('Ingresos MXN','$'+metrics.totals.revenue, barChart(metrics.revenue,'#D4A017','$',''), '#D4A017');
+    html += metricCard('Usuarios activos',metrics.totals.activeDay, barChart(metrics.activeDay,'#E8187A','',''), '#E8187A');
+    html += metricCard('Tiradas',metrics.totals.pulls, barChart(metrics.pulls,'#9333EA','',''), '#C084FC');
+    html += metricCard('Sobres reclamados',metrics.totals.dailyBonus, barChart(metrics.dailyBonus,'#3B82F6','',''), '#93C5FD');
+    html += metricCard('Nuevos usuarios',metrics.totals.newUsers, barChart(metrics.newUsers,'#4ADE80','',''), '#4ADE80');
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 // ── Usuarios ──────────────────────────────────────────────────

@@ -177,6 +177,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="tab"        id="tab-redemptions" onclick="loadTab('redemptions')">🎴 Canjes</div>
     <div class="tab"        id="tab-sim"         onclick="loadTab('sim')">🎰 Simulador</div>
     <div class="tab"        id="tab-announcements" onclick="loadTab('announcements')">📢 Anuncios</div>
+    <div class="tab"        id="tab-events"      onclick="loadTab('events')">⚡ Eventos</div>
   </div>
   <div class="main" id="tab-content"><div class="loading">Cargando...</div></div>
 </div>
@@ -261,6 +262,7 @@ function loadTab(tab){
   if(tab==='redemptions') loadRedemptions();
   if(tab==='sim')         loadSim();
   if(tab==='announcements') loadAnnouncements();
+  if(tab==='events')      loadEvents();
 }
 
 function fmt(d){ if(!d) return '—'; return new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
@@ -710,6 +712,165 @@ async function deleteAnnouncement(id){
   if(!confirm('¿Eliminar este anuncio permanentemente?')) return;
   var d=await adminFetch('delete_announcement',{announcement_id:id});
   if(d.ok) await refreshAnnouncements(); else alert(d.error||'Error');
+}
+
+// ── EVENTOS ───────────────────────────────────────────────────
+var EVENT_TYPES = {
+  premium_pull:    {icon:'💎', label:'Tirada Premium',          color:'#D4A017'},
+  prob_multiplier: {icon:'📈', label:'Multiplicador Probabilidad',color:'#9333EA'},
+  pull_discount:   {icon:'🏷️', label:'Descuento en Tiradas',     color:'#4ADE80'},
+  mana_bonus:      {icon:'✦',  label:'Bonus de Maná',            color:'#E8187A'},
+};
+
+async function loadEvents(){
+  var el = document.getElementById('tab-content');
+  el.innerHTML = '<div class="section"><div class="sec-title" style="margin-bottom:6px;">⚡ Eventos</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Activa promociones especiales. Solo 1 evento activo por tipo.</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">' +
+    '<button onclick="showEventForm(\'premium_pull\')" style="padding:11px;border-radius:8px;border:1px solid #D4A017;background:rgba(212,160,23,.1);color:#D4A017;font-size:12px;cursor:pointer;text-align:left;">💎 Crear Tirada Premium</button>' +
+    '<button onclick="showEventForm(\'prob_multiplier\')" style="padding:11px;border-radius:8px;border:1px solid #9333EA;background:rgba(147,51,234,.1);color:#C084FC;font-size:12px;cursor:pointer;text-align:left;">📈 Crear Multiplicador de Probabilidad</button>' +
+    '<button onclick="showEventForm(\'pull_discount\')" style="padding:11px;border-radius:8px;border:1px solid #4ADE80;background:rgba(74,222,128,.1);color:#4ADE80;font-size:12px;cursor:pointer;text-align:left;">🏷️ Crear Descuento en Tiradas</button>' +
+    '<button onclick="showEventForm(\'mana_bonus\')" style="padding:11px;border-radius:8px;border:1px solid #E8187A;background:rgba(232,24,122,.1);color:#F472B6;font-size:12px;cursor:pointer;text-align:left;">✦ Crear Bonus de Maná</button>' +
+    '</div>' +
+    '<div id="event-form-container"></div>' +
+    '<div id="events-list"><div class="loading">Cargando...</div></div>' +
+    '</div>';
+  await refreshEvents();
+}
+
+function showEventForm(type){
+  var c = document.getElementById('event-form-container');
+  var t = EVENT_TYPES[type];
+  var fields = '';
+
+  if(type === 'premium_pull'){
+    fields =
+      row('Costo en Maná', '<input id="ev-cost" type="number" value="6500" '+inp()+'>') +
+      row('Total de cartas', '<input id="ev-cards" type="number" value="11" '+inp()+'>') +
+      row('Épicas aseguradas', '<input id="ev-epics" type="number" value="1" '+inp()+'>') +
+      row('Legendarias aseguradas', '<input id="ev-legs" type="number" value="0" '+inp()+'>') +
+      '<div style="font-size:10px;color:var(--gold);margin:10px 0 6px;letter-spacing:1px;">PROBABILIDADES CARTAS RESTANTES (%)</div>' +
+      row('Común', '<input id="ev-pc" type="number" value="72" '+inp()+'>') +
+      row('Rara', '<input id="ev-pr" type="number" value="20" '+inp()+'>') +
+      row('Épica', '<input id="ev-pe" type="number" value="5" '+inp()+'>') +
+      row('Legendaria', '<input id="ev-pl" type="number" value="1" '+inp()+'>');
+  } else if(type === 'prob_multiplier'){
+    fields =
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Multiplica la probabilidad de épicas y legendarias en las tiradas normales.</div>' +
+      row('Multiplicador Épica', '<input id="ev-mult-epic" type="number" step="0.5" value="2" '+inp()+'>') +
+      row('Multiplicador Legendaria', '<input id="ev-mult-leg" type="number" step="0.5" value="2" '+inp()+'>');
+  } else if(type === 'pull_discount'){
+    fields =
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Reduce el costo en Maná de todas las tiradas normales.</div>' +
+      row('Descuento (%)', '<input id="ev-discount" type="number" value="20" min="1" max="90" '+inp()+'>');
+  } else if(type === 'mana_bonus'){
+    fields =
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Maná extra en todas las compras mientras esté activo.</div>' +
+      row('Bonus (%)', '<input id="ev-bonus" type="number" value="20" min="1" max="100" '+inp()+'>');
+  }
+
+  c.innerHTML =
+    '<div style="background:var(--bg3);border:1px solid '+t.color+';border-radius:12px;padding:16px;margin-bottom:16px;">' +
+    '<div style="font-family:\'Cinzel\',serif;font-size:12px;font-weight:700;color:'+t.color+';margin-bottom:12px;">'+t.icon+' Nuevo: '+t.label+'</div>' +
+    row('Nombre del evento', '<input id="ev-name" type="text" placeholder="Ej: Fin de Semana Épico" '+inp()+'>') +
+    fields +
+    row('Expira (opcional)', '<input id="ev-expires" type="datetime-local" '+inp()+'>') +
+    '<div style="display:flex;gap:8px;margin-top:14px;">' +
+    '<button onclick="document.getElementById(\'event-form-container\').innerHTML=\'\'" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;">Cancelar</button>' +
+    '<button onclick="saveEvent(\''+type+'\')" style="flex:2;padding:10px;border-radius:8px;border:none;background:linear-gradient(135deg,'+t.color+',#9D0050);color:white;font-family:\'Cinzel\',serif;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;">CREAR EVENTO</button>' +
+    '</div></div>';
+}
+
+function row(label, input){
+  return '<div style="margin-bottom:8px;"><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px;">'+label+'</label>'+input+'</div>';
+}
+function inp(){
+  return 'style="width:100%;background:rgba(61,20,102,.4);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:Inter,sans-serif;font-size:13px;outline:none;box-sizing:border-box;"';
+}
+
+async function saveEvent(type){
+  var name = document.getElementById('ev-name').value.trim();
+  if(!name){ alert('Ingresa un nombre'); return; }
+  var config = {};
+
+  if(type === 'premium_pull'){
+    config = {
+      cost:   parseInt(document.getElementById('ev-cost').value)||6500,
+      cards:  parseInt(document.getElementById('ev-cards').value)||11,
+      epics_guaranteed: parseInt(document.getElementById('ev-epics').value)||0,
+      legs_guaranteed:  parseInt(document.getElementById('ev-legs').value)||0,
+      probs: {
+        common:    parseFloat(document.getElementById('ev-pc').value)||72,
+        rare:      parseFloat(document.getElementById('ev-pr').value)||20,
+        epic:      parseFloat(document.getElementById('ev-pe').value)||5,
+        legendary: parseFloat(document.getElementById('ev-pl').value)||1,
+      }
+    };
+  } else if(type === 'prob_multiplier'){
+    config = {
+      mult_epic: parseFloat(document.getElementById('ev-mult-epic').value)||2,
+      mult_legendary: parseFloat(document.getElementById('ev-mult-leg').value)||2,
+    };
+  } else if(type === 'pull_discount'){
+    config = { discount_pct: parseInt(document.getElementById('ev-discount').value)||20 };
+  } else if(type === 'mana_bonus'){
+    config = { bonus_pct: parseInt(document.getElementById('ev-bonus').value)||20 };
+  }
+
+  var expires = document.getElementById('ev-expires').value;
+  var body = { type, name, config };
+  if(expires) body.expires_at = new Date(expires).toISOString();
+
+  var d = await adminFetch('create_event', body);
+  if(d.ok){
+    document.getElementById('event-form-container').innerHTML = '';
+    await refreshEvents();
+  } else { alert(d.error||'Error al crear evento'); }
+}
+
+async function refreshEvents(){
+  var d = await adminFetch('get_events');
+  var el = document.getElementById('events-list');
+  if(!el) return;
+  if(!d.ok || !d.events || !d.events.length){ el.innerHTML='<div class="empty">No hay eventos creados</div>'; return; }
+  var html = '';
+  d.events.forEach(function(ev){
+    var t = EVENT_TYPES[ev.type] || {icon:'⚡',label:ev.type,color:'#888'};
+    var cfg = ev.config || {};
+    var detail = '';
+    if(ev.type==='premium_pull') detail = cfg.cost+' Maná · '+cfg.cards+' cartas · '+cfg.epics_guaranteed+' épica(s) asegurada(s)';
+    else if(ev.type==='prob_multiplier') detail = 'Épica x'+cfg.mult_epic+' · Legendaria x'+cfg.mult_legendary;
+    else if(ev.type==='pull_discount') detail = cfg.discount_pct+'% de descuento';
+    else if(ev.type==='mana_bonus') detail = '+'+cfg.bonus_pct+'% Maná en compras';
+
+    html += '<div style="background:var(--bg3);border:1px solid '+(ev.active?t.color:'var(--border)')+';border-radius:12px;padding:14px;margin-bottom:10px;'+(ev.active?'box-shadow:0 0 16px '+t.color+'40;':'opacity:.7;')+'">';
+    html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">';
+    html += '<span style="font-size:22px;">'+t.icon+'</span>';
+    html += '<div style="flex:1;min-width:0;">';
+    html += '<div style="font-family:\'Cinzel\',serif;font-size:13px;font-weight:700;color:var(--text);">'+ev.name+'</div>';
+    html += '<div style="font-size:10px;color:'+t.color+';letter-spacing:.5px;">'+t.label+'</div>';
+    html += '</div>';
+    html += '<span class="badge '+(ev.active?'badge-green':'badge-muted')+'">'+(ev.active?'ACTIVO':'Inactivo')+'</span>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--muted);padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:10px;">'+detail+(ev.expires_at?'<br>Expira: '+fmt(ev.expires_at):'')+'</div>';
+    html += '<div style="display:flex;gap:8px;">';
+    html += '<button class="action-btn" style="flex:1;border-color:'+(ev.active?'rgba(212,160,23,.5)':'rgba(74,222,128,.5)')+';color:'+(ev.active?'#D4A017':'#4ADE80')+';" onclick="toggleEvent(\''+ev.id+'\','+ev.active+')">'+(ev.active?'⏸ Desactivar':'▶ Activar')+'</button>';
+    html += '<button class="action-btn" style="border-color:rgba(239,68,68,.4);color:#F87171;" onclick="deleteEvent(\''+ev.id+'\')">🗑</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+async function toggleEvent(id, currentActive){
+  var d = await adminFetch('toggle_event', {event_id:id, active:!currentActive});
+  if(d.ok) await refreshEvents(); else alert(d.error||'Error');
+}
+
+async function deleteEvent(id){
+  if(!confirm('¿Eliminar este evento permanentemente?')) return;
+  var d = await adminFetch('delete_event', {event_id:id});
+  if(d.ok) await refreshEvents(); else alert(d.error||'Error');
 }
 
 // ── Simulador de tiradas (solo visual, no afecta BD ni pity) ──

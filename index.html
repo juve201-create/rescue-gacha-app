@@ -4389,6 +4389,17 @@ function updatePackPrices(){
 }
 
 function showEventPopup(){
+  // Prioridad: si hay tirada premium, mostrar su pop-up dedicado primero
+  const prem = getEvent('premium_pull');
+  if(prem){
+    const seenKeyP = 'rescue_event_seen_' + prem.id;
+    if(!sessionStorage.getItem(seenKeyP)){
+      showPremiumPopup(prem);
+      sessionStorage.setItem(seenKeyP, '1');
+      return;
+    }
+  }
+
   // Mostrar pop-up del primer evento relevante, una vez por sesión
   const popable = activeEvents.filter(e => e.type !== 'premium_pull');
   if(popable.length === 0) return;
@@ -4445,6 +4456,11 @@ function closeEventPopup(){
 }
 
 // ── TIRADA PREMIUM ────────────────────────────────────────────
+function showPremiumPopup(ev){
+  // Reutiliza el modal de tirada premium como pop-up de bienvenida
+  openPremiumModal();
+}
+
 function openPremiumModal(){
   const ev = getEvent('premium_pull');
   if(!ev){ toastWarn('La tirada premium no está disponible ahora.'); return; }

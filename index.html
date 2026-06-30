@@ -2785,10 +2785,12 @@ body::after{
       </button>
     </div>
     <!-- Botón tirada premium junto a la máquina -->
-    <div id="premium-machine-btn-wrap" style="display:none;position:absolute;left:-8px;top:50%;transform:translateY(-50%);z-index:10;">
-      <button onclick="sndClick();openPremiumModal()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:14px;border:2px solid rgba(232,24,122,0.8);background:rgba(13,5,24,0.9);cursor:pointer;animation:premiumPulse 1.3s ease-in-out infinite alternate;box-shadow:0 0 18px rgba(232,24,122,0.5);">
-        <img src="premium-bunny.png" alt="Premium" style="width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(232,24,122,0.8));">
-        <span style="font-family:'Cinzel',serif;font-size:8px;font-weight:700;color:#F472B6;letter-spacing:1px;line-height:1.2;text-align:center;">TIRADA<br>PREMIUM</span>
+    <div id="premium-machine-btn-wrap" style="display:none;position:absolute;left:-14px;top:50%;transform:translateY(-50%);z-index:10;">
+      <button onclick="sndClick();openPremiumModal()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px;border-radius:16px;border:2px solid rgba(232,24,122,0.9);background:rgba(13,5,24,0.95);cursor:pointer;animation:premiumPulse 1.3s ease-in-out infinite alternate;box-shadow:0 0 22px rgba(232,24,122,0.6);">
+        <div style="width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,#3D0A28,#1A0512);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid rgba(232,24,122,0.5);">
+          <img src="premium-bunny.png" alt="Premium" style="width:64px;height:64px;object-fit:contain;mix-blend-mode:screen;">
+        </div>
+        <span style="font-family:'Cinzel',serif;font-size:9px;font-weight:700;color:#F472B6;letter-spacing:1px;line-height:1.2;text-align:center;">TIRADA<br>PREMIUM</span>
       </button>
     </div>
   </div>
@@ -4322,8 +4324,27 @@ function renderEventBanners(){
 
   const container = document.getElementById('events-banner-container');
   if(!container) return;
+
+  let html = '';
+
+  // Banner especial de tirada premium (clickeable, abre el modal)
+  const prem = getEvent('premium_pull');
+  if(prem){
+    const cfg = prem.config || {};
+    html += `<div onclick="sndClick();openPremiumModal()" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(232,24,122,.18),rgba(157,0,80,.12));border:1px solid rgba(232,24,122,.5);cursor:pointer;box-shadow:0 0 16px rgba(232,24,122,.2);">
+      <div style="width:42px;height:42px;border-radius:50%;background:radial-gradient(circle,#3D0A28,#1A0512);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid rgba(232,24,122,.4);">
+        <img src="premium-bunny.png" style="width:46px;height:46px;object-fit:contain;mix-blend-mode:screen;">
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:#F472B6;letter-spacing:.5px;">💎 ${prem.name}</div>
+        <div style="font-size:10px;color:rgba(240,230,200,.6);margin-top:2px;">${cfg.cards||11} cartas · ${cfg.epics_guaranteed||0} épica(s) asegurada(s) · ${(cfg.cost||6500).toLocaleString()} Maná</div>
+      </div>
+      <span style="font-size:18px;color:#F472B6;flex-shrink:0;">›</span>
+    </div>`;
+  }
+
   const banners = activeEvents.filter(e => e.type !== 'premium_pull');
-  if(banners.length === 0){ container.style.display='none'; return; }
+  if(banners.length === 0 && !prem){ container.style.display='none'; return; }
 
   const STYLES = {
     prob_multiplier: {icon:'📈', color:'#C084FC', border:'rgba(147,51,234,.4)', bg:'rgba(147,51,234,.12)'},
@@ -4331,7 +4352,6 @@ function renderEventBanners(){
     mana_bonus:      {icon:'✦',  color:'#F472B6', border:'rgba(232,24,122,.4)', bg:'rgba(232,24,122,.12)'},
   };
 
-  let html = '';
   banners.forEach(ev => {
     const s = STYLES[ev.type] || {icon:'⚡',color:'#fff',border:'rgba(255,255,255,.3)',bg:'rgba(255,255,255,.1)'};
     const cfg = ev.config || {};

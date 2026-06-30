@@ -2897,6 +2897,20 @@ body::after{
   </div>
 </div>
 
+<!-- Pop-up grande de evento -->
+<div id="event-popup-overlay" onclick="if(event.target===this)closeEventPopup()" style="display:none;position:fixed;inset:0;background:rgba(5,2,15,0.92);backdrop-filter:blur(8px);z-index:340;align-items:center;justify-content:center;padding:20px;">
+  <div id="event-popup-card" style="width:100%;max-width:360px;border-radius:24px;padding:0;position:relative;overflow:hidden;">
+    <canvas id="event-popup-canvas" style="position:absolute;inset:0;pointer-events:none;z-index:1;"></canvas>
+    <div style="position:relative;z-index:2;padding:32px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;">
+      <div id="event-popup-icon" style="font-size:72px;line-height:1;animation:pso-float 2s ease-in-out infinite;"></div>
+      <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:rgba(240,230,200,0.5);text-transform:uppercase;">¡Evento Activo!</div>
+      <div id="event-popup-name" style="font-family:'Cinzel',serif;font-size:24px;font-weight:900;line-height:1.2;"></div>
+      <div id="event-popup-desc" style="font-size:14px;color:rgba(240,230,200,0.8);line-height:1.6;"></div>
+      <button onclick="closeEventPopup()" id="event-popup-btn" style="margin-top:8px;padding:14px 40px;border-radius:12px;border:none;color:white;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;">¡VAMOS!</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de Anuncio -->
 <div id="announcement-overlay" onclick="if(event.target===this)closeAnnouncement()" style="display:none;position:fixed;inset:0;background:rgba(5,2,15,0.92);backdrop-filter:blur(8px);z-index:350;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:340px;background:linear-gradient(175deg,#1E0A38,#120720);border:1px solid rgba(232,24,122,0.35);border-radius:20px;padding:28px 22px;position:relative;">
@@ -4234,6 +4248,7 @@ async function loadActiveEvents(){
     const d = await res.json();
     activeEvents = (d.ok && d.events) ? d.events : [];
     renderEventBanners();
+    setTimeout(() => showEventPopup(), 1000);
   }catch(e){ console.error('loadActiveEvents error:', e); activeEvents=[]; }
 }
 
@@ -4271,6 +4286,62 @@ function renderEventBanners(){
   });
   container.innerHTML = html;
   container.style.display = 'flex';
+}
+
+function showEventPopup(){
+  // Mostrar pop-up del primer evento relevante, una vez por sesión
+  const popable = activeEvents.filter(e => e.type !== 'premium_pull');
+  if(popable.length === 0) return;
+
+  const STYLES = {
+    prob_multiplier: {icon:'📈', color:'#C084FC', grad:'linear-gradient(175deg,#2D0A50,#1A0633)', btn:'linear-gradient(135deg,#9333EA,#5B21B6)', border:'rgba(147,51,234,.4)', fw:['#C084FC','#9333EA','#E9D5FF']},
+    pull_discount:   {icon:'🏷️', color:'#4ADE80', grad:'linear-gradient(175deg,#0A2818,#06180F)', btn:'linear-gradient(135deg,#16A34A,#15803D)', border:'rgba(74,222,128,.4)', fw:['#4ADE80','#22C55E','#BBF7D0']},
+    mana_bonus:      {icon:'✦',  color:'#F472B6', grad:'linear-gradient(175deg,#3D0A28,#1F0514)', btn:'linear-gradient(135deg,#E8187A,#9D0050)', border:'rgba(232,24,122,.4)', fw:['#F472B6','#E8187A','#FBCFE8']},
+  };
+
+  const ev = popable[0]; // el primero
+  const seenKey = 'rescue_event_seen_' + ev.id;
+  if(sessionStorage.getItem(seenKey)) return; // ya visto esta sesión
+
+  const s = STYLES[ev.type];
+  const cfg = ev.config || {};
+  let desc = '';
+  if(ev.type==='prob_multiplier') desc = `¡Las probabilidades de épicas están x${cfg.mult_epic} y legendarias x${cfg.mult_legendary}! Es el momento perfecto para invocar.`;
+  else if(ev.type==='pull_discount') desc = `¡Todas las tiradas tienen ${cfg.discount_pct}% de descuento! Aprovecha y consigue más cartas.`;
+  else if(ev.type==='mana_bonus') desc = `¡Recibe +${cfg.bonus_pct}% de Maná extra en todas tus compras! El mejor momento para recargar.`;
+
+  document.getElementById('event-popup-card').style.background = s.grad;
+  document.getElementById('event-popup-card').style.border = '1px solid ' + s.border;
+  document.getElementById('event-popup-icon').textContent = s.icon;
+  document.getElementById('event-popup-name').textContent = ev.name;
+  document.getElementById('event-popup-name').style.color = s.color;
+  document.getElementById('event-popup-desc').textContent = desc;
+  document.getElementById('event-popup-btn').style.background = s.btn;
+  document.getElementById('event-popup-overlay').style.display = 'flex';
+
+  sessionStorage.setItem(seenKey, '1');
+
+  // Fuegos artificiales
+  const canvas = document.getElementById('event-popup-canvas');
+  const card = document.getElementById('event-popup-card');
+  canvas.width = card.offsetWidth || 360;
+  canvas.height = card.offsetHeight || 400;
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  function explode(x,y){ s.fw.forEach(c=>{ for(let i=0;i<8;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*4;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,alpha:1,color:c,size:2+Math.random()*3,life:0,maxLife:35+Math.random()*25});}}); }
+  [300,600,900].forEach((t,i)=>setTimeout(()=>explode(canvas.width*(.3+i*.2),canvas.height*(.2+i*.05)),t));
+  let stop=false; setTimeout(()=>stop=true,2200);
+  function loop(){
+    if(stop&&particles.length===0){ctx.clearRect(0,0,canvas.width,canvas.height);return;}
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.vx*=.97;p.life++;p.alpha=1-(p.life/p.maxLife);if(p.alpha<=0){particles.splice(i,1);continue;}ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=1;requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function closeEventPopup(){
+  document.getElementById('event-popup-overlay').style.display='none';
 }
 
 // ── Sobre Diario ──────────────────────────────────────────────

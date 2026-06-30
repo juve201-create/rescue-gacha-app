@@ -2760,6 +2760,9 @@ body::after{
     </div>
   </div>
 
+  <!-- Banners de eventos activos -->
+  <div id="events-banner-container" style="display:none;flex-direction:column;gap:8px;margin-bottom:16px;padding:0 4px;"></div>
+
   <!-- GACHA MACHINE -->
   <div class="machine-area">
     <div class="machine" id="machine" onclick="doPull()">
@@ -3403,6 +3406,9 @@ function loginSuccess(user, col, prizes){
 
   // Verificar si el sobre diario está disponible
   setTimeout(() => checkDailyBonus(), 800);
+
+  // Cargar eventos activos
+  setTimeout(() => loadActiveEvents(), 600);
 
   // Verificar si hay anuncio activo
   setTimeout(() => checkAnnouncement(), 1500);
@@ -4213,6 +4219,58 @@ async function checkAnnouncement(){
 
 function closeAnnouncement(){
   document.getElementById('announcement-overlay').style.display='none';
+}
+
+// ── Eventos activos ───────────────────────────────────────────
+var activeEvents = [];
+
+async function loadActiveEvents(){
+  try{
+    const res = await fetch(BACKEND+'/api/gems',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'get_active_events'})
+    });
+    const d = await res.json();
+    activeEvents = (d.ok && d.events) ? d.events : [];
+    renderEventBanners();
+  }catch(e){ console.error('loadActiveEvents error:', e); activeEvents=[]; }
+}
+
+function getEvent(type){
+  return activeEvents.find(e => e.type === type) || null;
+}
+
+function renderEventBanners(){
+  const container = document.getElementById('events-banner-container');
+  if(!container) return;
+  const banners = activeEvents.filter(e => e.type !== 'premium_pull');
+  if(banners.length === 0){ container.style.display='none'; return; }
+
+  const STYLES = {
+    prob_multiplier: {icon:'📈', color:'#C084FC', border:'rgba(147,51,234,.4)', bg:'rgba(147,51,234,.12)'},
+    pull_discount:   {icon:'🏷️', color:'#4ADE80', border:'rgba(74,222,128,.4)', bg:'rgba(74,222,128,.12)'},
+    mana_bonus:      {icon:'✦',  color:'#F472B6', border:'rgba(232,24,122,.4)', bg:'rgba(232,24,122,.12)'},
+  };
+
+  let html = '';
+  banners.forEach(ev => {
+    const s = STYLES[ev.type] || {icon:'⚡',color:'#fff',border:'rgba(255,255,255,.3)',bg:'rgba(255,255,255,.1)'};
+    const cfg = ev.config || {};
+    let desc = '';
+    if(ev.type==='prob_multiplier') desc = `Épicas x${cfg.mult_epic} · Legendarias x${cfg.mult_legendary}`;
+    else if(ev.type==='pull_discount') desc = `${cfg.discount_pct}% de descuento en tiradas`;
+    else if(ev.type==='mana_bonus') desc = `+${cfg.bonus_pct}% Maná extra en compras`;
+    html += `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:${s.bg};border:1px solid ${s.border};">
+      <span style="font-size:24px;flex-shrink:0;">${s.icon}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Cinzel',serif;font-size:12px;font-weight:700;color:${s.color};letter-spacing:.5px;">${ev.name}</div>
+        <div style="font-size:10px;color:rgba(240,230,200,.6);margin-top:2px;">${desc}</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+  container.style.display = 'flex';
 }
 
 // ── Sobre Diario ──────────────────────────────────────────────

@@ -1250,6 +1250,10 @@ body::after{
   from{filter:brightness(1);}
   to  {filter:brightness(1.3);}
 }
+@keyframes premiumPulse{
+  from{box-shadow:0 0 18px rgba(232,24,122,0.5);transform:translateY(-50%) scale(1);}
+  to  {box-shadow:0 0 30px rgba(232,24,122,0.9),0 0 50px rgba(232,24,122,0.4);transform:translateY(-50%) scale(1.05);}
+}
 @keyframes flameRise{
   0%  {transform:translateY(0) scaleX(1);opacity:.8;}
   50% {transform:translateY(-40px) scaleX(.8) rotate(5deg);opacity:.5;}
@@ -2780,6 +2784,13 @@ body::after{
         <span style="font-family:'Cinzel',serif;font-size:8px;font-weight:700;color:#FFE080;letter-spacing:1px;line-height:1.2;text-align:center;">SOBRE<br>DIARIO</span>
       </button>
     </div>
+    <!-- Botón tirada premium junto a la máquina -->
+    <div id="premium-machine-btn-wrap" style="display:none;position:absolute;left:-8px;top:50%;transform:translateY(-50%);z-index:10;">
+      <button onclick="sndClick();openPremiumModal()" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:14px;border:2px solid rgba(232,24,122,0.8);background:rgba(13,5,24,0.9);cursor:pointer;animation:premiumPulse 1.3s ease-in-out infinite alternate;box-shadow:0 0 18px rgba(232,24,122,0.5);">
+        <img src="premium-bunny.png" alt="Premium" style="width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(232,24,122,0.8));">
+        <span style="font-family:'Cinzel',serif;font-size:8px;font-weight:700;color:#F472B6;letter-spacing:1px;line-height:1.2;text-align:center;">TIRADA<br>PREMIUM</span>
+      </button>
+    </div>
   </div>
 
   <!-- PROBABILIDADES -->
@@ -2893,6 +2904,23 @@ body::after{
     <p class="prizes-modal-sub">Muestra el código en tienda para canjear</p>
     <div id="prizes-wallet-list">
       <div class="prizes-empty">Aún no tienes premios.<br>¡Sigue robando cartas!</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tirada Premium -->
+<div id="premium-modal-overlay" onclick="if(event.target===this)closePremiumModal()" style="display:none;position:fixed;inset:0;background:rgba(5,2,15,0.94);backdrop-filter:blur(8px);z-index:345;align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:360px;border-radius:24px;padding:0;position:relative;overflow:hidden;background:linear-gradient(175deg,#3D0A28,#1A0512);border:1px solid rgba(232,24,122,0.4);">
+    <button onclick="closePremiumModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(0,0,0,0.4);color:white;font-size:16px;cursor:pointer;z-index:5;">✕</button>
+    <canvas id="premium-modal-canvas" style="position:absolute;inset:0;pointer-events:none;z-index:1;"></canvas>
+    <div style="position:relative;z-index:2;padding:28px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;">
+      <img src="premium-bunny.png" alt="Premium" style="width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(232,24,122,0.7));animation:pso-float 2.5s ease-in-out infinite;">
+      <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:rgba(240,230,200,0.5);text-transform:uppercase;">Tirada Premium</div>
+      <div id="premium-modal-name" style="font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:#F472B6;line-height:1.2;"></div>
+      <div id="premium-modal-details" style="font-size:13px;color:rgba(240,230,200,0.8);line-height:1.7;"></div>
+      <div id="premium-modal-cost" style="font-family:'Cinzel',serif;font-size:18px;font-weight:900;color:#FFE080;margin-top:4px;"></div>
+      <button onclick="doPremiumPull()" id="premium-pull-btn" style="width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#E8187A,#9D0050);color:white;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #500025,0 8px 24px rgba(232,24,122,0.4);margin-top:6px;">¡INVOCAR PREMIUM!</button>
+      <div style="font-size:9px;color:rgba(240,230,200,0.3);letter-spacing:1px;">No afecta el pity de la carta secreta</div>
     </div>
   </div>
 </div>
@@ -4285,6 +4313,13 @@ function getEvent(type){
 }
 
 function renderEventBanners(){
+  // Botón de tirada premium (independiente de los banners)
+  const premBtn = document.getElementById('premium-machine-btn-wrap');
+  if(premBtn) premBtn.style.display = getEvent('premium_pull') ? 'block' : 'none';
+
+  // Actualizar precios (por si hay descuento)
+  updatePackPrices();
+
   const container = document.getElementById('events-banner-container');
   if(!container) return;
   const banners = activeEvents.filter(e => e.type !== 'premium_pull');
@@ -4314,7 +4349,6 @@ function renderEventBanners(){
   });
   container.innerHTML = html;
   container.style.display = 'flex';
-  updatePackPrices();
 }
 
 // Actualiza los precios visibles de los packs según el descuento activo
@@ -4388,6 +4422,124 @@ function showEventPopup(){
 
 function closeEventPopup(){
   document.getElementById('event-popup-overlay').style.display='none';
+}
+
+// ── TIRADA PREMIUM ────────────────────────────────────────────
+function openPremiumModal(){
+  const ev = getEvent('premium_pull');
+  if(!ev){ toastWarn('La tirada premium no está disponible ahora.'); return; }
+  const cfg = ev.config || {};
+  const cost = cfg.cost || 6500;
+  const cards = cfg.cards || 11;
+  const epics = cfg.epics_guaranteed || 0;
+  const legs = cfg.legs_guaranteed || 0;
+
+  document.getElementById('premium-modal-name').textContent = ev.name;
+
+  let details = `${cards} cartas`;
+  const garantias = [];
+  if(epics > 0) garantias.push(`${epics} épica${epics>1?'s':''} asegurada${epics>1?'s':''}`);
+  if(legs > 0)  garantias.push(`${legs} legendaria${legs>1?'s':''} asegurada${legs>1?'s':''}`);
+  if(garantias.length) details += '<br>' + garantias.join(' + ');
+  details += '<br>+ probabilidades aumentadas';
+  document.getElementById('premium-modal-details').innerHTML = details;
+
+  document.getElementById('premium-modal-cost').textContent = `✦ ${cost.toLocaleString()} Maná`;
+
+  const btn = document.getElementById('premium-pull-btn');
+  if(gems < cost){
+    btn.textContent = `Necesitas ${cost.toLocaleString()} Maná`;
+    btn.style.opacity = '0.5';
+    btn.style.pointerEvents = 'none';
+  } else {
+    btn.textContent = '¡INVOCAR PREMIUM!';
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'all';
+  }
+
+  document.getElementById('premium-modal-overlay').style.display = 'flex';
+}
+
+function closePremiumModal(){
+  document.getElementById('premium-modal-overlay').style.display = 'none';
+}
+
+async function doPremiumPull(){
+  if(pulling) return;
+  const ev = getEvent('premium_pull');
+  if(!ev){ toastWarn('La tirada premium no está disponible.'); return; }
+  const cfg = ev.config || {};
+  const cost = cfg.cost || 6500;
+  const nCards = cfg.cards || 11;
+  const nEpics = cfg.epics_guaranteed || 0;
+  const nLegs = cfg.legs_guaranteed || 0;
+  const probs = cfg.probs || {common:72, rare:20, epic:5, legendary:1};
+
+  if(gems < cost){ toastWarn(`Necesitas ${cost.toLocaleString()} Maná.`); return; }
+
+  pulling = true;
+  closePremiumModal();
+  resumeAC();
+
+  try{
+    // Cobrar en el servidor
+    const spent = await spendGems(cost);
+    if(!spent){
+      toastError('No se pudo procesar la tirada premium.');
+      pulling = false;
+      return;
+    }
+
+    // Generar las cartas:
+    // 1. Épicas y legendarias garantizadas primero
+    // 2. El resto con las probabilidades premium
+    const drawn = [];
+    for(let i=0; i<nEpics; i++) drawn.push(pickCard('epic'));
+    for(let i=0; i<nLegs; i++)  drawn.push(pickCard('legendary'));
+
+    const restantes = Math.max(0, nCards - nEpics - nLegs);
+    let hasLegendary = nLegs > 0;
+    for(let i=0; i<restantes; i++){
+      const rarity = rollPremiumRarity(probs);
+      if(rarity === 'legendary') hasLegendary = true;
+      drawn.push(pickCard(rarity));
+    }
+
+    // Mezclar para que las garantizadas no salgan siempre primero en el reel
+    for(let i=drawn.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [drawn[i], drawn[j]] = [drawn[j], drawn[i]];
+    }
+
+    // IMPORTANTE: la tirada premium NO toca el pity de la secreta.
+    // No hay cartas secretas y NO se llama a updateGlobalPity.
+
+    addToCollection(drawn);
+
+    // Usar el mismo sistema de reveal CS:GO que las tiradas normales
+    showResults(drawn, hasLegendary);
+    window._pendingPrize = null;  // la premium no da premios de comida
+
+  } catch(e){
+    console.error('doPremiumPull error:', e);
+    toastError('Ocurrió un error en la tirada premium.');
+  } finally {
+    pulling = false;
+  }
+}
+
+// Tirada con probabilidades premium personalizadas (NO toca la secreta)
+function rollPremiumRarity(probs){
+  const common = probs.common || 72;
+  const rare   = probs.rare   || 20;
+  const epic   = probs.epic   || 5;
+  const legendary = probs.legendary || 1;
+  const total = common + rare + epic + legendary;
+  const r = Math.random() * total;
+  if(r < common) return 'common';
+  if(r < common + rare) return 'rare';
+  if(r < common + rare + epic) return 'epic';
+  return 'legendary';
 }
 
 // ── Sobre Diario ──────────────────────────────────────────────

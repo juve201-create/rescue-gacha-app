@@ -2910,6 +2910,27 @@ body::after{
   </div>
 </div>
 
+<!-- Modal Lloros del Ikem -->
+<div id="ikem-modal-overlay" onclick="if(event.target===this)closeIkemModal()" style="display:none;position:fixed;inset:0;background:rgba(5,2,15,0.94);backdrop-filter:blur(8px);z-index:345;align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:360px;border-radius:24px;padding:0;position:relative;overflow:hidden;background:linear-gradient(175deg,#0A1F3D,#05101F);border:1px solid rgba(59,130,246,0.4);">
+    <button onclick="closeIkemModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(0,0,0,0.4);color:white;font-size:16px;cursor:pointer;z-index:5;">✕</button>
+    <canvas id="ikem-modal-canvas" style="position:absolute;inset:0;pointer-events:none;z-index:1;"></canvas>
+    <div style="position:relative;z-index:2;padding:28px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:64px;line-height:1;animation:pso-float 2.5s ease-in-out infinite;">😭</span>
+        <span style="font-size:24px;color:#93C5FD;letter-spacing:-2px;">⟵——</span>
+        <span style="font-family:'Cinzel',serif;font-size:20px;font-weight:900;color:#60A5FA;">IKEM</span>
+      </div>
+      <div style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:rgba(240,230,200,0.5);text-transform:uppercase;">Tirada Especial</div>
+      <div id="ikem-modal-name" style="font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:#60A5FA;line-height:1.2;"></div>
+      <div id="ikem-modal-details" style="font-size:13px;color:rgba(240,230,200,0.8);line-height:1.7;"></div>
+      <div id="ikem-modal-cost" style="font-family:'Cinzel',serif;font-size:18px;font-weight:900;color:#FFE080;margin-top:4px;"></div>
+      <button onclick="doIkemPull()" id="ikem-pull-btn" style="width:100%;padding:16px;border-radius:14px;border:none;background:linear-gradient(135deg,#3B82F6,#1D4ED8);color:white;font-family:'Cinzel',serif;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 4px 0 #0A2A6E,0 8px 24px rgba(59,130,246,0.4);margin-top:6px;">🥤 ¡INVOCAR!</button>
+      <div style="font-size:9px;color:rgba(240,230,200,0.3);letter-spacing:1px;">Refresco asegurado · No afecta el pity secreto</div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Tirada Premium -->
 <div id="premium-modal-overlay" onclick="if(event.target===this)closePremiumModal()" style="display:none;position:fixed;inset:0;background:rgba(5,2,15,0.94);backdrop-filter:blur(8px);z-index:345;align-items:center;justify-content:center;padding:20px;">
   <div style="width:100%;max-width:360px;border-radius:24px;padding:0;position:relative;overflow:hidden;background:linear-gradient(175deg,#3D0A28,#1A0512);border:1px solid rgba(232,24,122,0.4);">
@@ -4343,8 +4364,23 @@ function renderEventBanners(){
     </div>`;
   }
 
-  const banners = activeEvents.filter(e => e.type !== 'premium_pull');
-  if(banners.length === 0 && !prem){ container.style.display='none'; return; }
+  // Banner especial de Lloros del Ikem (refresco asegurado)
+  const ikem = getEvent('ikem_pull');
+  if(ikem){
+    const cfg = ikem.config || {};
+    html += `<div onclick="sndClick();openIkemModal()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(29,78,216,.12));border:1px solid rgba(59,130,246,.5);cursor:pointer;box-shadow:0 0 16px rgba(59,130,246,.2);">
+      <span style="font-size:32px;flex-shrink:0;">😭</span>
+      <span style="font-size:20px;color:#93C5FD;flex-shrink:0;letter-spacing:-2px;">⟵————</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Cinzel',serif;font-size:15px;font-weight:900;color:#60A5FA;letter-spacing:1px;">IKEM</div>
+        <div style="font-size:10px;color:rgba(240,230,200,.6);margin-top:2px;">🥤 ${cfg.cards||18} cartas + refresco · ${(cfg.cost||2300).toLocaleString()} Maná</div>
+      </div>
+      <span style="font-size:18px;color:#60A5FA;flex-shrink:0;">›</span>
+    </div>`;
+  }
+
+  const banners = activeEvents.filter(e => e.type !== 'premium_pull' && e.type !== 'ikem_pull');
+  if(banners.length === 0 && !prem && !ikem){ container.style.display='none'; return; }
 
   const STYLES = {
     prob_multiplier: {icon:'📈', color:'#C084FC', border:'rgba(147,51,234,.4)', bg:'rgba(147,51,234,.12)'},
@@ -4400,8 +4436,19 @@ function showEventPopup(){
     }
   }
 
+  // Lloros del Ikem
+  const ikem = getEvent('ikem_pull');
+  if(ikem){
+    const seenKeyI = 'rescue_event_seen_' + ikem.id;
+    if(!sessionStorage.getItem(seenKeyI)){
+      showIkemPopup(ikem);
+      sessionStorage.setItem(seenKeyI, '1');
+      return;
+    }
+  }
+
   // Mostrar pop-up del primer evento relevante, una vez por sesión
-  const popable = activeEvents.filter(e => e.type !== 'premium_pull');
+  const popable = activeEvents.filter(e => e.type !== 'premium_pull' && e.type !== 'ikem_pull');
   if(popable.length === 0) return;
 
   const STYLES = {
@@ -4576,6 +4623,88 @@ function rollPremiumRarity(probs){
   if(r < common + rare) return 'rare';
   if(r < common + rare + epic) return 'epic';
   return 'legendary';
+}
+
+// ── LLOROS DEL IKEM (refresco asegurado) ──────────────────────
+function showIkemPopup(ev){ openIkemModal(); }
+
+function openIkemModal(){
+  const ev = getEvent('ikem_pull');
+  if(!ev){ toastWarn('Los Lloros del Ikem no están disponibles ahora.'); return; }
+  const cfg = ev.config || {};
+  const cost = cfg.cost || 2300;
+  const cards = cfg.cards || 18;
+
+  document.getElementById('ikem-modal-name').textContent = ev.name;
+  document.getElementById('ikem-modal-details').innerHTML =
+    `${cards} cartas<br>🥤 1 refresco asegurado`;
+  document.getElementById('ikem-modal-cost').textContent = `✦ ${cost.toLocaleString()} Maná`;
+
+  const btn = document.getElementById('ikem-pull-btn');
+  if(gems < cost){
+    btn.textContent = `Necesitas ${cost.toLocaleString()} Maná`;
+    btn.style.opacity = '0.5';
+    btn.style.pointerEvents = 'none';
+  } else {
+    btn.textContent = '🥤 ¡INVOCAR!';
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'all';
+  }
+  document.getElementById('ikem-modal-overlay').style.display = 'flex';
+}
+
+function closeIkemModal(){
+  document.getElementById('ikem-modal-overlay').style.display = 'none';
+}
+
+async function doIkemPull(){
+  if(pulling) return;
+  const ev = getEvent('ikem_pull');
+  if(!ev){ toastWarn('Los Lloros del Ikem no están disponibles.'); return; }
+  const cfg = ev.config || {};
+  const cost = cfg.cost || 2300;
+  const nCards = cfg.cards || 18;
+  const probs = cfg.probs || {common:85, rare:14, epic:0.8, legendary:0.1};
+
+  if(gems < cost){ toastWarn(`Necesitas ${cost.toLocaleString()} Maná.`); return; }
+
+  pulling = true;
+  closeIkemModal();
+  resumeAC();
+
+  try{
+    const spent = await spendGems(cost);
+    if(!spent){
+      toastError('No se pudo procesar la tirada.');
+      pulling = false;
+      return;
+    }
+
+    // Generar cartas con ratios ajustados
+    const drawn = [];
+    let hasLegendary = false;
+    for(let i=0; i<nCards; i++){
+      const rarity = rollPremiumRarity(probs);
+      if(rarity === 'legendary') hasLegendary = true;
+      drawn.push(pickCard(rarity));
+    }
+
+    // IMPORTANTE: NO toca el pity de la secreta (no hay secretas, no llama updateGlobalPity)
+    addToCollection(drawn);
+
+    // Refresco asegurado — tomar el premio de refresco (p1) con código generado
+    const refrescoBase = PRIZE_CARDS.find(p => p.id === 'p1') || PRIZE_CARDS[0];
+    const refresco = { ...refrescoBase, code: genCode(refrescoBase.prefix) };
+    window._pendingPrize = refresco;
+
+    showResults(drawn, hasLegendary);
+
+  } catch(e){
+    console.error('doIkemPull error:', e);
+    toastError('Ocurrió un error en la tirada.');
+  } finally {
+    pulling = false;
+  }
 }
 
 // ── Sobre Diario ──────────────────────────────────────────────

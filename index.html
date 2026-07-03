@@ -2820,12 +2820,10 @@ body::after{
         <div class="odds-group-title">Premios de comida</div>
         <div class="odds-note food-note" style="margin-bottom:10px;">🎁 Los premios de comida son <strong>independientes</strong> de las cartas: puedes ganar una carta y un premio de comida en la misma tirada.</div>
         <div class="odds-row"><span class="odds-label food">🥤 Refresco</span><span class="odds-val">1 de cada 60</span></div>
-        <div class="odds-row"><span class="odds-label food">🍟 Papas</span><span class="odds-val">1 de cada 120</span></div>
-        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden</span><span class="odds-val">1 de cada 350</span></div>
-        <div class="odds-row"><span class="odds-label food">🎉 Orden completa</span><span class="odds-val">1 de cada 750</span></div>
-        <div class="odds-row"><span class="odds-label food">🍔 ½ Orden + Papas</span><span class="odds-val">1 de cada 550</span></div>
-        <div class="odds-row"><span class="odds-label food">🏆 Orden + Papas</span><span class="odds-val">1 de cada 1,050</span></div>
-        <div class="odds-row"><span class="odds-label food">👑 Combo completo</span><span class="odds-val">1 de cada 1,500</span></div>
+        <div class="odds-row"><span class="odds-label food">🍟 ½ Orden de Papas</span><span class="odds-val">1 de cada 200</span></div>
+        <div class="odds-row"><span class="odds-label food">🌭 Hotdog</span><span class="odds-val">1 de cada 400</span></div>
+        <div class="odds-row"><span class="odds-label food">🍟 Papas Fritas</span><span class="odds-val">1 de cada 700</span></div>
+        <div class="odds-row"><span class="odds-label food">🍗 ½ Orden de Boneless</span><span class="odds-val">1 de cada 1,200</span></div>
       </div>
     </div>
   </div>
@@ -5145,6 +5143,16 @@ function handleCraftOverlay(e){
   if(e.target===document.getElementById('craft-modal-overlay')) closeCraftModal();
 }
 
+// Costos de crafteo: cuántas cartas de rareza inferior = 1 de la superior
+const CRAFT_COST = { rare:5, epic:6, legendary:7 };
+// (5 comunes→1 rara · 6 raras→1 épica · 7 épicas→1 legendaria)
+
+function craftCostFor(sourceRarity){
+  const map = { common:'rare', rare:'epic', epic:'legendary' };
+  const target = map[sourceRarity];
+  return target ? CRAFT_COST[target] : null;
+}
+
 function updateCraftModal(){
   const counts = getCardCounts();
   const grid = document.getElementById('craft-orbs-grid');
@@ -5161,7 +5169,8 @@ function updateCraftModal(){
   let html = '';
   RARITIES.forEach(r => {
     const count = counts[r.id] || 0;
-    const canCraft = r.next && count >= 10;
+    const needed = r.next ? CRAFT_COST[r.next] : null;  // cuántas de esta rareza para la siguiente
+    const canCraft = r.next && needed && count >= needed;
     const isEmpty  = count === 0;
     const isSecret = r.id === 'secret';
     const spanAll  = isSecret ? 'grid-column:span 2;' : '';
@@ -5179,8 +5188,11 @@ function updateCraftModal(){
       <div style="font-family:'Cinzel',serif;font-size:24px;font-weight:900;color:${r.color};line-height:1;">${count}</div>
       <!-- Label -->
       <div style="font-size:10px;letter-spacing:2px;color:rgba(240,230,200,0.5);text-transform:uppercase;">${r.label}</div>
-      <!-- Botón craftear -->
-      ${canCraft ? `<button onclick="doCraft('${r.next}')" style="padding:6px 14px;border-radius:20px;border:1px solid ${r.border};background:${r.border}22;color:${r.color};font-family:'Cinzel',serif;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:1px;">▲ → ${r.nextLabel}</button>` : ''}
+      <!-- Botón craftear / hint de costo -->
+      ${r.next && needed ? (canCraft
+        ? `<button onclick="doCraft('${r.next}')" style="padding:6px 14px;border-radius:20px;border:1px solid ${r.border};background:${r.border}22;color:${r.color};font-family:'Cinzel',serif;font-size:9px;font-weight:700;cursor:pointer;letter-spacing:1px;">▲ ${needed} → 1 ${r.nextLabel}</button>`
+        : `<div style="font-size:8px;color:rgba(240,230,200,0.35);letter-spacing:.5px;text-align:center;">${needed} → 1 ${r.nextLabel}<br>(faltan ${needed-count})</div>`
+      ) : ''}
     </div>`;
   });
 
@@ -5349,8 +5361,9 @@ async function doCraft(targetRarity){
   const sourceRarity = cost[targetRarity];
   if(!sourceRarity) return;
 
+  const needed = CRAFT_COST[targetRarity];  // 5, 6 o 7
   const counts = getCardCounts();
-  if(counts[sourceRarity] < 10){ sndClick(); return; }
+  if(counts[sourceRarity] < needed){ sndClick(); return; }
 
   // Mostrar animación de fusión
   showCraftAnimation(sourceRarity, targetRarity, async () => {
@@ -5370,7 +5383,7 @@ async function doCraft(targetRarity){
     // Actualizar colección local
     let removed = 0;
     collection = collection.filter(c => {
-      if(c.rarity === sourceRarity && removed < 10){ removed++; return false; }
+      if(c.rarity === sourceRarity && removed < needed){ removed++; return false; }
       return true;
     });
     collection.push({ rarity: targetRarity });
@@ -5730,13 +5743,11 @@ function genCode(prefix){
 }
 
 const PRIZE_CARDS = [
-  { id:'p1', odds:60,   name:'Refresco Gratis',          art:'🥤', desc:'1 refresco de cualquier sabor', prefix:'RFSC' },
-  { id:'p2', odds:120,  name:'Papas Gratis',             art:'🍟', desc:'1 orden de papas fritas',       prefix:'PAPA' },
-  { id:'p3', odds:350,  name:'½ Orden Gratis',           art:'🍔', desc:'Media orden de tu elección',    prefix:'HALF' },
-  { id:'p4', odds:750,  name:'Orden Completa',           art:'🎉', desc:'1 orden completa gratis',       prefix:'ORD1' },
-  { id:'p5', odds:550,  name:'½ Orden + Papas',          art:'🍔', desc:'Media orden + papas gratis',    prefix:'HPAP' },
-  { id:'p6', odds:1050, name:'Orden + Papas',            art:'🏆', desc:'1 orden completa + papas',      prefix:'OPAP' },
-  { id:'p7', odds:1500, name:'Orden + Papas + Refresco', art:'👑', desc:'¡El combo completo gratis!',    prefix:'FULL' },
+  { id:'p1', odds:60,   name:'Refresco Gratis',        art:'🥤', desc:'1 refresco de cualquier sabor',  prefix:'RFSC' },
+  { id:'p2', odds:200,  name:'½ Orden de Papas',       art:'🍟', desc:'Media orden de papas fritas',    prefix:'HPAP' },
+  { id:'p3', odds:400,  name:'Hotdog Gratis',          art:'🌭', desc:'1 hotdog a tu gusto',            prefix:'HOTD' },
+  { id:'p4', odds:700,  name:'Papas Fritas',           art:'🍟', desc:'1 orden completa de papas',      prefix:'PAPA' },
+  { id:'p5', odds:1200, name:'½ Orden de Boneless',    art:'🍗', desc:'Media orden de boneless',        prefix:'BONE' },
 ];
 
 function rollPrize() {
@@ -6587,12 +6598,10 @@ if(checkTermsGate()){
       </div>
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;">
         <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🥤 Refresco</span><span>1 de cada 60</span></div>
-        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍟 Papas</span><span>1 de cada 120</span></div>
-        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍔 ½ Orden</span><span>1 de cada 350</span></div>
-        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🎉 Orden completa</span><span>1 de cada 750</span></div>
-        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍔 ½ Orden + Papas</span><span>1 de cada 550</span></div>
-        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🏆 Orden + Papas</span><span>1 de cada 1,050</span></div>
-        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;"><span>👑 Combo completo</span><span>1 de cada 1,500</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍟 ½ Orden de Papas</span><span>1 de cada 200</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🌭 Hotdog</span><span>1 de cada 400</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);"><span>🍟 Papas Fritas</span><span>1 de cada 700</span></div>
+        <div style="font-size:11px;color:#9D7DB8;display:flex;justify-content:space-between;padding:4px 0;"><span>🍗 ½ Orden de Boneless</span><span>1 de cada 1,200</span></div>
       </div>
     </div>
 
@@ -6600,13 +6609,12 @@ if(checkTermsGate()){
     <div style="margin-bottom:18px;">
       <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#D4A017;text-transform:uppercase;margin-bottom:10px;">◈ Fabricación de Cartas</div>
       <div style="font-size:12px;color:#C8B89A;line-height:1.7;">
-        Puedes combinar <strong style="color:#F0E6C8;">10 cartas</strong> de una rareza para fabricar <strong style="color:#F0E6C8;">1 carta</strong> de la rareza siguiente. Accede desde el botón <strong style="color:#F0E6C8;">◈ Colección</strong>.
+        Puedes combinar cartas repetidas para fabricar una carta de la rareza siguiente. Accede desde el botón <strong style="color:#F0E6C8;">◈ Colección</strong>.
       </div>
-      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:#9D7DB8;">
-        <span style="color:#AAAACC;">10 Comunes</span><span>→</span>
-        <span style="color:#93C5FD;">1 Rara</span><span>→</span>
-        <span style="color:#D8B4FE;">1 Épica</span><span>→</span>
-        <span style="color:#FFE080;">1 Legendaria</span>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:#AAAACC;font-weight:700;">5 Comunes</span><span style="color:#9D7DB8;">→</span><span style="color:#93C5FD;">1 Rara</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:#93C5FD;font-weight:700;">6 Raras</span><span style="color:#9D7DB8;">→</span><span style="color:#D8B4FE;">1 Épica</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="color:#D8B4FE;font-weight:700;">7 Épicas</span><span style="color:#9D7DB8;">→</span><span style="color:#FFE080;">1 Legendaria</span></div>
       </div>
     </div>
 

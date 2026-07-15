@@ -1254,6 +1254,10 @@ body::after{
   from{box-shadow:0 0 18px rgba(232,24,122,0.5);transform:translateY(-50%) scale(1);}
   to  {box-shadow:0 0 30px rgba(232,24,122,0.9),0 0 50px rgba(232,24,122,0.4);transform:translateY(-50%) scale(1.05);}
 }
+@keyframes alertPulse{
+  0%,100%{box-shadow:0 0 20px rgba(239,68,68,0.3);}
+  50%    {box-shadow:0 0 32px rgba(239,68,68,0.6);}
+}
 @keyframes flameRise{
   0%  {transform:translateY(0) scaleX(1);opacity:.8;}
   50% {transform:translateY(-40px) scaleX(.8) rotate(5deg);opacity:.5;}
@@ -3637,6 +3641,18 @@ async function redeemPrizeToDB(dbId){
   } catch(e){}
 }
 
+async function claimSpecialCard(eventId){
+  if(!currentUser) return null;
+  try{
+    const res = await fetch(BACKEND + '/api/gems', {
+      method:'POST',
+      headers:{'Content-Type':'application/json', 'Authorization':'Bearer '+getToken()},
+      body: JSON.stringify({ action:'claim_special_card', user_id: currentUser.id, event_id: eventId })
+    });
+    return await res.json();
+  } catch(e){ return null; }
+}
+
 // ══════════════════════════════
 //  SOUND ENGINE (Web Audio API)
 // ══════════════════════════════
@@ -4143,11 +4159,42 @@ async function doPull(){
     const drawn=[];
     let hasLegendary=false,secretCard=null,prizeCard=null;
     let secretPulled=false;
+    let specialHit=false;
+    const specEvent = getEvent('special_card');
     for(let i=0;i<pack.count;i++){
       const rarity=rollRarity(selectedPack);
       if(rarity==='secret'){secretCard=pickCard('secret');drawn.push({...secretCard});secretPulled=true;}
       else{if(rarity==='legendary')hasLegendary=true;drawn.push(pickCard(rarity));}
+      // Roll de carta especial (independiente, NO toca pity, máx 1 por tirada)
+      if(specEvent && !specialHit){
+        const cfg = specEvent.config || {};
+        const odds = Math.max(10, parseInt(cfg.odds)||500);
+        if(Math.floor(Math.random()*odds) === 0) specialHit = true;
+      }
       if(!prizeCard){ const p=rollPrize(); if(p) prizeCard=p; }
+    }
+
+    // Si el roll local acertó la carta especial, el SERVIDOR arbitra
+    // atómicamente si este jugador es el ÚNICO ganador.
+    if(specialHit && specEvent){
+      const claim = await claimSpecialCard(specEvent.id);
+      if(claim && claim.ok && claim.winner){
+        // ¡GANADOR ÚNICO! El premio ya fue guardado por el servidor.
+        prizeCard = {
+          id:'sc1',
+          name: claim.name,
+          art:  claim.art || '🃏',
+          desc: '¡Carta especial del evento! Canjéala en tienda.',
+          code: claim.code,
+          db_id: claim.db_id,
+          _alreadySaved: true
+        };
+      } else {
+        // Alguien más la ganó primero — quitar el evento localmente
+        activeEvents = activeEvents.filter(e => e.id !== specEvent.id);
+        renderEventBanners();
+        toastInfo('La carta especial ya fue ganada por otro invocador.');
+      }
     }
 
     // Actualizar pity global en el servidor
@@ -4377,8 +4424,22 @@ function renderEventBanners(){
     </div>`;
   }
 
-  const banners = activeEvents.filter(e => e.type !== 'premium_pull' && e.type !== 'ikem_pull');
-  if(banners.length === 0 && !prem && !ikem){ container.style.display='none'; return; }
+  // Banner de ALERTA de carta especial (roja, dramática)
+  const spec = getEvent('special_card');
+  if(spec){
+    const cfg = spec.config || {};
+    html += `<div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(239,68,68,.22),rgba(153,27,27,.15));border:1px solid rgba(239,68,68,.6);box-shadow:0 0 20px rgba(239,68,68,.3);animation:alertPulse 1.2s ease-in-out infinite;">
+      <span style="font-size:30px;flex-shrink:0;">${cfg.art||'🃏'}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Cinzel',serif;font-size:10px;font-weight:700;color:#FCA5A5;letter-spacing:2px;">⚠️ ¡ALERTA! CARTA ESPECIAL ACTIVA</div>
+        <div style="font-family:'Cinzel',serif;font-size:14px;font-weight:900;color:#F87171;letter-spacing:.5px;margin-top:2px;">${cfg.card_name||''}</div>
+        <div style="font-size:10px;color:rgba(240,230,200,.6);margin-top:2px;">1 de cada ${(cfg.odds||500).toLocaleString()} tiros · Solo en tiradas normales</div>
+      </div>
+    </div>`;
+  }
+
+  const banners = activeEvents.filter(e => e.type !== 'premium_pull' && e.type !== 'ikem_pull' && e.type !== 'special_card');
+  if(banners.length === 0 && !prem && !ikem && !spec){ container.style.display='none'; return; }
 
   const STYLES = {
     prob_multiplier: {icon:'📈', color:'#C084FC', border:'rgba(147,51,234,.4)', bg:'rgba(147,51,234,.12)'},
@@ -4445,8 +4506,44 @@ function showEventPopup(){
     }
   }
 
+  // Carta especial (ALERTA)
+  const spec = getEvent('special_card');
+  if(spec){
+    const seenKeyS = 'rescue_event_seen_' + spec.id;
+    if(!sessionStorage.getItem(seenKeyS)){
+      const cfg = spec.config || {};
+      document.getElementById('event-popup-card').style.background = 'linear-gradient(175deg,#3D0A0A,#1F0505)';
+      document.getElementById('event-popup-card').style.border = '1px solid rgba(239,68,68,.5)';
+      document.getElementById('event-popup-icon').textContent = cfg.art || '🃏';
+      document.getElementById('event-popup-name').textContent = '⚠️ ¡' + (cfg.card_name||'Carta Especial').toUpperCase() + ' ACTIVADO!';
+      document.getElementById('event-popup-name').style.color = '#F87171';
+      document.getElementById('event-popup-desc').textContent = `¡Hay una posibilidad de 1 en ${(cfg.odds||500).toLocaleString()} tiros de que salga ${cfg.card_name||'la carta especial'}! Solo en tiradas normales. Si te sale, recibes un código para canjearla físicamente en la tienda.`;
+      document.getElementById('event-popup-btn').style.background = 'linear-gradient(135deg,#EF4444,#991B1B)';
+      document.getElementById('event-popup-overlay').style.display = 'flex';
+      sessionStorage.setItem(seenKeyS, '1');
+      // Fuegos rojos
+      const canvas = document.getElementById('event-popup-canvas');
+      const card = document.getElementById('event-popup-card');
+      canvas.width = card.offsetWidth || 360;
+      canvas.height = card.offsetHeight || 400;
+      const ctx = canvas.getContext('2d');
+      const particles = [];
+      const colors = ['#F87171','#EF4444','#FCA5A5'];
+      function explode(x,y){ colors.forEach(c=>{ for(let i=0;i<8;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*4;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,alpha:1,color:c,size:2+Math.random()*3,life:0,maxLife:35+Math.random()*25});}}); }
+      [300,600,900].forEach((t,i)=>setTimeout(()=>explode(canvas.width*(.3+i*.2),canvas.height*(.2+i*.05)),t));
+      let stop=false; setTimeout(()=>stop=true,2200);
+      (function loop(){
+        if(stop&&particles.length===0){ctx.clearRect(0,0,canvas.width,canvas.height);return;}
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.07;p.vx*=.97;p.life++;p.alpha=1-(p.life/p.maxLife);if(p.alpha<=0){particles.splice(i,1);continue;}ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}
+        ctx.globalAlpha=1;requestAnimationFrame(loop);
+      })();
+      return;
+    }
+  }
+
   // Mostrar pop-up del primer evento relevante, una vez por sesión
-  const popable = activeEvents.filter(e => e.type !== 'premium_pull' && e.type !== 'ikem_pull');
+  const popable = activeEvents.filter(e => e.type !== 'premium_pull' && e.type !== 'ikem_pull' && e.type !== 'special_card');
   if(popable.length === 0) return;
 
   const STYLES = {
@@ -5762,9 +5859,12 @@ function rollPrize() {
 
 function showPrizeReveal(prize) {
   if(!window._prizes) window._prizes = [];
-  savePrizeToDB(prize).then(data => {
-    if(data && data.db_id) prize.db_id = data.db_id;
-  });
+  // La carta especial ya fue guardada por el servidor (claim atómico)
+  if(!prize._alreadySaved){
+    savePrizeToDB(prize).then(data => {
+      if(data && data.db_id) prize.db_id = data.db_id;
+    });
+  }
   window._prizes.push(prize);
   renderCollection();
   updatePrizeBadge();

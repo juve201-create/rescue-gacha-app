@@ -721,6 +721,7 @@ var EVENT_TYPES = {
   prob_multiplier: {icon:'📈', label:'Multiplicador Probabilidad',color:'#9333EA'},
   pull_discount:   {icon:'🏷️', label:'Descuento en Tiradas',     color:'#4ADE80'},
   mana_bonus:      {icon:'✦',  label:'Bonus de Maná',            color:'#E8187A'},
+  special_card:    {icon:'⚠️', label:'Carta Especial',           color:'#EF4444'},
 };
 
 async function loadEvents(){
@@ -733,6 +734,7 @@ async function loadEvents(){
     '<button onclick="showEventForm(\'prob_multiplier\')" style="padding:11px;border-radius:8px;border:1px solid #9333EA;background:rgba(147,51,234,.1);color:#C084FC;font-size:12px;cursor:pointer;text-align:left;">📈 Crear Multiplicador de Probabilidad</button>' +
     '<button onclick="showEventForm(\'pull_discount\')" style="padding:11px;border-radius:8px;border:1px solid #4ADE80;background:rgba(74,222,128,.1);color:#4ADE80;font-size:12px;cursor:pointer;text-align:left;">🏷️ Crear Descuento en Tiradas</button>' +
     '<button onclick="showEventForm(\'mana_bonus\')" style="padding:11px;border-radius:8px;border:1px solid #E8187A;background:rgba(232,24,122,.1);color:#F472B6;font-size:12px;cursor:pointer;text-align:left;">✦ Crear Bonus de Maná</button>' +
+    '<button onclick="showEventForm(\'special_card\')" style="padding:11px;border-radius:8px;border:1px solid #EF4444;background:rgba(239,68,68,.1);color:#F87171;font-size:12px;cursor:pointer;text-align:left;">⚠️ Crear Carta Especial (Alerta)</button>' +
     '</div>' +
     '<div id="event-form-container"></div>' +
     '<div id="events-list"><div class="loading">Cargando...</div></div>' +
@@ -779,6 +781,12 @@ function showEventForm(type){
     fields =
       '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Maná extra en todas las compras mientras esté activo.</div>' +
       row('Bonus (%)', '<input id="ev-bonus" type="number" value="20" min="1" max="100" '+inp()+'>');
+  } else if(type === 'special_card'){
+    fields =
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5;">Una carta física específica entra al pool de las tiradas normales. Cuando sale, el jugador recibe un código canjeable en tienda. NO afecta el pity secreto.</div>' +
+      row('Nombre de la carta', '<input id="ev-cardname" type="text" placeholder="Ej: Vampiric Tutor" maxlength="60" '+inp()+'>') +
+      row('Emoji/Arte', '<input id="ev-cardart" type="text" value="🧛" maxlength="4" '+inp()+'>') +
+      row('Probabilidad: 1 de cada X tiros', '<input id="ev-cardodds" type="number" value="500" min="10" '+inp()+'>');
   }
 
   c.innerHTML =
@@ -835,6 +843,14 @@ async function saveEvent(type){
     config = { discount_pct: parseInt(document.getElementById('ev-discount').value)||20 };
   } else if(type === 'mana_bonus'){
     config = { bonus_pct: parseInt(document.getElementById('ev-bonus').value)||20 };
+  } else if(type === 'special_card'){
+    var cardName = document.getElementById('ev-cardname').value.trim();
+    if(!cardName){ alert('Ingresa el nombre de la carta'); return; }
+    config = {
+      card_name: cardName,
+      art: document.getElementById('ev-cardart').value.trim() || '🃏',
+      odds: Math.max(10, parseInt(document.getElementById('ev-cardodds').value)||500)
+    };
   }
 
   var expires = document.getElementById('ev-expires').value;
@@ -862,6 +878,7 @@ async function refreshEvents(){
     else if(ev.type==='prob_multiplier') detail = 'Épica x'+cfg.mult_epic+' · Legendaria x'+cfg.mult_legendary;
     else if(ev.type==='pull_discount') detail = cfg.discount_pct+'% de descuento';
     else if(ev.type==='mana_bonus') detail = '+'+cfg.bonus_pct+'% Maná en compras';
+    else if(ev.type==='special_card') detail = (cfg.art||'🃏')+' '+cfg.card_name+' · 1 de cada '+cfg.odds+' tiros';
 
     html += '<div style="background:var(--bg3);border:1px solid '+(ev.active?t.color:'var(--border)')+';border-radius:12px;padding:14px;margin-bottom:10px;'+(ev.active?'box-shadow:0 0 16px '+t.color+'40;':'opacity:.7;')+'">';
     html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">';
